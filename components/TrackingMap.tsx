@@ -8,7 +8,8 @@ import { MapPin } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
-import { TILE_ATTRIBUTION, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
+import { TILE_ATTRIBUTION, TILE_LABEL_URL,
+  TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
 import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
 
@@ -132,6 +133,7 @@ export default function TrackingMap({
       className="h-full w-full"
     >
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {distanceKm > 0 && (
         <>

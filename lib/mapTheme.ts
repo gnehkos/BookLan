@@ -9,22 +9,34 @@ import { colors } from "@/constants/theme";
  */
 
 /**
- * Base map tiles.
+ * Base map tiles: Esri World Light Gray Canvas.
  *
- * Standard OpenStreetMap by default: keyless, and it renders clean. CARTO's
- * Positron looked better under our navy UI, but CARTO now watermarks
- * "API KEY REQUIRED" across unauthenticated tiles, so it can't be used bare.
+ * Pale grey and low-contrast — the closest keyless match to CARTO Positron,
+ * which is what this UI was designed against. CARTO can't be used: their
+ * basemaps now watermark "API KEY REQUIRED" across every tile, and the
+ * `api_key` query parameter is ignored (an authenticated request returns a
+ * byte-identical watermarked image).
  *
- * To go back to Positron (or any keyed provider), set NEXT_PUBLIC_MAP_TILE_URL
- * and NEXT_PUBLIC_MAP_ATTRIBUTION — no code change needed. For a free CARTO
- * key that would be:
- *   NEXT_PUBLIC_MAP_TILE_URL=https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?api_key=YOUR_KEY
+ * Esri splits the style in two — a label-free base, plus a reference layer
+ * carrying place names — so both are drawn, base first.
+ *
+ * Any keyed provider can override this without a code change via
+ * NEXT_PUBLIC_MAP_TILE_URL / NEXT_PUBLIC_MAP_ATTRIBUTION. Stadia Maps'
+ * "Alidade Smooth" is the true Positron equivalent if a key is ever added.
  */
-export const TILE_URL =
-  process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const ESRI_BASE =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+
+const ESRI_LABELS =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}";
+
+export const TILE_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL || ESRI_BASE;
+
+/** Place-name overlay. Null when a custom provider is supplying its own labels. */
+export const TILE_LABEL_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ? null : ESRI_LABELS;
 
 export const TILE_ATTRIBUTION =
-  process.env.NEXT_PUBLIC_MAP_ATTRIBUTION || "© OpenStreetMap contributors";
+  process.env.NEXT_PUBLIC_MAP_ATTRIBUTION || "© Esri, HERE, Garmin, © OpenStreetMap contributors";
 
 export const userIcon = L.divIcon({
   className: "",
@@ -45,12 +57,32 @@ function escapeHtml(value: string) {
   );
 }
 
-/** White circle with a navy ring and the company's initial. */
+/**
+ * The company's own logo in a white ringed circle.
+ *
+ * Leaflet injects this as raw HTML rather than React, so the extension
+ * fallback that CompanyLogo does in state is done here with an inline onerror
+ * chain: png → jpg → webp → the company's initial.
+ */
 export function vehicleIcon(companyName: string) {
-  const initial = escapeHtml((companyName || "?").charAt(0).toUpperCase());
+  const name = companyName || "Unknown";
+  const initial = escapeHtml(name.charAt(0).toUpperCase());
+  const slug = name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  const fallback =
+    `this.parentNode.innerHTML='${initial}';this.parentNode.classList.add('booklan-pin-initial')`;
+  const tryWebp = `this.onerror=function(){${fallback}};this.src='/logos/${slug}.webp'`;
+  const tryJpg = `this.onerror=function(){${tryWebp}};this.src='/logos/${slug}.jpg'`;
+
   return L.divIcon({
     className: "",
-    html: `<div class="booklan-pin">${initial}</div>`,
+    html: `<div class="booklan-pin booklan-pin-logo">
+        <img src="/logos/${slug}.png" alt="" onerror="${tryJpg}" />
+      </div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],

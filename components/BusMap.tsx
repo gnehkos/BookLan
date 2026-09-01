@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import { TILE_ATTRIBUTION, TILE_URL, userIcon } from "@/lib/mapTheme";
+import { TILE_ATTRIBUTION, TILE_LABEL_URL,
+  TILE_URL, userIcon } from "@/lib/mapTheme";
 
 /**
  * The passenger's own map. Deliberately shows only their location — plotting
@@ -46,6 +47,7 @@ export default function BusMap() {
       className="h-full w-full"
     >
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {userPos && <Marker position={userPos} icon={userIcon} />}
 

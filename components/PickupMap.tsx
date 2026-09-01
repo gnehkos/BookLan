@@ -3,12 +3,13 @@
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Polyline, Rectangle } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Rectangle, useMap } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
 import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
-import { TILE_ATTRIBUTION, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
+import { TILE_ATTRIBUTION, TILE_LABEL_URL,
+  TILE_URL, dropPinIcon } from "@/lib/mapTheme";
 
 /** Zone colours are deliberately deeper than the UI status colours so the
  *  overlays stay readable at 15% fill over pale map tiles. */
@@ -20,6 +21,76 @@ const NO_PICKUP_BOUNDS: L.LatLngBoundsExpression = [
   [9.5, 102.0],
   [15.0, 108.0],
 ];
+
+/**
+ * Pixel width of the allowed corridor at the current zoom.
+ *
+ * Leaflet strokes are measured in pixels but the pickup rule is measured in
+ * kilometres, so a fixed weight drew a band far narrower than what was
+ * actually accepted — a pin could sit well outside the green line and still
+ * pass. Recomputing on zoom keeps the drawing honest.
+ */
+function useCorridorWeight(toleranceKm: number) {
+  const map = useMap();
+  const [weight, setWeight] = useState(() => corridorPixels(map, toleranceKm));
+
+  useEffect(() => {
+    const update = () => setWeight(corridorPixels(map, toleranceKm));
+    map.on("zoomend", update);
+    map.on("moveend", update);
+    return () => {
+      map.off("zoomend", update);
+      map.off("moveend", update);
+    };
+  }, [map, toleranceKm]);
+
+  return weight;
+}
+
+function corridorPixels(map: L.Map, toleranceKm: number) {
+  const center = map.getCenter();
+  // Metres per pixel at this latitude and zoom.
+  const metresPerPixel =
+    (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** map.getZoom();
+  // The band spans the tolerance either side of the centre-line.
+  return Math.max(3, (2 * toleranceKm * 1000) / metresPerPixel);
+}
+
+/** Roads drawn at their true allowed width, plus a crisp centre-line. */
+function RoadCorridors({ roads }: { roads: { id: string; path: [number, number][] }[] }) {
+  const weight = useCorridorWeight(ROAD_TOLERANCE_KM);
+
+  return (
+    <>
+      {roads.map((road) => (
+        <Polyline
+          key={`${road.id}-corridor`}
+          positions={road.path}
+          pathOptions={{
+            color: PICKUP_GREEN,
+            weight,
+            opacity: 0.18,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
+        />
+      ))}
+      {roads.map((road) => (
+        <Polyline
+          key={road.id}
+          positions={road.path}
+          pathOptions={{
+            color: PICKUP_GREEN,
+            weight: 3,
+            opacity: 0.9,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
+        />
+      ))}
+    </>
+  );
+}
 
 function DraggableMarker({
   position,
@@ -120,9 +191,11 @@ export default function PickupMap({
 
   const allowed = isPickupAllowed(position[0], position[1], roads);
 
+  // Zoomed in: at a 50 m tolerance the roadside is only targetable up close.
   return (
-    <MapContainer center={center} zoom={12} zoomControl={false} className="h-full w-full">
+    <MapContainer center={center} zoom={16} zoomControl={false} className="h-full w-full">
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {/* No-pickup wash over everything, with a dashed red edge… */}
       <Rectangle
@@ -137,34 +210,9 @@ export default function PickupMap({
         }}
       />
 
-      {/* …with the allowed national-road corridors punched back in green. */}
-      {roads.map((road) => (
-        <Polyline
-          key={`${road.id}-corridor`}
-          positions={road.path}
-          pathOptions={{
-            color: PICKUP_GREEN,
-            // Roughly the tolerance band, in screen terms, at this zoom.
-            weight: ROAD_TOLERANCE_KM * 9,
-            opacity: 0.15,
-            lineCap: "round",
-            lineJoin: "round",
-          }}
-        />
-      ))}
-      {roads.map((road) => (
-        <Polyline
-          key={road.id}
-          positions={road.path}
-          pathOptions={{
-            color: PICKUP_GREEN,
-            weight: 3,
-            opacity: 0.9,
-            lineCap: "round",
-            lineJoin: "round",
-          }}
-        />
-      ))}
+      {/* …with the allowed national-road corridors punched back in green, at
+          their true width so the drawing matches what's accepted. */}
+      <RoadCorridors roads={roads} />
 
       <DraggableMarker position={position} allowed={allowed} onChange={handleChange} />
 

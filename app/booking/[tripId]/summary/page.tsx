@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import CompanyLogo from "@/components/CompanyLogo";
+import VehicleBadge from "@/components/VehicleBadge";
 import PaymentCard from "@/components/PaymentCard";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
@@ -150,43 +152,81 @@ export default function SummaryPage() {
           <h1 className="text-[16px] font-semibold text-text-primary">Confirm Booking</h1>
         </div>
 
-        <div className="mx-4 mt-4 flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
-              From
-            </span>
-            <span className="text-[15px] text-text-primary">
-              {pickup.stationName ??
-                pickup.placeName ??
-                `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
-            </span>
-            <span className="text-[13px] text-text-secondary">
-              {pickup.stationName ? "Station pickup" : "Roadside pickup"}
-            </span>
+        {/* Journey: pickup and drop-off joined by a connector, so the trip
+            reads as one route rather than two unrelated fields. */}
+        <div className="mx-4 mt-4 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          <div className="flex gap-3">
+            <div className="flex flex-col items-center pt-1">
+              <span className="h-3 w-3 rounded-full border-[3px] border-primary bg-white" />
+              <span className="my-1 w-px flex-1 border-l-2 border-dashed border-border" />
+              <MapPin className="h-4 w-4 text-error" />
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-5">
+              <div className="flex min-w-0 flex-col">
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
+                  PICKUP POINT
+                </span>
+                <span className="truncate text-[15px] font-semibold text-text-primary">
+                  {pickup.stationName ??
+                    pickup.placeName ??
+                    `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
+                </span>
+                <span className="text-[12px] text-text-secondary">
+                  {pickup.stationName ? "Station pickup" : "Roadside pickup"}
+                </span>
+              </div>
+
+              <div className="flex min-w-0 flex-col">
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
+                  DROP-OFF STATION
+                </span>
+                <span className="truncate text-[15px] font-semibold text-primary">
+                  {dropoff.name}
+                </span>
+                <span className="truncate text-[12px] text-text-secondary">{dropoff.address}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
-              To
+        </div>
+
+        {/* Who's carrying you */}
+        <div className="mx-4 mt-3 flex items-center gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          <CompanyLogo name={trip.companies?.name ?? "Unknown"} size={44} />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="truncate text-[15px] font-semibold text-text-primary">
+              {trip.companies?.name ?? "Unknown company"}
             </span>
-            <span className="text-[15px] text-text-primary">{dropoff.name}</span>
-            <span className="text-[13px] text-text-secondary">{dropoff.address}</span>
+            <div className="flex items-center gap-2">
+              <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
+              <span className="text-[12px] text-text-secondary">
+                {seat.seatNumbers.length > 1 ? "Seats" : "Seat"}{" "}
+                {seat.seatNumbers.join(", ")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Fare breakdown — roadside pricing is per km, so show the maths. */}
+        <div className="mx-4 mt-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
+            FARE BREAKDOWN
+          </span>
+
+          <div className="mt-3 flex flex-col gap-2.5">
+            <Row
+              label={`${trip.distance_km} km × $${trip.price_per_km.toFixed(2)}/km`}
+              value={`$${(trip.distance_km * trip.price_per_km).toFixed(2)}`}
+            />
+            {seat.seatNumbers.length > 1 && (
+              <Row label={`× ${seat.seatNumbers.length} seats`} value="" />
+            )}
+            <Row label="Service fee" value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
           </div>
 
-          <div className="my-1 border-t border-dashed border-border" />
-
-          <Row label="Company" value={trip.companies?.name ?? "Unknown"} />
-          <Row label="Vehicle type" value={trip.companies?.vehicle_type ?? "bus"} capitalize />
-          <Row
-            label={seat.seatNumbers.length > 1 ? "Seat numbers" : "Seat number"}
-            value={seat.seatNumbers.join(", ")}
-          />
-          <Row label="Distance" value={`${trip.distance_km} km`} />
-          <Row label="Price per km" value={`$${trip.price_per_km.toFixed(2)}`} />
-          <Row label="Service fee" value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
-
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
-            <span className="text-[15px] font-bold text-text-primary">Total</span>
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
+            <span className="text-[14px] font-semibold text-text-primary">Total</span>
+            <span className="text-[24px] font-bold leading-none text-primary">
               ${seat.totalPrice.toFixed(2)}
             </span>
           </div>
@@ -204,15 +244,11 @@ export default function SummaryPage() {
   );
 }
 
-function Row({ label, value, capitalize }: { label: string; value: string; capitalize?: boolean }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-3 text-[14px]">
-      <span className="shrink-0 text-text-secondary">{label}</span>
-      <span
-        className={`text-right font-medium text-text-primary ${capitalize ? "capitalize" : ""}`}
-      >
-        {value}
-      </span>
+    <div className="flex items-start justify-between gap-3 text-[13px]">
+      <span className="min-w-0 text-text-secondary">{label}</span>
+      <span className="shrink-0 text-right font-medium text-text-primary">{value}</span>
     </div>
   );
 }

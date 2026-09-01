@@ -88,10 +88,20 @@ body {
   outline: none;
 }
 
-/* Tiles are CARTO Positron (keyed via NEXT_PUBLIC_MAP_TILE_URL) — already the
-   pale blue-grey the UI is designed against, so no filtering here. If the key
-   is ever removed the base falls back to OpenStreetMap, which will look
-   noticeably more colourful. */
+/* --------------------------------------------------------------------------
+   Nudge the basemap toward the app's blue.
+
+   Tiles are Stadia "Alidade Smooth" (keyed via NEXT_PUBLIC_MAP_TILE_URL),
+   already a pale blue-grey. This is a deliberately light touch — a heavy
+   grayscale/sepia chain flattens the cartography and erases the place names,
+   which is the whole reason this style was chosen.
+
+   `saturate` is the knob: raise for more blue, drop to 1 for the style as
+   Stadia draws it.
+   -------------------------------------------------------------------------- */
+.leaflet-tile-pane {
+  filter: saturate(1.35) hue-rotate(-10deg) brightness(1.01);
+}
 
 /* Kill the default focus ring that clashes with the design. */
 .leaflet-container:focus,
@@ -261,6 +271,25 @@ body {
   color: var(--color-primary);
   font-size: 13px;
   font-weight: 800;
+}
+
+/* Logo variant: the artwork fills the circle, cropped to it. */
+.booklan-pin-logo {
+  overflow: hidden;
+  padding: 2px;
+  background: #ffffff;
+}
+
+.booklan-pin-logo img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: contain;
+}
+
+/* Applied by the onerror chain when no logo file exists. */
+.booklan-pin-initial {
+  padding: 0;
 }
 
 .booklan-pin-drop {

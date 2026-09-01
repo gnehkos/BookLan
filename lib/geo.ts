@@ -20,8 +20,16 @@ export const PHNOM_PENH_BBOX = {
   maxLng: 105.0,
 } as const;
 
-/** How far from a road centre-line still counts as "on the road", in km. */
-export const ROAD_TOLERANCE_KM = 2;
+/**
+ * How far from a road centre-line still counts as "on the road", in metres.
+ *
+ * A national road is roughly 10–20 m wide, and a bus will not leave its route
+ * to collect anyone — the passenger has to be standing at the roadside. This
+ * allows a little slack for the difference between the routed centre-line and
+ * the actual verge, and nothing more.
+ */
+export const ROAD_TOLERANCE_M = 50;
+export const ROAD_TOLERANCE_KM = ROAD_TOLERANCE_M / 1000;
 
 export type RoadCorridor = {
   id: string;

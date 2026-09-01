@@ -10,6 +10,7 @@ import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
 import {
   TILE_ATTRIBUTION,
+  TILE_LABEL_URL,
   TILE_URL,
   currentLocationIcon,
   destinationPinIcon,
@@ -94,6 +95,7 @@ export default function TripMap({
       className="h-full w-full"
     >
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {/* Travelled portion, faded out behind the bus. */}
       <Polyline
