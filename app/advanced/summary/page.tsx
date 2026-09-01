@@ -74,6 +74,7 @@ export default function AdvancedSummaryPage() {
           schedule_id: schedule.id,
           travel_date: travelDate,
           seat_numbers: seat.seatNumbers,
+          dropoff_station_id: dropoff?.id ?? null,
           ticket_id: ticketId,
           status: "confirmed",
           total_price: seat.totalPrice,
@@ -85,20 +86,6 @@ export default function AdvancedSummaryPage() {
 
     if (insertError || !booking) {
       throw new Error(insertError?.message ?? "Could not create booking.");
-    }
-
-    // Best-effort, for the same reason as the seat count below: the drop-off
-    // columns were added after the live table, so writing them separately means
-    // a database that has not run the migration still takes the booking.
-    if (dropoff) {
-      try {
-        await supabase
-          .from("advanced_bookings")
-          .update({ dropoff_station_id: dropoff.id })
-          .eq("id", booking.id);
-      } catch {
-        // Column missing on an un-migrated database; the booking still stands.
-      }
     }
 
     // Best-effort: the booking above already succeeded, so a failure here must never
