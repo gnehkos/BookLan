@@ -1,20 +1,17 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Polyline, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
+import { MapPin } from "lucide-react";
+import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
+import { TILE_ATTRIBUTION, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
+import { useRoadRoute } from "@/lib/useRoadRoute";
+import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
 
 const EARTH_RADIUS_KM = 6371;
-
-/**
- * Public OSRM demo server. It has no API key and no uptime guarantee and its
- * usage policy rules out production traffic — swap in a keyed provider (Mapbox
- * Directions, Google Routes) or a self-hosted OSRM before launch. If the call
- * fails we fall back to a straight line so the map still works.
- */
-const OSRM_ROUTE_URL = "https://router.project-osrm.org/route/v1/driving";
 
 function hash(value: string) {
   let h = 2166136261;
@@ -55,29 +52,39 @@ function offsetPosition(
   return [(lat2 * 180) / Math.PI, (lng2 * 180) / Math.PI];
 }
 
-const userIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:18px;height:18px;border-radius:9999px;background:${colors.secondary};border:3px solid white;box-shadow:0 0 0 4px ${colors.secondary}33;"></div>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
-const busIcon = L.divIcon({
-  className: "",
-  html: `<div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:white;border:1.5px solid ${colors.border};box-shadow:0 3px 5px rgba(13,17,23,0.16);font-size:18px;">\u{1F68C}</div>`,
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-  popupAnchor: [0, -19],
-});
-
 /** Keeps the whole route in view as its geometry arrives. */
-function FitRoute({ points }: { points: [number, number][] }) {
+/**
+ * Frames the approach once. Re-fitting on every countdown tick made the map
+ * judder and creep inward; after the first fit the bus is followed by panning
+ * only when it drifts out of view.
+ */
+function FitOnce({
+  points,
+  bottomPadding,
+  follow,
+}: {
+  points: LatLng[];
+  bottomPadding: number;
+  follow: LatLng;
+}) {
   const map = useMap();
+  const fitted = useRef(false);
 
   useEffect(() => {
-    if (points.length < 2) return;
-    map.fitBounds(L.latLngBounds(points).pad(0.25));
-  }, [map, points]);
+    if (fitted.current || points.length < 2) return;
+    fitted.current = true;
+    map.fitBounds(L.latLngBounds(points), {
+      paddingTopLeft: [24, 72],
+      paddingBottomRight: [24, bottomPadding],
+      animate: false,
+    });
+  }, [map, points, bottomPadding]);
+
+  useEffect(() => {
+    if (!fitted.current) return;
+    if (map.getBounds().pad(-0.2).contains(follow)) return;
+    map.panTo(follow, { animate: true, duration: 1.2 });
+  }, [map, follow]);
 
   return null;
 }
@@ -90,6 +97,7 @@ export default function TrackingMap({
   company,
   destination,
   etaMinutes,
+  panelHeight,
 }: {
   lat: number;
   lng: number;
@@ -98,96 +106,70 @@ export default function TrackingMap({
   company: string;
   destination: string;
   etaMinutes: number;
+  panelHeight: number;
 }) {
-  const pickup: [number, number] = [lat, lng];
-  const busPosition = offsetPosition(pickup, distanceKm, hash(bookingId) % 360);
-  const [roadRoute, setRoadRoute] = useState<[number, number][] | null>(null);
+  const pickup: LatLng = [lat, lng];
 
-  useEffect(() => {
-    if (distanceKm <= 0) {
-      setRoadRoute(null);
-      return;
-    }
+  // Anchor the route to where the bus started so the geometry is fetched once
+  // and the marker slides along it, instead of re-routing every countdown tick.
+  const startDistance = useRef(distanceKm);
+  if (distanceKm > startDistance.current) startDistance.current = distanceKm;
+  const startPosition = offsetPosition(pickup, startDistance.current, hash(bookingId) % 360);
 
-    let cancelled = false;
-    const controller = new AbortController();
+  const roadRoute = useRoadRoute(startPosition, pickup);
+  const path: LatLng[] = roadRoute ?? [startPosition, pickup];
 
-    async function loadRoute() {
-      try {
-        const from = `${busPosition[1]},${busPosition[0]}`;
-        const to = `${pickup[1]},${pickup[0]}`;
-        const response = await fetch(
-          `${OSRM_ROUTE_URL}/${from};${to}?overview=full&geometries=geojson`,
-          { signal: controller.signal }
-        );
-        if (!response.ok) return;
-
-        const data = await response.json();
-        const coordinates: [number, number][] | undefined =
-          data?.routes?.[0]?.geometry?.coordinates;
-        if (!coordinates || cancelled) return;
-
-        // GeoJSON is [lng, lat]; Leaflet wants [lat, lng].
-        setRoadRoute(coordinates.map(([clng, clat]) => [clat, clng]));
-      } catch {
-        // Offline or the demo server is unhappy — the straight-line fallback stands.
-      }
-    }
-
-    loadRoute();
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-    // Re-route whenever the bus moves closer.
-  }, [bookingId, distanceKm, lat, lng]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const linePoints = roadRoute ?? [busPosition, pickup];
+  const travelled =
+    startDistance.current > 0 ? 1 - distanceKm / startDistance.current : 1;
+  const busPosition = pointAtFraction(path, travelled);
+  const linePoints = sliceFrom(path, travelled);
 
   return (
     <MapContainer
-      bounds={L.latLngBounds([pickup, busPosition]).pad(0.4)}
+      bounds={L.latLngBounds([pickup, startPosition]).pad(0.4)}
       zoomControl={false}
       className="h-full w-full"
-      attributionControl={false}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
 
       {distanceKm > 0 && (
         <>
           <Polyline
             positions={linePoints}
+            // `booklan-route` animates the dashes toward the pickup pin.
+            className="booklan-route"
             pathOptions={{
               color: colors.primary,
-              weight: 5,
-              opacity: 0.85,
-              // Dashed only while we're guessing with a straight line.
-              dashArray: roadRoute ? undefined : "8 8",
+              weight: 4,
+              opacity: 0.9,
               lineCap: "round",
               lineJoin: "round",
             }}
           />
-          <FitRoute points={linePoints} />
+          <FitOnce points={path} bottomPadding={panelHeight} follow={busPosition} />
         </>
       )}
 
-      <Marker position={pickup} icon={userIcon}>
-        <Tooltip permanent direction="top" offset={[0, -10]}>
-          You
-        </Tooltip>
-      </Marker>
+      {/* The "You" label is baked into the marker itself. */}
+      <Marker position={pickup} icon={userIcon} />
 
       {distanceKm > 0 && (
-        <Marker position={busPosition} icon={busIcon}>
+        <Marker position={busPosition} icon={vehicleIcon(company)}>
           <Popup>
-            <span className="block text-[13px] font-extrabold text-text-primary">{company}</span>
-            <span className="block text-[11px] text-text-secondary">to {destination}</span>
-            <span className="mt-0.5 block text-[12px] font-bold text-primary">
-              {etaMinutes} min · {distanceKm} km away
+            <span className="block text-[14px] font-semibold text-text-primary">{company}</span>
+            <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
+              <MapPin className="h-3 w-3 text-text-secondary" />
+              <span className="font-medium text-text-primary">{distanceKm} km</span>
+              <span>· to {destination}</span>
+            </span>
+            <span className="mt-1 block text-[16px] font-bold text-primary">
+              {etaMinutes} min away
             </span>
           </Popup>
         </Marker>
       )}
+
+      <RecenterControl target={pickup} zoom={13} label="Recenter to my location" />
     </MapContainer>
   );
 }

@@ -4,25 +4,21 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Rectangle } from "react-leaflet";
-import { colors } from "@/constants/theme";
+import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
 import { NATIONAL_ROADS, ROAD_TOLERANCE_KM, isPickupAllowed } from "@/lib/geo";
+import { TILE_ATTRIBUTION, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
+
+/** Zone colours are deliberately deeper than the UI status colours so the
+ *  overlays stay readable at 15% fill over pale map tiles. */
+const NO_PICKUP_RED = "#DC2626";
+const PICKUP_GREEN = "#16A34A";
 
 /** Covers all of Cambodia — everything here is no-pickup unless a road is drawn over it. */
 const NO_PICKUP_BOUNDS: L.LatLngBoundsExpression = [
   [9.5, 102.0],
   [15.0, 108.0],
 ];
-
-function pinIcon(allowed: boolean) {
-  const fill = allowed ? colors.success : colors.error;
-  return L.divIcon({
-    className: "",
-    html: `<div style="width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${fill};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.35);"></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-  });
-}
 
 function DraggableMarker({
   position,
@@ -51,7 +47,7 @@ function DraggableMarker({
     <Marker
       draggable
       position={position}
-      icon={pinIcon(allowed)}
+      icon={dropPinIcon(allowed)}
       eventHandlers={eventHandlers}
       ref={markerRef}
     />
@@ -96,17 +92,19 @@ export default function PickupMap({
   const allowed = isPickupAllowed(position[0], position[1]);
 
   return (
-    <MapContainer center={center} zoom={12} className="h-full w-full" attributionControl={false}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <MapContainer center={center} zoom={12} zoomControl={false} className="h-full w-full">
+      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
 
-      {/* No-pickup wash over everything… */}
+      {/* No-pickup wash over everything, with a dashed red edge… */}
       <Rectangle
         bounds={NO_PICKUP_BOUNDS}
         pathOptions={{
-          color: colors.error,
-          weight: 0,
-          fillColor: colors.error,
-          fillOpacity: 0.12,
+          color: NO_PICKUP_RED,
+          weight: 2,
+          dashArray: "8 6",
+          opacity: 0.55,
+          fillColor: NO_PICKUP_RED,
+          fillOpacity: 0.15,
         }}
       />
 
@@ -116,10 +114,10 @@ export default function PickupMap({
           key={`${road.id}-corridor`}
           positions={road.path}
           pathOptions={{
-            color: colors.success,
+            color: PICKUP_GREEN,
             // Roughly the tolerance band, in screen terms, at this zoom.
             weight: ROAD_TOLERANCE_KM * 9,
-            opacity: 0.3,
+            opacity: 0.15,
             lineCap: "round",
             lineJoin: "round",
           }}
@@ -129,11 +127,19 @@ export default function PickupMap({
         <Polyline
           key={road.id}
           positions={road.path}
-          pathOptions={{ color: colors.success, weight: 3, opacity: 0.9 }}
+          pathOptions={{
+            color: PICKUP_GREEN,
+            weight: 3,
+            opacity: 0.9,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
         />
       ))}
 
       <DraggableMarker position={position} allowed={allowed} onChange={handleChange} />
+
+      <RecenterControl target={position} zoom={14} label="Recenter to my pin" />
     </MapContainer>
   );
 }

@@ -2,10 +2,11 @@
 
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
-import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { colors } from "@/constants/theme";
+import { MapPin } from "lucide-react";
+import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
+import { TILE_ATTRIBUTION, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
 
 export type MapVehicle = {
   id: string;
@@ -57,24 +58,6 @@ function offsetPosition(
   return [(lat2 * 180) / Math.PI, (lng2 * 180) / Math.PI];
 }
 
-function vehicleIcon(type: "bus" | "van") {
-  const emoji = type === "bus" ? "\u{1F68C}" : "\u{1F690}";
-  return L.divIcon({
-    className: "",
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;background:white;border:1.5px solid ${colors.border};box-shadow:0 3px 5px rgba(13,17,23,0.16);font-size:18px;">${emoji}</div>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -19],
-  });
-}
-
-const userIcon = L.divIcon({
-  className: "",
-  html: `<div style="width:18px;height:18px;border-radius:9999px;background:${colors.secondary};border:3px solid white;box-shadow:0 0 0 4px ${colors.secondary}33;"></div>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
-});
-
 export default function BusMap({ vehicles = [] }: { vehicles?: MapVehicle[] }) {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
@@ -106,36 +89,35 @@ export default function BusMap({ vehicles = [] }: { vehicles?: MapVehicle[] }) {
       scrollWheelZoom={false}
       zoomControl={false}
       className="h-full w-full"
-      attributionControl={false}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
 
-      {userPos && (
-        <Marker position={userPos} icon={userIcon}>
-          <Popup>You are here</Popup>
-        </Marker>
-      )}
+      {userPos && <Marker position={userPos} icon={userIcon} />}
 
       {vehicles.map((vehicle) => {
         const bearing = hash(vehicle.id) % 360;
         const position = offsetPosition(center, vehicle.distanceKm, bearing);
 
         return (
-          <Marker key={vehicle.id} position={position} icon={vehicleIcon(vehicle.vehicleType)}>
+          <Marker key={vehicle.id} position={position} icon={vehicleIcon(vehicle.company)}>
             <Popup>
-              <span className="block text-[13px] font-extrabold text-text-primary">
+              <span className="block text-[14px] font-semibold text-text-primary">
                 {vehicle.company}
               </span>
-              <span className="block text-[11px] text-text-secondary">
-                {vehicle.distanceKm} km away · {vehicle.destination}
+              <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
+                <MapPin className="h-3 w-3 text-text-secondary" />
+                <span className="font-medium text-text-primary">{vehicle.distanceKm} km</span>
+                <span>· {vehicle.destination}</span>
               </span>
-              <span className="mt-0.5 block text-[13px] font-extrabold text-primary">
+              <span className="mt-1 block text-[16px] font-bold text-primary">
                 ${vehicle.price.toFixed(2)}
               </span>
             </Popup>
           </Marker>
         );
       })}
+
+      <RecenterControl target={userPos ?? center} zoom={11} label="Recenter to my location" />
     </MapContainer>
   );
 }

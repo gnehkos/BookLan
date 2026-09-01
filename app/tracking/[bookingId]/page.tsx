@@ -3,9 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { AlertTriangle, ArrowLeft, MessageCircle, Phone, Send, Ticket, X } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Loader2,
+  MessageCircle,
+  Phone,
+  Send,
+  Ticket,
+  X,
+} from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav from "@/components/BottomNav";
+import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
@@ -23,6 +33,20 @@ const DRIVER_PHONE = "+85512345678";
 type VehicleType = "bus" | "van";
 
 type ChatMessage = { id: number; from: "you" | "driver"; text: string };
+
+/**
+ * Pickup handover. In production the driver's app approves the ticket and the
+ * passenger's app follows; with no driver app yet, the bus closes the distance
+ * on a timer and the approval is simulated so the flow can be demonstrated.
+ */
+type TripPhase = "approaching" | "verifying" | "approved";
+
+/** Roughly how tall the floating panel is, so the map can frame around it. */
+const PANEL_HEIGHT = 220;
+
+const APPROACH_TICK_MS = 1500;
+const VERIFY_MS = 2600;
+const APPROVED_MS = 1400;
 
 type BookingRow = {
   id: string;
@@ -57,6 +81,7 @@ export default function TrackingPage() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [phase, setPhase] = useState<TripPhase>("approaching");
   const distanceRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -115,26 +140,41 @@ export default function TrackingPage() {
     };
   }, [bookingId]);
 
+  // Drive the bus in over a few seconds so the approach is actually visible.
   useEffect(() => {
-    if (distance === null || distance <= 0) return;
+    if (phase !== "approaching" || distance === null || distance <= 0) return;
 
     const interval = setInterval(async () => {
       const current = distanceRef.current;
       if (current === null || current <= 0) return;
 
-      const drop = Math.floor(Math.random() * 3) + 1;
-      const next = Math.max(0, current - drop);
+      const step = Math.max(1, Math.ceil(current / 4));
+      const next = Math.max(0, current - step);
       setDistance(next);
       await supabase.from("bookings").update({ distance_remaining_km: next }).eq("id", bookingId);
-    }, 30000);
+    }, APPROACH_TICK_MS);
 
     return () => clearInterval(interval);
-  }, [bookingId, distance]);
+  }, [bookingId, distance, phase]);
 
-  async function handleVehicleArrived() {
-    setDistance(0);
-    await supabase.from("bookings").update({ distance_remaining_km: 0 }).eq("id", bookingId);
-  }
+  // Arrived → the driver checks the ticket → approves → the trip begins.
+  useEffect(() => {
+    if (phase !== "approaching" || distance === null || distance > 0) return;
+    const timer = setTimeout(() => setPhase("verifying"), 600);
+    return () => clearTimeout(timer);
+  }, [distance, phase]);
+
+  useEffect(() => {
+    if (phase !== "verifying") return;
+    const timer = setTimeout(() => setPhase("approved"), VERIFY_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "approved") return;
+    const timer = setTimeout(() => router.push(`/trip/${bookingId}`), APPROVED_MS);
+    return () => clearTimeout(timer);
+  }, [phase, router, bookingId]);
 
   async function handleConfirmCancel() {
     setCancelling(true);
@@ -196,7 +236,6 @@ export default function TrackingPage() {
     );
   }
 
-  const arrived = distance <= 0;
   const companyName = booking.active_trips?.companies?.name ?? "Your bus";
   const destination = booking.active_trips?.destination ?? "your destination";
   const etaMinutes = Math.round((distance / AVG_SPEED_KMH) * 60);
@@ -215,6 +254,7 @@ export default function TrackingPage() {
             company={companyName}
             destination={destination}
             etaMinutes={etaMinutes}
+            panelHeight={PANEL_HEIGHT + NAV_CLEARANCE}
           />
         </div>
 
@@ -228,27 +268,32 @@ export default function TrackingPage() {
           </button>
         </div>
 
-        <div
-          className="absolute inset-x-0 z-20 rounded-t-[24px] border border-border bg-white px-5 pt-4 shadow-[0_-8px_28px_rgba(13,17,23,0.14)]"
-          style={{ bottom: 68 }}
-        >
-          {/* Anchored to the sheet so it always clears it, whatever the height. */}
-          <span className="absolute -top-11 left-4 inline-flex items-center gap-1.5 rounded-pill border border-border bg-white px-3 py-1.5 shadow-sm">
-            <Ticket className="h-[13px] w-[13px] text-primary" />
-            <span className="font-mono text-[12px] font-bold text-text-primary">
+        {/* Ticket pill — what the driver checks against on arrival. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-end px-4 pt-5">
+          <span className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-white px-3 py-1.5 shadow-[var(--shadow-float)]">
+            <Ticket className="h-3.5 w-3.5 text-primary" />
+            <span className="font-mono text-[12px] font-medium text-text-primary">
               {booking.ticket_id}
             </span>
           </span>
+        </div>
 
+        {/* Floating panel: detached from the edges and clear of the nav. */}
+        <div
+          className="absolute inset-x-4 z-20 rounded-[16px] bg-white p-4 shadow-[var(--shadow-float)]"
+          style={{ bottom: NAV_CLEARANCE + 8 }}
+        >
           <div className="flex items-center gap-3">
-            <div className="flex flex-1 flex-col">
-              <span className="text-[15px] font-extrabold text-text-primary">{companyName}</span>
-              <span className="text-[12px] text-text-secondary">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-[16px] font-semibold text-text-primary">
+                {companyName}
+              </span>
+              <span className="truncate text-[12px] text-text-secondary">
                 Seat{booking.seat_numbers.length > 1 ? "s" : ""} {booking.seat_numbers.join(", ")} ·
                 to {destination}
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setShowCallModal(true)}
                 aria-label="Call driver"
@@ -266,33 +311,48 @@ export default function TrackingPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex items-baseline justify-center gap-2">
-            {arrived ? (
-              <span className="text-[24px] font-extrabold text-success">Your bus has arrived</span>
-            ) : (
-              <>
-                <span className="text-[13px] font-semibold text-text-secondary">Arriving in</span>
-                <span className="text-[40px] font-extrabold leading-none text-primary">
+          {phase === "approaching" && (
+            <>
+              <div className="mt-4 flex items-baseline justify-center gap-2">
+                <span className="text-[12px] text-text-secondary">Arriving in</span>
+                <span className="text-[36px] font-bold leading-none text-primary">
                   {etaMinutes}
                 </span>
-                <span className="text-[15px] font-bold text-text-secondary">
+                <span className="text-[14px] font-medium text-text-secondary">
                   min · {distance} km
                 </span>
-              </>
-            )}
-          </div>
+              </div>
 
-          <div className="mt-4 flex flex-col gap-2 pb-5">
-            <Button disabled={arrived} onClick={handleVehicleArrived}>
-              Vehicle Arrived
-            </Button>
-            <button
-              onClick={() => setShowCancelConfirm(true)}
-              className="flex h-12 w-full items-center justify-center rounded-card border border-error text-[15px] font-semibold text-error hover:bg-error/5"
-            >
-              Cancel Booking
-            </button>
-          </div>
+              <button
+                onClick={() => setShowCancelConfirm(true)}
+                className="mt-4 flex h-11 w-full items-center justify-center rounded-[12px] border border-error text-[14px] font-semibold text-error hover:bg-error/5"
+              >
+                Cancel Booking
+              </button>
+            </>
+          )}
+
+          {phase === "verifying" && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+              <span className="text-[16px] font-semibold text-text-primary">
+                Driver is verifying your ticket
+              </span>
+              <span className="text-center text-[12px] text-text-secondary">
+                Show {booking.ticket_id} to the driver.
+              </span>
+            </div>
+          )}
+
+          {phase === "approved" && (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <CheckCircle2 className="h-8 w-8 animate-[pop-in_0.5s_ease-out] text-success" />
+              <span className="text-[16px] font-semibold text-text-primary">
+                Ticket approved — you&apos;re on board
+              </span>
+              <span className="text-[12px] text-text-secondary">Starting your trip…</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -302,7 +362,7 @@ export default function TrackingPage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
               <Phone className="h-6 w-6 text-primary" />
             </div>
-            <span className="text-lg font-bold text-text-primary">{DRIVER_NAME}</span>
+            <span className="text-[16px] font-semibold text-text-primary">{DRIVER_NAME}</span>
             <span className="text-[13px] text-text-secondary">Driver · {companyName}</span>
             <span className="font-mono text-2xl font-bold text-text-primary">{DRIVER_PHONE}</span>
             <div className="mt-2 flex w-full flex-col gap-2">
@@ -383,7 +443,7 @@ export default function TrackingPage() {
         <Modal onClose={() => setShowCancelConfirm(false)}>
           <div className="flex flex-col items-center gap-3 px-6 pb-6">
             <AlertTriangle className="h-8 w-8 text-error" />
-            <h2 className="text-lg font-bold text-text-primary">Cancel this booking?</h2>
+            <h2 className="text-[16px] font-semibold text-text-primary">Cancel this booking?</h2>
             <p className="text-center text-[14px] text-text-secondary">
               This can&apos;t be undone. Your seat will be released.
             </p>

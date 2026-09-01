@@ -6,6 +6,8 @@ import { CalendarClock, Ticket as TicketIcon } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
+import Price from "@/components/Price";
+import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { releaseScheduleSeats, releaseTripSeats } from "@/lib/seats";
 
@@ -164,7 +166,7 @@ export default function BookingsPage() {
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-28">
         <div className="bg-white px-4 pt-6 pb-4">
-          <h1 className="text-lg font-extrabold text-text-primary">My Bookings</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">My Bookings</h1>
         </div>
 
         <div className="flex gap-1 px-4 pt-4">
@@ -186,8 +188,8 @@ export default function BookingsPage() {
         <div className="flex flex-col gap-3 px-4 pt-4">
           {loading && (
             <>
-              <div className="h-32 w-full animate-pulse rounded-card bg-white" />
-              <div className="h-32 w-full animate-pulse rounded-card bg-white" />
+              <div className="h-32 w-full animate-pulse rounded-[12px] bg-white" />
+              <div className="h-32 w-full animate-pulse rounded-[12px] bg-white" />
             </>
           )}
 
@@ -287,7 +289,7 @@ function ScheduledCard({
   const cancelled = booking.status === "cancelled";
 
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
           <RouteLine origin={schedule?.origin} destination={schedule?.destination} />
@@ -295,9 +297,7 @@ function ScheduledCard({
             <span className="text-[13px] font-semibold text-text-secondary">
               {company?.name ?? "Unknown company"}
             </span>
-            <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
-              {company?.vehicle_type ?? "bus"}
-            </span>
+            <VehicleBadge type={company?.vehicle_type ?? "bus"} />
           </div>
         </div>
         <StatusBadge status={booking.status} />
@@ -333,9 +333,7 @@ function ScheduledCard({
 
       <div className="flex items-center justify-between border-t border-border pt-3">
         <span className="text-[13px] text-text-secondary">Total paid</span>
-        <span className="text-[15px] font-extrabold text-primary">
-          ${booking.total_price.toFixed(2)}
-        </span>
+        <Price amount={booking.total_price} />
       </div>
 
       {!cancelled && !confirmingCancel && (
@@ -379,7 +377,7 @@ function BookingCard({
   const isCancelled = booking.status === "cancelled";
 
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
           <RouteLine
@@ -390,9 +388,7 @@ function BookingCard({
             <span className="text-[13px] font-semibold text-text-secondary">
               {company?.name ?? "Unknown company"}
             </span>
-            <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
-              {company?.vehicle_type ?? "bus"}
-            </span>
+            <VehicleBadge type={company?.vehicle_type ?? "bus"} />
           </div>
           <span className="text-[13px] text-text-secondary">
             {booking.seat_numbers.length > 1 ? "Seats" : "Seat"}{" "}
@@ -422,9 +418,7 @@ function BookingCard({
 
       <div className="flex items-center justify-between border-t border-border pt-3">
         <span className="text-[13px] text-text-secondary">Total paid</span>
-        <span className="text-[15px] font-extrabold text-primary">
-          ${booking.total_price.toFixed(2)}
-        </span>
+        <Price amount={booking.total_price} />
       </div>
 
       {tab === "active" && !confirmingCancel && (

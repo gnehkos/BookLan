@@ -160,8 +160,8 @@ export default function SearchPage() {
         <div className="mt-4 flex flex-col gap-2 px-4">
           {loading && (
             <>
-              <div className="h-16 w-full animate-pulse rounded-card bg-surface" />
-              <div className="h-16 w-full animate-pulse rounded-card bg-surface" />
+              <div className="h-16 w-full animate-pulse rounded-[12px] bg-surface" />
+              <div className="h-16 w-full animate-pulse rounded-[12px] bg-surface" />
             </>
           )}
 

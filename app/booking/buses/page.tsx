@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import DistanceLabel from "@/components/DistanceLabel";
+import Price from "@/components/Price";
+import VehicleBadge from "@/components/VehicleBadge";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
@@ -126,7 +129,7 @@ export default function BusesPage() {
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-lg font-bold text-text-primary">Buses to {destination}</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">Buses to {destination}</h1>
         </div>
 
         <div className="flex items-center gap-2 bg-white px-4 pb-4 text-[13px] text-text-secondary">
@@ -164,8 +167,8 @@ export default function BusesPage() {
         <div className="flex flex-col gap-3 px-4">
           {loading && (
             <>
-              <div className="h-28 w-full animate-pulse rounded-card bg-white" />
-              <div className="h-28 w-full animate-pulse rounded-card bg-white" />
+              <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
+              <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
             </>
           )}
 
@@ -189,37 +192,37 @@ export default function BusesPage() {
               return (
                 <div
                   key={trip.id}
-                  className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm"
+                  className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex flex-1 flex-col gap-1.5">
-                      <span className="flex items-center gap-1.5 text-[15px] font-bold text-text-primary">
-                        {trip.origin}
-                        <span className="text-text-muted">→</span>
-                        {trip.destination}
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <span className="truncate text-[16px] font-semibold text-text-primary">
+                        {trip.origin} → {trip.destination}
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-text-secondary">
+                        <span className="truncate text-[14px] text-text-secondary">
                           {trip.companies?.name ?? "Unknown company"}
                         </span>
-                        <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
-                          {trip.companies?.vehicle_type ?? "bus"}
-                        </span>
+                        <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-text-secondary">
-                        <span>{trip.distance_km} km away</span>
-                        <span>~{etaMinutes} min</span>
-                        <span className={lowSeats ? "font-semibold text-error" : ""}>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <DistanceLabel km={trip.distance_km} suffix="away" />
+                        <span className="text-[12px] text-text-secondary">~{etaMinutes} min</span>
+                        <span
+                          className={`text-[12px] ${
+                            lowSeats ? "font-medium text-error" : "text-text-secondary"
+                          }`}
+                        >
                           {trip.seats_available} seats left
                         </span>
                       </div>
                     </div>
-                    <span className="text-[15px] font-extrabold text-primary">${price}</span>
+                    <Price amount={Number(price)} />
                   </div>
 
                   <button
                     onClick={() => selectTrip(trip)}
-                    className="h-10 w-full rounded-[12px] bg-gradient-to-b from-primary to-primary-dark text-[14px] font-semibold text-white hover:brightness-110"
+                    className="h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
                   >
                     Select
                   </button>

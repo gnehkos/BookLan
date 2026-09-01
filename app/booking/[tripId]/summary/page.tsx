@@ -134,7 +134,7 @@ export default function SummaryPage() {
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-lg font-bold text-text-primary">Confirm Booking</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">Confirm Booking</h1>
         </div>
 
         <div className="mx-4 mt-4 flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm">

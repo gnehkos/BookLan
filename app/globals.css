@@ -36,6 +36,8 @@
   --font-sans: var(--font-jakarta);
   --radius-card: 16px;
   --radius-pill: 100px;
+  /* The one floating-element shadow used across cards, sheets and nav. */
+  --shadow-float: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 body {
@@ -64,5 +66,154 @@ body {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   Leaflet theming
+   Marker markup is injected by Leaflet as raw HTML (divIcon), outside React,
+   so these live here as plain CSS rather than utility classes.
+   ========================================================================== */
+
+.leaflet-container {
+  background: #eef2f6;
+  font-family: inherit;
+  outline: none;
+}
+
+/* Kill the default focus ring that clashes with the design. */
+.leaflet-container:focus,
+.leaflet-container *:focus,
+.leaflet-interactive:focus {
+  outline: none;
+}
+
+/* Popups as design-system cards. */
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-float);
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  font-family: inherit;
+  line-height: 1.35;
+}
+
+.leaflet-popup-tip {
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.leaflet-popup-close-button {
+  display: none;
+}
+
+/* Attribution kept legally intact but visually quiet. */
+.leaflet-control-attribution {
+  padding: 1px 6px !important;
+  border-radius: 6px 0 0 0;
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: var(--color-text-muted) !important;
+  font-size: 9px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-text-muted) !important;
+}
+
+/* --- User location marker: navy dot with a pulsing ring and a "You" pill --- */
+.booklan-user-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.booklan-user-dot {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #ffffff;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: 0 1px 4px rgba(13, 17, 23, 0.3);
+}
+
+.booklan-user-pulse {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-primary);
+  border-radius: 9999px;
+  animation: booklan-pulse 2.2s ease-out infinite;
+}
+
+@keyframes booklan-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+.booklan-user-label {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: var(--shadow-float);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+/* --- Vehicle / station markers: white circle, navy ring, initial inside --- */
+.booklan-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--color-primary);
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: var(--shadow-float);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.booklan-pin-drop {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgba(13, 17, 23, 0.35);
+}
+
+/* --- Tracking route: navy dashes that crawl toward the pickup pin --- */
+.booklan-route {
+  stroke-dasharray: 10 12;
+  stroke-linecap: round;
+  animation: booklan-dash 1.1s linear infinite;
+}
+
+@keyframes booklan-dash {
+  to {
+    stroke-dashoffset: -22;
   }
 }

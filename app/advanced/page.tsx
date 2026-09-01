@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRightLeft, Clock, Users } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
+import Price from "@/components/Price";
+import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { CITIES } from "@/constants/booking";
 
@@ -95,7 +97,7 @@ export default function AdvancedBookingPage() {
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-24">
         <div className="bg-white px-4 pt-6 pb-4">
-          <h1 className="text-lg font-bold text-text-primary">Advanced Booking</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">Advanced Booking</h1>
           <p className="mt-1 text-[13px] text-text-secondary">
             Reserve a seat on a scheduled departure.
           </p>
@@ -170,8 +172,8 @@ export default function AdvancedBookingPage() {
           <div className="flex flex-col gap-3 px-4 pt-4">
             {loading && (
               <>
-                <div className="h-28 w-full animate-pulse rounded-card bg-white" />
-                <div className="h-28 w-full animate-pulse rounded-card bg-white" />
+                <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
+                <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
               </>
             )}
 
@@ -188,37 +190,30 @@ export default function AdvancedBookingPage() {
               schedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm"
+                  className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-[15px] font-bold text-text-primary">
-                      {schedule.origin}
-                      <span className="text-text-muted">→</span>
-                      {schedule.destination}
-                    </span>
-                    <span className="text-[15px] font-extrabold text-primary">
-                      ${schedule.price_per_seat.toFixed(2)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-1 items-center gap-2">
-                      <span className="text-[14px] font-semibold text-text-secondary">
-                        {schedule.companies?.name ?? "Unknown company"}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                      <span className="truncate text-[16px] font-semibold text-text-primary">
+                        {schedule.origin} → {schedule.destination}
                       </span>
-                      <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
-                        {schedule.companies?.vehicle_type ?? "bus"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-[14px] text-text-secondary">
+                          {schedule.companies?.name ?? "Unknown company"}
+                        </span>
+                        <VehicleBadge type={schedule.companies?.vehicle_type ?? "bus"} />
+                      </div>
                     </div>
+                    <Price amount={schedule.price_per_seat} />
                   </div>
 
-                  <div className="flex items-center gap-2 text-[15px] font-semibold text-text-primary">
+                  <div className="flex items-center gap-2 text-[14px] font-medium text-text-primary">
                     <span>{schedule.departure_time}</span>
                     <span className="text-text-secondary">→</span>
                     <span>{schedule.arrival_time}</span>
                   </div>
 
-                  <div className="flex items-center gap-4 text-[13px] text-text-secondary">
+                  <div className="flex items-center gap-3 text-[12px] text-text-secondary">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" /> {schedule.duration_hours}h
                     </span>
@@ -229,7 +224,7 @@ export default function AdvancedBookingPage() {
 
                   <button
                     onClick={() => selectSchedule(schedule)}
-                    className="h-10 w-full rounded-[12px] bg-gradient-to-b from-primary to-primary-dark text-[14px] font-semibold text-white hover:brightness-110"
+                    className="h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
                   >
                     Select
                   </button>

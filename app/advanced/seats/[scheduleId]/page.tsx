@@ -138,7 +138,7 @@ export default function AdvancedSeatsPage() {
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
           <div className="flex flex-col">
-            <h1 className="text-lg font-bold text-text-primary">
+            <h1 className="text-[16px] font-semibold text-text-primary">
               {schedule.companies?.name ?? "Unknown company"}
             </h1>
             <span className="text-[13px] text-text-secondary">

@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronRight, Search } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
+import { Bell, ChevronRight, ChevronUp, Search } from "lucide-react";
+import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import DistanceLabel from "@/components/DistanceLabel";
 import ErrorState from "@/components/ErrorState";
+import Price from "@/components/Price";
+import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import type { MapVehicle } from "@/components/BusMap";
@@ -30,9 +33,9 @@ type ActiveTrip = {
 
 type SortMode = "nearest" | "cheapest";
 
-const NAV_HEIGHT = 68;
-const COLLAPSED_SHEET_HEIGHT = 92;
-const EXPANDED_SHEET_HEIGHT = 380;
+const COLLAPSED_SHEET_HEIGHT = 84;
+// Viewport-relative so the panel still fits on short screens.
+const EXPANDED_SHEET_HEIGHT = "min(420px, 58vh)";
 const DRAG_THRESHOLD = 40;
 
 export default function HomePage() {
@@ -174,50 +177,52 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Floating panel: detached from the edges, sitting clear of the nav. */}
         <div
-          className="absolute inset-x-0 z-20 rounded-t-[24px] border border-border bg-white shadow-[0_-8px_28px_rgba(13,17,23,0.14)] transition-[height] duration-300 ease-out"
+          className="absolute inset-x-4 z-20 flex flex-col overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)] transition-[height] duration-300 ease-out"
           style={{
-            bottom: NAV_HEIGHT,
+            bottom: NAV_CLEARANCE + 8,
             height: expanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
           }}
         >
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             aria-expanded={expanded}
             aria-label={expanded ? "Collapse nearby buses" : "Expand nearby buses"}
             onPointerDown={(e) => handleDragStart(e.clientY)}
             onPointerUp={(e) => handleDragEnd(e.clientY)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") setExpanded((current) => !current);
-            }}
-            className="cursor-grab touch-none select-none px-4 pt-2.5 active:cursor-grabbing"
+            className="shrink-0 cursor-grab touch-none select-none px-4 pt-2.5 active:cursor-grabbing"
           >
-            <span className="mx-auto mb-3 block h-1 w-10 rounded-[2px] bg-border" />
-            <div className="flex items-center justify-between pb-2.5">
-              <span className="flex items-center gap-2 text-[14px] font-extrabold text-text-primary">
-                <span className="h-1.5 w-1.5 rounded-[3px] bg-success" />
-                Live near you
-                <span className="rounded-pill bg-success/10 px-2 py-0.5 text-[10px] font-bold tracking-[0.4px] text-success">
-                  LIVE
-                </span>
+            <span className="mx-auto mb-3 block h-1 w-9 rounded-pill bg-border" />
+            <div className="flex items-center gap-2 pb-3">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-success" />
+              <span className="text-[16px] font-semibold text-text-primary">Live near you</span>
+              <span className="rounded-pill bg-success/10 px-2 py-0.5 text-[10px] font-semibold tracking-[0.4px] text-success">
+                LIVE
               </span>
-              <span className="text-[12px] font-semibold text-text-secondary">
+              <span className="ml-auto text-[12px] text-text-secondary">
                 {sortedTrips.length} nearby
               </span>
+              <ChevronUp
+                className={`h-4 w-4 shrink-0 text-text-muted transition-transform duration-300 ${
+                  expanded ? "rotate-180" : ""
+                }`}
+              />
             </div>
-          </div>
+          </button>
 
           {expanded && (
             <>
-              <div className="flex items-center justify-between px-4 pb-2">
+              <div className="shrink-0 px-4 pb-3">
                 <div className="flex items-center gap-1 rounded-pill bg-surface p-1">
                   {(["nearest", "cheapest"] as SortMode[]).map((mode) => (
                     <button
                       key={mode}
                       onClick={() => setSortMode(mode)}
-                      className={`rounded-pill px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
-                        sortMode === mode ? "bg-primary text-white" : "text-text-secondary"
+                      className={`flex-1 rounded-pill px-3 py-1.5 text-[12px] font-medium capitalize transition-colors ${
+                        sortMode === mode
+                          ? "bg-primary text-white"
+                          : "text-text-secondary hover:bg-white"
                       }`}
                     >
                       {mode}
@@ -226,14 +231,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div
-                className="flex flex-col gap-2.5 overflow-y-auto px-4 pb-4"
-                style={{ maxHeight: 232 }}
-              >
+              {/* min-h-0 lets this flex child actually scroll instead of
+                  overflowing the panel and getting clipped at the bottom. */}
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4">
                 {loading && (
                   <>
-                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-card bg-surface" />
-                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-card bg-surface" />
+                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
+                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
                   </>
                 )}
 
@@ -256,31 +260,35 @@ export default function HomePage() {
                       <button
                         key={trip.id}
                         onClick={() => selectTrip(trip)}
-                        className="flex shrink-0 items-center gap-3 rounded-card border border-border bg-white p-3 text-left"
+                        className="flex shrink-0 items-center gap-3 rounded-[12px] bg-white p-4 text-left shadow-[var(--shadow-float)]"
                       >
-                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <div className="flex min-w-0 flex-1 flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="truncate text-[14px] font-bold text-text-primary">
+                            <span className="truncate text-[16px] font-semibold text-text-primary">
                               {trip.companies?.name ?? "Unknown company"}
                             </span>
-                            <span className="shrink-0 rounded-pill bg-surface px-2 py-0.5 text-[10px] font-medium capitalize text-text-secondary">
-                              {trip.companies?.vehicle_type ?? "bus"}
-                            </span>
+                            <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
                           </div>
-                          <span className="truncate text-[12px] text-text-secondary">
+                          <span className="truncate text-[14px] text-text-secondary">
                             {trip.origin} → {trip.destination}
                           </span>
-                          <div className="flex items-center gap-2.5 text-[11px] text-text-muted">
-                            <span>{trip.distance_km} km</span>
-                            <span>~{etaMinutes} min</span>
-                            <span className={lowSeats ? "font-semibold text-error" : ""}>
+                          <div className="flex items-center gap-3">
+                            <DistanceLabel km={trip.distance_km} />
+                            <span className="text-[12px] text-text-secondary">
+                              ~{etaMinutes} min
+                            </span>
+                            <span
+                              className={`text-[12px] ${
+                                lowSeats ? "font-medium text-error" : "text-text-secondary"
+                              }`}
+                            >
                               {trip.seats_available} seats
                             </span>
                           </div>
                         </div>
 
                         <div className="flex shrink-0 items-center gap-1">
-                          <span className="text-[15px] font-extrabold text-primary">${price}</span>
+                          <Price amount={Number(price)} />
                           <ChevronRight className="h-4 w-4 text-text-muted" />
                         </div>
                       </button>

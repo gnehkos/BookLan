@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Bus, Check, ChevronRight, MapPin, Star, X } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav from "@/components/BottomNav";
+import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
+import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH, SERVICE_FEE_USD } from "@/constants/booking";
 import { companyProfile } from "@/constants/companyProfile";
@@ -25,6 +26,9 @@ type TripDetail = {
 };
 
 type StoredPickup = { lat: number; lng: number; stationName?: string };
+
+/** Height of the sticky action bar, so scrolled content never hides under it. */
+const ACTION_BAR_HEIGHT = 92;
 
 export default function BusDetailPage() {
   const router = useRouter();
@@ -103,9 +107,9 @@ export default function BusDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-white">
-        <div className="w-full max-w-[390px] flex-1 px-4 pt-6 pb-24">
-          <div className="h-6 w-40 animate-pulse rounded bg-surface" />
+      <div className="flex min-h-screen flex-col items-center bg-surface">
+        <div className="w-full max-w-[390px] flex-1 px-4 pt-6">
+          <div className="h-6 w-40 animate-pulse rounded bg-white" />
         </div>
         <BottomNav />
       </div>
@@ -114,15 +118,15 @@ export default function BusDetailPage() {
 
   if (error || !trip) {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-white">
-        <div className="flex w-full max-w-[390px] flex-1 flex-col pb-24">
+      <div className="flex min-h-screen flex-col items-center bg-surface">
+        <div className="flex w-full max-w-[390px] flex-1 flex-col">
           <div className="flex items-center gap-2 px-4 pt-6 pb-3">
             <button
               onClick={() => router.back()}
               aria-label="Back"
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
+              className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white"
             >
-              <ArrowLeft className="h-6 w-6 text-text-primary" />
+              <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
             </button>
           </div>
           <ErrorState
@@ -136,205 +140,209 @@ export default function BusDetailPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-white">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col pb-40">
-        <div className="flex items-center gap-3 px-5 pt-6 pb-4">
+    <div className="flex min-h-screen justify-center bg-surface">
+      <div className="relative flex w-full max-w-[390px] flex-col">
+        <div className="flex items-center gap-3 px-4 pt-6 pb-4">
           <button
             onClick={() => router.back()}
             aria-label="Back"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-surface"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
-          <div className="flex flex-1 flex-col">
-            <h1 className="text-[18px] font-extrabold text-text-primary">{companyName}</h1>
-            <span className="text-[13px] capitalize text-text-muted">
-              {vehicleType} · {trip.origin} → {trip.destination}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h1 className="truncate text-[16px] font-semibold text-text-primary">
+              {companyName}
+            </h1>
+            <span className="text-[12px] text-text-secondary">
+              {trip.origin} → {trip.destination}
             </span>
           </div>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-bold text-primary">
-            <span className="h-1.5 w-1.5 rounded-[3px] bg-success" />
+          <span className="shrink-0 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-semibold text-primary">
             {trip.seats_available} seats
           </span>
         </div>
 
-        <div className="mx-5 overflow-hidden rounded-[18px] border border-border bg-surface">
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-[#eff6ff]">
-              <MapPin className="h-[13px] w-[13px] text-secondary" />
-            </div>
-            <div className="flex flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                PICKUP POINT
-              </span>
-              <span className="text-[13px] font-bold text-text-primary">
-                {pickup?.stationName ??
-                  (pickup
-                    ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`
-                    : "Not set yet")}
-              </span>
-            </div>
-          </div>
-
-          <div className="mx-4 h-px bg-border" />
-
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-accent">
-              <MapPin className="h-[13px] w-[13px] text-primary" />
-            </div>
-            <div className="flex flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                DESTINATION
-              </span>
-              <span className="text-[14px] font-bold text-primary">{trip.destination}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mx-5 mt-4 grid grid-cols-3 gap-2.5">
-          <InfoBox label="ETA" value={`${etaMinutes} min`} valueClass="text-warning" />
-          <InfoBox
-            label="Distance"
-            value={`${trip.distance_km} km`}
-            valueClass="text-text-secondary"
-          />
-          <InfoBox
-            label="Price"
-            value={`$${pricePerSeat.toFixed(2)}`}
-            valueClass="text-primary"
-          />
-        </div>
-
-        <div className="mx-5 mt-6 flex items-center gap-3">
-          <div className="flex flex-1 flex-col">
-            <span className="text-[14px] font-extrabold text-text-primary">{companyName}</span>
-            <span className="flex items-center gap-1.5 text-[11px] text-text-muted">
-              <Star className="h-[11px] w-[11px] fill-warning text-warning" />
-              <span className="text-[12px] font-bold text-text-primary">{profile.rating}</span>
-              · {profile.tripCount} trips
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 flex gap-2 px-5">
-          {profile.amenities.map((amenity) => (
-            <div
-              key={amenity.label}
-              className="flex-1 rounded-[10px] border border-border bg-surface py-2 text-center"
-            >
-              <span className={`text-[11px] font-bold ${amenity.colorClass}`}>
-                {amenity.label}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 flex gap-2 overflow-x-auto px-5 pb-1">
-          {[0, 1, 2].map((index) => (
-            <div
-              key={index}
-              className="flex h-[110px] w-[174px] shrink-0 items-center justify-center rounded-[12px] bg-gradient-to-br from-accent to-surface"
-            >
-              <Bus className="h-8 w-8 text-primary/40" strokeWidth={1.5} />
-            </div>
-          ))}
-        </div>
-
-        <h2 className="mt-5 px-5 text-[13px] font-extrabold text-text-primary">
-          Ratings &amp; Reviews
-        </h2>
-
-        <div className="mt-2.5 flex flex-col gap-2 px-5">
-          {profile.reviews.map((review) => (
-            <div
-              key={review.author}
-              className="flex flex-col gap-1.5 rounded-[12px] border border-border bg-surface p-3.5"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex h-[26px] w-[26px] items-center justify-center rounded-[13px] bg-accent">
-                  <span className="text-[12px] font-extrabold text-primary">
-                    {review.author.charAt(0)}
-                  </span>
-                </div>
-                <span className="flex-1 text-[13px] font-bold text-text-primary">
-                  {review.author}
+        {/* Content scrolls on its own and stops short of the sticky bar. */}
+        <div
+          className="flex flex-col gap-4 overflow-y-auto px-4"
+          style={{ paddingBottom: ACTION_BAR_HEIGHT + NAV_CLEARANCE }}
+        >
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="truncate text-[16px] font-semibold text-text-primary">
+                  {companyName}
                 </span>
-                <span className="flex gap-px">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-[11px] w-[11px] ${
-                        i < review.stars ? "fill-warning text-warning" : "text-border"
-                      }`}
-                    />
-                  ))}
+                <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+                  <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                  <span className="font-medium text-text-primary">{profile.rating}</span>
+                  <span>· {profile.tripCount} trips</span>
                 </span>
               </div>
-              <p className="text-[12px] text-text-secondary">{review.text}</p>
+              <VehicleBadge type={vehicleType} />
             </div>
-          ))}
+          </Card>
+
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface">
+                <MapPin className="h-4 w-4 text-text-secondary" />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[12px] text-text-secondary">Pickup point</span>
+                <span className="truncate text-[14px] font-medium text-text-primary">
+                  {pickup?.stationName ??
+                    (pickup
+                      ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`
+                      : "Not set yet")}
+                </span>
+              </div>
+            </div>
+
+            <div className="my-3 h-px bg-border" />
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent">
+                <MapPin className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[12px] text-text-secondary">Destination</span>
+                <span className="truncate text-[14px] font-medium text-text-primary">
+                  {trip.destination}
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          <div className="grid grid-cols-3 gap-3">
+            <InfoBox label="ETA" value={`${etaMinutes} min`} />
+            <InfoBox label="Distance" value={`${trip.distance_km} km`} />
+            <InfoBox label="Price" value={`$${pricePerSeat.toFixed(2)}`} emphasis />
+          </div>
+
+          <Card>
+            <span className="text-[16px] font-semibold text-text-primary">Photos</span>
+            <div className="mt-3 flex gap-3 overflow-x-auto">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="flex h-[104px] w-[168px] shrink-0 items-center justify-center rounded-[12px] bg-surface"
+                >
+                  <Bus className="h-8 w-8 text-text-muted" strokeWidth={1.5} />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <span className="text-[16px] font-semibold text-text-primary">Amenities</span>
+            <div className="mt-3 flex gap-3">
+              {profile.amenities.map((amenity) => (
+                <div
+                  key={amenity.label}
+                  className="flex-1 rounded-[12px] bg-surface py-2 text-center text-[12px] font-medium text-text-primary"
+                >
+                  {amenity.label}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <span className="text-[16px] font-semibold text-text-primary">Ratings &amp; Reviews</span>
+            <div className="mt-3 flex flex-col gap-3">
+              {profile.reviews.map((review) => (
+                <div key={review.author} className="rounded-[12px] bg-surface p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 text-[14px] font-medium text-text-primary">
+                      {review.author}
+                    </span>
+                    <span className="flex gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${
+                            i < review.stars ? "fill-warning text-warning" : "text-border"
+                          }`}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[12px] text-text-secondary">{review.text}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <span className="text-[16px] font-semibold text-text-primary">Policies</span>
+            <ul className="mt-3 flex flex-col gap-3">
+              {profile.policies.map((policy) => (
+                <li key={policy} className="flex items-start gap-3">
+                  <Check
+                    className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary"
+                    strokeWidth={2.5}
+                  />
+                  <span className="text-[12px] text-text-secondary">{policy}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </div>
 
-        <h2 className="mt-5 px-5 text-[13px] font-extrabold text-text-primary">Policies</h2>
-        <ul className="mt-2 flex flex-col gap-2 px-5">
-          {profile.policies.map((policy) => (
-            <li key={policy} className="flex items-start gap-2">
-              <Check className="mt-0.5 h-[15px] w-[15px] shrink-0 text-success" strokeWidth={2.5} />
-              <span className="text-[12px] text-text-secondary">{policy}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="fixed bottom-[92px] left-1/2 z-10 w-full max-w-[390px] -translate-x-1/2 px-5">
-        <button
-          onClick={() => setSeatSheetOpen(true)}
-          className="flex w-full items-center gap-3.5 rounded-card bg-gradient-to-b from-primary to-primary-dark p-4 text-left shadow-[0_6px_16px_rgba(26,58,92,0.3)]"
+        {/* Sticky action bar: always visible, content never renders beneath it. */}
+        <div
+          className="fixed inset-x-0 z-20 mx-auto w-full max-w-[390px] px-4"
+          style={{ bottom: NAV_CLEARANCE }}
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-white/15">
-            <Bus className="h-5 w-5 text-white" />
-          </span>
-          <span className="flex flex-1 flex-col">
-            <span className="text-[15px] font-extrabold text-white">Select Your Seats</span>
-            <span className="text-[12px] text-white/75">
-              {selectedSeats.length > 0
-                ? `${selectedSeats.length} selected · $${totalPrice.toFixed(2)}`
-                : "Pick from the vehicle layout"}
+          <button
+            onClick={() => setSeatSheetOpen(true)}
+            className="flex w-full items-center gap-3 rounded-[12px] bg-primary p-4 text-left shadow-[var(--shadow-float)]"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white/15">
+              <Bus className="h-5 w-5 text-white" />
             </span>
-          </span>
-          <ChevronRight className="h-[18px] w-[18px] shrink-0 text-white" />
-        </button>
+            <span className="flex flex-1 flex-col">
+              <span className="text-[14px] font-semibold text-white">Select Your Seats</span>
+              <span className="text-[12px] text-white/70">
+                {selectedSeats.length > 0
+                  ? `${selectedSeats.length} selected · $${totalPrice.toFixed(2)}`
+                  : "Pick from the vehicle layout"}
+              </span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-white" />
+          </button>
+        </div>
       </div>
 
       {seatSheetOpen && (
         <div
-          // Above the bottom nav (z-30), or the nav paints over the confirm button.
+          // Above the nav, or the nav paints over the confirm button.
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
           onClick={() => setSeatSheetOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex h-[60vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[28px] bg-white"
+            className="flex h-[60vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[24px] bg-white"
           >
-            <div className="flex items-start justify-between px-5 pt-5">
+            <div className="flex items-start justify-between px-4 pt-4">
               <div className="flex flex-col">
-                <h2 className="text-[18px] font-extrabold tracking-[-0.3px] text-text-primary">
-                  Select Seats
-                </h2>
-                <span className="text-[12px] text-text-muted">
-                  {companyName} · {vehicleType} · {trip.seats_total} seats total
+                <h2 className="text-[16px] font-semibold text-text-primary">Select Seats</h2>
+                <span className="text-[12px] text-text-secondary">
+                  {companyName} · {trip.seats_total} seats total
                 </span>
               </div>
               <button
                 onClick={() => setSeatSheetOpen(false)}
                 aria-label="Close seat selection"
-                className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-surface"
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface"
               >
                 <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 pt-4">
+            <div className="flex-1 overflow-y-auto px-4 pt-4">
               <SeatMap
                 seatsTotal={trip.seats_total}
                 seatsAvailable={trip.seats_available}
@@ -344,12 +352,12 @@ export default function BusDetailPage() {
               />
             </div>
 
-            <div className="border-t border-border px-5 pb-6 pt-4">
+            <div className="border-t border-border p-4 pb-6">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-semibold text-text-muted">Selected seats</span>
+                  <span className="text-[12px] text-text-secondary">Selected seats</span>
                   <span
-                    className={`text-[14px] font-bold ${
+                    className={`text-[14px] font-medium ${
                       selectedSeats.length ? "text-text-primary" : "text-text-muted"
                     }`}
                   >
@@ -357,8 +365,8 @@ export default function BusDetailPage() {
                   </span>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-[12px] font-semibold text-text-muted">Subtotal</span>
-                  <span className="text-[16px] font-extrabold text-primary">
+                  <span className="text-[12px] text-text-secondary">Subtotal</span>
+                  <span className="text-[20px] font-bold text-primary">
                     ${selectedSeats.length ? totalPrice.toFixed(2) : "0.00"}
                   </span>
                 </div>
@@ -378,21 +386,33 @@ export default function BusDetailPage() {
   );
 }
 
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">{children}</div>
+  );
+}
+
 function InfoBox({
   label,
   value,
-  valueClass,
+  emphasis,
 }: {
   label: string;
   value: string;
-  valueClass: string;
+  emphasis?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 rounded-[14px] border border-border bg-surface px-2.5 py-3">
-      <span className="text-[10px] font-bold uppercase tracking-[0.4px] text-text-muted">
-        {label}
+    <div className="flex flex-col items-center gap-1 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+      <span className="text-[12px] text-text-secondary">{label}</span>
+      <span
+        className={
+          emphasis
+            ? "text-[16px] font-bold text-primary"
+            : "text-[14px] font-medium text-text-primary"
+        }
+      >
+        {value}
       </span>
-      <span className={`text-[14px] font-extrabold ${valueClass}`}>{value}</span>
     </div>
   );
 }

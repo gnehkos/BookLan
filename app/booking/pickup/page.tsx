@@ -77,7 +77,7 @@ export default function PickupPage() {
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
-          <h1 className="text-lg font-extrabold text-text-primary">
+          <h1 className="text-[16px] font-semibold text-text-primary">
             {originMode === "station" ? "Where You'll Board" : "Confirm Pickup Location"}
           </h1>
         </div>

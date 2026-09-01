@@ -6,6 +6,7 @@ const PROTECTED_PREFIXES = [
   "/search",
   "/booking",
   "/tracking",
+  "/trip",
   "/bookings",
   "/advanced",
   "/profile",

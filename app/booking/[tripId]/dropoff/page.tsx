@@ -110,14 +110,14 @@ export default function DropoffPage() {
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-lg font-bold text-text-primary">Choose Drop-off Station</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">Choose Drop-off Station</h1>
         </div>
 
         <div className="flex flex-col gap-3 px-4 pt-4">
           {loading && (
             <>
-              <div className="h-32 w-full animate-pulse rounded-card bg-white" />
-              <div className="h-32 w-full animate-pulse rounded-card bg-white" />
+              <div className="h-32 w-full animate-pulse rounded-[12px] bg-white" />
+              <div className="h-32 w-full animate-pulse rounded-[12px] bg-white" />
             </>
           )}
 
