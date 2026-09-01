@@ -3,16 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Bell, ChevronRight, ChevronUp, Search } from "lucide-react";
+import { ChevronRight, ChevronUp, Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveBookingModal from "@/components/ActiveBookingModal";
+import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
-import DistanceLabel from "@/components/DistanceLabel";
 import ErrorState from "@/components/ErrorState";
-import Price from "@/components/Price";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
-import { AVG_SPEED_KMH } from "@/constants/booking";
 import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
 import type { MapVehicle } from "@/components/BusMap";
 
@@ -34,8 +32,6 @@ type ActiveTrip = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type SortMode = "nearest" | "cheapest";
-
 const COLLAPSED_SHEET_HEIGHT = 84;
 // Viewport-relative so the panel still fits on short screens.
 const EXPANDED_SHEET_HEIGHT = "min(420px, 58vh)";
@@ -46,14 +42,31 @@ export default function HomePage() {
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("nearest");
   const [name, setName] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [blockedBy, setBlockedBy] = useState<ActivePickupBooking | null>(null);
   const dragStartY = useRef<number | null>(null);
 
   useEffect(() => {
     setName(localStorage.getItem("booklan_user_name") ?? "");
+
+    const userId = localStorage.getItem("booklan_user_id");
+    if (!userId) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data } = await safeQuery(
+        supabase.from("users").select("name, profile_photo_url").eq("id", userId).single()
+      );
+      if (cancelled || !data) return;
+      setName(data.name ?? "");
+      setPhotoUrl(data.profile_photo_url);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const loadTrips = useCallback(async () => {
@@ -82,15 +95,11 @@ export default function HomePage() {
     loadTrips();
   }, [loadTrips]);
 
-  const sortedTrips = useMemo(() => {
-    const list = [...trips];
-    if (sortMode === "nearest") {
-      list.sort((a, b) => a.distance_km - b.distance_km);
-    } else {
-      list.sort((a, b) => a.distance_km * a.price_per_km - b.distance_km * b.price_per_km);
-    }
-    return list;
-  }, [trips, sortMode]);
+  // Nearest first: this panel is a glance at what's close, not a full search.
+  const sortedTrips = useMemo(
+    () => [...trips].sort((a, b) => a.distance_km - b.distance_km),
+    [trips]
+  );
 
   const mapVehicles: MapVehicle[] = useMemo(
     () =>
@@ -167,12 +176,27 @@ export default function HomePage() {
                   Where to today?
                 </h1>
               </div>
-              <button
-                aria-label="Notifications"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-white shadow-sm"
-              >
-                <Bell className="h-5 w-5 text-text-primary" />
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  onClick={() => router.push("/inbox")}
+                  aria-label="Inbox"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white shadow-sm"
+                >
+                  <Inbox className="h-5 w-5 text-text-primary" />
+                </button>
+                <button
+                  onClick={() => router.push("/profile")}
+                  aria-label="Your profile"
+                  className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-white shadow-sm"
+                >
+                  {photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-5 w-5 text-text-secondary" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button
@@ -227,31 +251,14 @@ export default function HomePage() {
 
           {expanded && (
             <>
-              <div className="shrink-0 px-4 pb-3">
-                <div className="flex items-center gap-1 rounded-pill bg-surface p-1">
-                  {(["nearest", "cheapest"] as SortMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => setSortMode(mode)}
-                      className={`flex-1 rounded-pill px-3 py-1.5 text-[12px] font-medium capitalize transition-colors ${
-                        sortMode === mode
-                          ? "bg-primary text-white"
-                          : "text-text-secondary hover:bg-white"
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* min-h-0 lets this flex child actually scroll instead of
                   overflowing the panel and getting clipped at the bottom. */}
-              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 pb-4">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4">
                 {loading && (
                   <>
-                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
-                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
+                    <div className="h-[60px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
+                    <div className="h-[60px] w-full shrink-0 animate-pulse rounded-[12px] bg-surface" />
                   </>
                 )}
 
@@ -268,43 +275,37 @@ export default function HomePage() {
                   sortedTrips.map((trip) => {
                     const lowSeats = trip.seats_available < 3;
                     const price = (trip.distance_km * trip.price_per_km).toFixed(2);
-                    const etaMinutes = Math.round((trip.distance_km / AVG_SPEED_KMH) * 60);
 
                     return (
+                      // Compact by design: this panel is a glance at what's
+                      // nearby — the full detail lives on the buses list.
                       <button
                         key={trip.id}
                         onClick={() => selectTrip(trip)}
-                        className="flex shrink-0 items-center gap-3 rounded-[12px] bg-white p-4 text-left shadow-[var(--shadow-float)]"
+                        className="flex shrink-0 items-center gap-3 rounded-[12px] bg-white p-3 text-left shadow-[var(--shadow-float)]"
                       >
-                        <CompanyLogo name={trip.companies?.name ?? "Unknown"} size={40} />
+                        <CompanyLogo name={trip.companies?.name ?? "Unknown"} size={36} />
 
-                        <div className="flex min-w-0 flex-1 flex-col gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate text-[16px] font-semibold text-text-primary">
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate text-[14px] font-semibold text-text-primary">
                               {trip.companies?.name ?? "Unknown company"}
                             </span>
                             <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
                           </div>
-                          <span className="truncate text-[14px] text-text-secondary">
-                            {trip.origin} → {trip.destination}
-                          </span>
-                          <div className="flex items-center gap-3">
-                            <DistanceLabel km={trip.distance_km} />
-                            <span className="text-[12px] text-text-secondary">
-                              ~{etaMinutes} min
-                            </span>
-                            <span
-                              className={`text-[12px] ${
-                                lowSeats ? "font-medium text-error" : "text-text-secondary"
-                              }`}
-                            >
+                          <span className="flex items-center gap-1.5 truncate text-[12px] text-text-secondary">
+                            <span className="truncate">{trip.destination}</span>
+                            <span className="text-text-muted">·</span>
+                            <span className="shrink-0">{trip.distance_km} km</span>
+                            <span className="text-text-muted">·</span>
+                            <span className={`shrink-0 ${lowSeats ? "text-error" : ""}`}>
                               {trip.seats_available} seats
                             </span>
-                          </div>
+                          </span>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-1">
-                          <Price amount={Number(price)} />
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          <span className="text-[15px] font-bold text-primary">${price}</span>
                           <ChevronRight className="h-4 w-4 text-text-muted" />
                         </div>
                       </button>
@@ -320,6 +321,7 @@ export default function HomePage() {
         <ActiveBookingModal booking={blockedBy} onClose={() => setBlockedBy(null)} />
       )}
 
+      <ActiveTripBanner />
       <BottomNav />
     </div>
   );

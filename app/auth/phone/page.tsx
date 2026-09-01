@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/Button";
+import { safeQuery, supabase } from "@/lib/supabase";
 
 const COUNTRY_CODE = "+855";
 
@@ -18,6 +19,7 @@ export default function PhoneEntryPage() {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const digits = value.replace(/\D/g, "");
   const isValid = digits.length === 8 || digits.length === 9;
@@ -27,9 +29,30 @@ export default function PhoneEntryPage() {
   async function handleContinue() {
     if (!isValid || loading) return;
     setLoading(true);
+    setError(null);
 
     const fullPhone = `${COUNTRY_CODE}${digits}`;
     localStorage.setItem("booklan_phone", fullPhone);
+
+    // Returning numbers sign straight in; only new ones go on to create an
+    // account, so existing users aren't asked to register again.
+    const { data, error: lookupError } = await safeQuery(
+      supabase.from("users").select("id, name").eq("phone", fullPhone).maybeSingle()
+    );
+
+    if (lookupError) {
+      setError("Couldn't reach the server. Check your connection and try again.");
+      setLoading(false);
+      return;
+    }
+
+    if (data) {
+      localStorage.setItem("booklan_user_id", data.id);
+      localStorage.setItem("booklan_user_name", data.name ?? "");
+      document.cookie = `booklan_session=${data.id}; path=/; max-age=2592000; samesite=lax`;
+      router.push("/home");
+      return;
+    }
 
     router.push("/auth/profile");
   }
@@ -38,7 +61,7 @@ export default function PhoneEntryPage() {
     <div className="flex min-h-screen flex-col items-center bg-white">
       <div className="flex w-full max-w-[390px] flex-1 flex-col px-6 pb-8 pt-6">
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/auth/login")}
           aria-label="Back"
           className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
         >
@@ -82,6 +105,8 @@ export default function PhoneEntryPage() {
             <p className="mt-2 text-sm text-error">Enter a valid Cambodian phone number.</p>
           )}
         </div>
+
+        {error && <p className="mt-3 text-sm text-error">{error}</p>}
 
         <div className="mt-auto pt-8">
           <Button disabled={!isValid} loading={loading} onClick={handleContinue}>

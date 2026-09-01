@@ -22,19 +22,15 @@ import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import { releaseTripSeats } from "@/lib/seats";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
+import { DRIVER_PHONE, driverNameFor } from "@/constants/drivers";
+import { appendMessage, getThread } from "@/lib/chat";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
   loading: () => <div className="h-full w-full animate-pulse bg-surface" />,
 });
 
-// Demo contact details — the schema has no driver or company phone column yet.
-const DRIVER_NAME = "Sok Dara";
-const DRIVER_PHONE = "+85512345678";
-
 type VehicleType = "bus" | "van";
-
-type ChatMessage = { id: number; from: "you" | "driver"; text: string };
 
 /**
  * Pickup handover. In production the driver's app approves the ticket and the
@@ -79,7 +75,7 @@ export default function TrackingPage() {
   const [showCallModal, setShowCallModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<{ id: number; from: "you" | "driver"; text: string }[]>([]);
   const [draft, setDraft] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -129,6 +125,13 @@ export default function TrackingPage() {
   useEffect(() => {
     distanceRef.current = distance;
   }, [distance]);
+
+  // Pick up an existing conversation so messaging continues where the inbox
+  // left off instead of starting blank each time.
+  useEffect(() => {
+    const existing = getThread(bookingId);
+    if (existing) setMessages(existing.messages);
+  }, [bookingId]);
 
   /**
    * This screen is only for the pickup handover. A booking that has already
@@ -220,8 +223,18 @@ export default function TrackingPage() {
 
   function sendMessage() {
     const text = draft.trim();
-    if (!text) return;
-    setMessages((current) => [...current, { id: Date.now(), from: "you", text }]);
+    if (!text || !booking) return;
+
+    const thread = appendMessage(
+      {
+        bookingId,
+        company: booking.active_trips?.companies?.name ?? "Your bus",
+        driver: driverNameFor(bookingId),
+        destination: booking.active_trips?.destination ?? "your destination",
+      },
+      { from: "you", text }
+    );
+    setMessages(thread.messages);
     setDraft("");
   }
 
@@ -260,6 +273,7 @@ export default function TrackingPage() {
   }
 
   const companyName = booking.active_trips?.companies?.name ?? "Your bus";
+  const driverName = driverNameFor(bookingId);
   const destination = booking.active_trips?.destination ?? "your destination";
   const etaMinutes = Math.round((distance / AVG_SPEED_KMH) * 60);
 
@@ -387,7 +401,7 @@ export default function TrackingPage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
               <Phone className="h-6 w-6 text-primary" />
             </div>
-            <span className="text-[16px] font-semibold text-text-primary">{DRIVER_NAME}</span>
+            <span className="text-[16px] font-semibold text-text-primary">{driverName}</span>
             <span className="text-[13px] text-text-secondary">Driver · {companyName}</span>
             <span className="font-mono text-2xl font-bold text-text-primary">{DRIVER_PHONE}</span>
             <div className="mt-2 flex w-full flex-col gap-2">
@@ -414,11 +428,11 @@ export default function TrackingPage() {
             <div className="flex items-center gap-3 border-b border-border px-5 pb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
                 <span className="text-[14px] font-extrabold text-primary">
-                  {DRIVER_NAME.charAt(0)}
+                  {driverName.charAt(0)}
                 </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[15px] font-bold text-text-primary">{DRIVER_NAME}</span>
+                <span className="text-[15px] font-bold text-text-primary">{driverName}</span>
                 <span className="text-[12px] text-text-secondary">Driver · {companyName}</span>
               </div>
             </div>

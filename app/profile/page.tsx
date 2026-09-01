@@ -15,6 +15,7 @@ import {
   Shield,
   User as UserIcon,
 } from "lucide-react";
+import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
 
@@ -209,7 +210,7 @@ export default function ProfilePage() {
     localStorage.removeItem("booklan_phone");
     document.cookie = "booklan_session=; path=/; max-age=0";
     await supabase.auth.signOut();
-    router.push("/");
+    router.push("/auth/login");
   }
 
   if (!userId) return null;
@@ -355,6 +356,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      <ActiveTripBanner />
       <BottomNav />
     </div>
   );

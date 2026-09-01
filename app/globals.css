@@ -279,3 +279,15 @@ body {
     stroke-dashoffset: -22;
   }
 }
+
+/* Onboarding step transition. */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

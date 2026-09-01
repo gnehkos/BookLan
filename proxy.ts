@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AUTH_ROUTES = ["/", "/auth/phone", "/auth/profile"];
+const AUTH_ROUTES = ["/", "/auth/login", "/auth/phone", "/auth/profile"];
 const PROTECTED_PREFIXES = [
   "/home",
+  "/inbox",
   "/search",
   "/booking",
   "/tracking",

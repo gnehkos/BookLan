@@ -1,66 +1,118 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Bus, Phone } from "lucide-react";
-import Button from "@/components/Button";
-import GoogleIcon from "@/components/GoogleIcon";
-import { supabase } from "@/lib/supabase";
 
-export default function WelcomePage() {
+/**
+ * Three-step onboarding, shown once. Skipping or finishing records the fact in
+ * localStorage so returning users land straight on the sign-in screen.
+ */
+const STEPS = [
+  {
+    image: "/onboarding/step-1.png",
+    title: "Book from anywhere",
+    body: "No station needed. Flag down any bus or van right from where you stand on the national road.",
+  },
+  {
+    image: "/onboarding/step-2.png",
+    title: "Pre-book in advance",
+    body: "Schedule your trip a day ahead. Pick your route, date, and seats — all locked in before you travel.",
+  },
+  {
+    image: "/onboarding/step-3.png",
+    title: "Pay and get picked up",
+    body: "Pay securely in-app with E-Bank app, or your card. Show your Ticket ID to the driver and hop on.",
+  },
+] as const;
+
+export default function OnboardingPage() {
   const router = useRouter();
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const [ready, setReady] = useState(false);
 
-  async function handleGoogleSignIn() {
-    setError(null);
-    setGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/phone` },
-    });
-    if (error) {
-      setError(error.message);
-      setGoogleLoading(false);
+  useEffect(() => {
+    if (localStorage.getItem("booklan_onboarded") === "true") {
+      router.replace("/auth/login");
+      return;
     }
+    setReady(true);
+  }, [router]);
+
+  function finish() {
+    localStorage.setItem("booklan_onboarded", "true");
+    router.push("/auth/login");
   }
 
+  function next() {
+    if (step === STEPS.length - 1) {
+      finish();
+      return;
+    }
+    setStep((current) => current + 1);
+  }
+
+  if (!ready) return null;
+
+  const current = STEPS[step];
+  const isLast = step === STEPS.length - 1;
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-white">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col px-6 pb-8 pt-16">
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-8">
-          <div className="flex h-[190px] w-[190px] items-center justify-center rounded-[44px] bg-accent">
-            <Bus className="h-20 w-20 text-primary" strokeWidth={1.75} />
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <h1 className="text-center text-[26px] font-extrabold tracking-[-0.7px] text-text-primary">
-              Book from anywhere
+    <div className="flex min-h-screen justify-center bg-white">
+      <div className="flex w-full max-w-[393px] flex-col">
+        <div className="flex flex-1 flex-col items-center justify-center px-10">
+          {/* Keyed so the illustration and copy re-animate on every step. */}
+          <div key={step} className="flex animate-[step-in_0.35s_ease-out] flex-col items-center">
+            <div className="flex h-[190px] w-[190px] items-center justify-center overflow-hidden rounded-[44px] bg-accent">
+              <Image
+                src={current.image}
+                alt=""
+                width={190}
+                height={190}
+                priority={step === 0}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            <h1 className="mt-11 max-w-[280px] text-center text-[26px] font-extrabold leading-[39px] tracking-[-0.7px] text-text-primary">
+              {current.title}
             </h1>
-            <p className="max-w-[280px] text-center text-[15px] leading-6 text-text-muted">
-              Book a seat on any passing intercity bus. No station. No waiting.
+            <p className="mt-3 max-w-[313px] text-center text-[15px] font-medium leading-[24.75px] text-text-muted">
+              {current.body}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {error && <p className="text-center text-sm text-error">{error}</p>}
-          <Button
-            icon={<Phone className="h-5 w-5" />}
-            onClick={() => router.push("/auth/phone")}
+        <div className="flex items-center justify-center gap-1.5 pb-6">
+          {STEPS.map((s, index) => (
+            <button
+              key={s.title}
+              onClick={() => setStep(index)}
+              aria-label={`Go to step ${index + 1}`}
+              aria-current={index === step ? "step" : undefined}
+              className={`h-2 rounded-[4px] transition-all duration-300 ${
+                index === step ? "w-7 bg-primary" : "w-2 bg-border"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="flex flex-col gap-2.5 px-6 pb-14">
+          <button
+            onClick={next}
+            className="w-full rounded-[16px] bg-gradient-to-b from-primary to-primary-dark px-6 py-4 text-[15px] font-bold text-white shadow-[0_4px_10px_rgba(26,58,92,0.28)] hover:brightness-110"
           >
-            Continue with Phone Number
-          </Button>
-          <Button
-            variant="outline"
-            icon={<GoogleIcon />}
-            loading={googleLoading}
-            onClick={handleGoogleSignIn}
-          >
-            Continue with Google
-          </Button>
-          <p className="mt-2 text-center text-xs text-text-muted">
-            By continuing, you agree to BookLan&apos;s Terms of Service and Privacy Policy.
-          </p>
+            {isLast ? "Get Started" : "Continue"}
+          </button>
+
+          {!isLast && (
+            <button
+              onClick={finish}
+              className="w-full p-2 text-center text-[14px] font-semibold text-text-muted"
+            >
+              Skip
+            </button>
+          )}
         </div>
       </div>
     </div>

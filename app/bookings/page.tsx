@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarClock, Ticket as TicketIcon } from "lucide-react";
+import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav from "@/components/BottomNav";
 import Button from "@/components/Button";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -243,6 +244,7 @@ export default function BookingsPage() {
         </div>
       </div>
 
+      <ActiveTripBanner />
       <BottomNav />
     </div>
   );

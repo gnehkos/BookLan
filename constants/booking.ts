@@ -1,7 +1,36 @@
 export const SERVICE_FEE_USD = 0.5;
 export const AVG_SPEED_KMH = 40;
 export const PHNOM_PENH: [number, number] = [11.5564, 104.9282];
-export const CITIES = ["Phnom Penh", "Siem Reap", "Kampot", "Sihanoukville", "Battambang"] as const;
+export const CITIES = [
+  "Phnom Penh",
+  "Siem Reap",
+  "Kampot",
+  "Sihanoukville",
+  "Battambang",
+  "Svay Rieng",
+  "Prey Veng",
+  "Kampong Cham",
+  "Takeo",
+  "Kratie",
+  "Kep",
+] as const;
+
+/**
+ * Quick-pick destinations on the search screen, ordered by how often people
+ * actually travel there rather than alphabetically.
+ */
+export const POPULAR_DESTINATIONS = [
+  { name: "Siem Reap", note: "Angkor Wat" },
+  { name: "Sihanoukville", note: "Beaches" },
+  { name: "Battambang", note: "Northwest" },
+  { name: "Kampot", note: "Riverside" },
+  { name: "Kep", note: "Crab market" },
+  { name: "Kampong Cham", note: "Mekong" },
+  { name: "Svay Rieng", note: "Southeast" },
+  { name: "Prey Veng", note: "Southeast" },
+  { name: "Takeo", note: "South" },
+  { name: "Kratie", note: "Dolphins" },
+] as const;
 
 /**
  * Departure stations for passengers boarding inside Phnom Penh, where there is

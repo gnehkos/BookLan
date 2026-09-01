@@ -11,7 +11,9 @@ import {
   Star,
   Users,
 } from "lucide-react";
+import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav from "@/components/BottomNav";
+import DestinationSheet from "@/components/DestinationSheet";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -90,6 +92,7 @@ export default function BusesPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("soonest");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [destinationSheetOpen, setDestinationSheetOpen] = useState(false);
 
   useEffect(() => {
     const tripStored = sessionStorage.getItem("booklan_trip");
@@ -154,6 +157,17 @@ export default function BusesPage() {
     return list;
   }, [trips, sortMode]);
 
+  function changeDestination(next: string) {
+    setDestination(next);
+    const stored = sessionStorage.getItem("booklan_trip");
+    if (stored) {
+      sessionStorage.setItem(
+        "booklan_trip",
+        JSON.stringify({ ...JSON.parse(stored), destination: next })
+      );
+    }
+  }
+
   function selectTrip(trip: ActiveTrip) {
     sessionStorage.setItem(
       "booklan_trip",
@@ -176,13 +190,12 @@ export default function BusesPage() {
     pickup?.stationName ??
     pickup?.placeName ??
     (pickup ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}` : "Your location");
-  const longestLeg = sortedTrips.reduce((max, t) => Math.max(max, t.distance_km), 0);
   const accent = SORT_ACCENT[sortMode];
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col pb-28">
-        <div className="flex items-start gap-3 px-4 pt-6 pb-4">
+        <div className="flex items-center gap-3 px-4 pt-6 pb-4">
           <button
             onClick={() => router.back()}
             aria-label="Back"
@@ -194,51 +207,41 @@ export default function BusesPage() {
             <h1 className="truncate text-[16px] font-semibold text-text-primary">
               Buses to {destination}
             </h1>
-            <span className="mt-0.5 flex items-center gap-1.5 truncate text-[12px]">
-              <span className="text-text-secondary">{origin ?? "Your location"}</span>
-              <span className="text-text-muted">→</span>
-              <span className="font-medium text-primary">{destination}</span>
+            <span className="text-[12px] text-text-secondary">
+              {sortedTrips.length} available now
             </span>
           </div>
-          {longestLeg > 0 && (
-            <span className="shrink-0 rounded-pill bg-white px-3 py-1.5 text-[12px] font-medium text-text-secondary shadow-[var(--shadow-float)]">
-              {longestLeg} km
-            </span>
-          )}
         </div>
 
-        {/* FROM / TO card */}
-        <div className="mx-4 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface">
-              <Navigation className="h-4 w-4 text-text-secondary" />
+        {/* From / to — both tappable */}
+        <div className="mx-4 rounded-[12px] bg-white p-2 shadow-[var(--shadow-float)]">
+          <button
+            onClick={() => router.push("/booking/pickup")}
+            className="flex w-full items-center gap-3 rounded-[10px] p-2 text-left hover:bg-surface"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-surface">
+              <Navigation className="h-3.5 w-3.5 text-text-secondary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[12px] text-text-secondary">Your location</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">FROM</span>
               <span className="truncate text-[14px] font-semibold text-text-primary">
                 {pickupName}
               </span>
             </span>
-            <button
-              onClick={() => router.push("/booking/pickup")}
-              aria-label="Change pickup point"
-              className="shrink-0 text-text-muted"
-            >
-              <MapPin className="h-4 w-4" />
-            </button>
-          </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
+          </button>
 
-          <div className="my-3 h-px bg-border" />
+          <div className="mx-2 h-px bg-border" />
 
           <button
-            onClick={() => router.push("/search")}
-            className="flex w-full items-center gap-3 text-left"
+            onClick={() => setDestinationSheetOpen(true)}
+            className="flex w-full items-center gap-3 rounded-[10px] p-2 text-left hover:bg-surface"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent">
-              <MapPin className="h-4 w-4 text-primary" />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-accent">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[12px] text-text-secondary">TO · tap to change</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TO</span>
               <span className="truncate text-[14px] font-semibold text-primary">
                 {destination}
               </span>
@@ -292,13 +295,21 @@ export default function BusesPage() {
                 trip={trip}
                 accent={accent}
                 topPick={index === 0}
-                pickupName={pickupName}
                 onSelect={() => selectTrip(trip)}
               />
             ))}
         </div>
       </div>
 
+      {destinationSheetOpen && (
+        <DestinationSheet
+          current={destination}
+          onSelect={changeDestination}
+          onClose={() => setDestinationSheetOpen(false)}
+        />
+      )}
+
+      <ActiveTripBanner />
       <BottomNav />
     </div>
   );
@@ -308,13 +319,11 @@ function BusCard({
   trip,
   accent,
   topPick,
-  pickupName,
   onSelect,
 }: {
   trip: ActiveTrip;
   accent: (typeof SORT_ACCENT)[SortMode];
   topPick: boolean;
-  pickupName: string;
   onSelect: () => void;
 }) {
   const companyName = trip.companies?.name ?? "Unknown company";
@@ -326,8 +335,9 @@ function BusCard({
   const lowSeats = trip.seats_available <= 3;
 
   return (
-    <article
-      className={`relative overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)] ${
+    <button
+      onClick={onSelect}
+      className={`relative w-full overflow-hidden rounded-[16px] bg-white text-left shadow-[var(--shadow-float)] transition-transform active:scale-[0.99] ${
         topPick ? `border-2 ${accent.border}` : "border border-transparent"
       }`}
     >
@@ -366,31 +376,13 @@ function BusCard({
           </div>
         </div>
 
-        {/* Route progress: your spot ─── duration ─── destination */}
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[10px] uppercase tracking-[0.4px] text-text-muted">
-              Your spot
-            </span>
-            <span className="truncate text-[12px] font-medium text-text-primary">
-              {pickupName}
-            </span>
-          </div>
-
-          <div className="flex shrink-0 flex-col items-center">
-            <span className="text-[11px] font-semibold text-text-primary">
-              {formatDuration(trip.distance_km)}
-            </span>
-            <span className="my-1 h-px w-14 bg-border" />
-            <span className="text-[10px] text-text-muted">direct</span>
-          </div>
-
-          <div className="flex min-w-0 flex-1 flex-col items-end">
-            <span className="text-[10px] uppercase tracking-[0.4px] text-text-muted">To</span>
-            <span className="truncate text-[12px] font-semibold text-primary">
-              {trip.destination}
-            </span>
-          </div>
+        {/* Journey time, centred on a hairline — the from/to lives in the header. */}
+        <div className="mt-3.5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" />
+          <span className="shrink-0 text-[11px] font-semibold text-text-secondary">
+            {formatDuration(trip.distance_km)} · direct
+          </span>
+          <span className="h-px flex-1 bg-border" />
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-3">
@@ -413,14 +405,8 @@ function BusCard({
           />
         </div>
 
-        <button
-          onClick={onSelect}
-          className="mt-4 h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
-        >
-          Select
-        </button>
       </div>
-    </article>
+    </button>
   );
 }
 

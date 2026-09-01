@@ -57,12 +57,15 @@ function DraggableMarker({
 
 export default function PickupMap({
   onPositionChange,
+  bottomInset = 0,
 }: {
   onPositionChange: (
     position: [number, number],
     allowed: boolean,
     roadName: string | null
   ) => void;
+  /** Height of the floating sheet, so controls sit clear of it. */
+  bottomInset?: number;
 }) {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
@@ -159,7 +162,12 @@ export default function PickupMap({
 
       <DraggableMarker position={position} allowed={allowed} onChange={handleChange} />
 
-      <RecenterControl target={position} zoom={14} label="Recenter to my pin" />
+      <RecenterControl
+        target={position}
+        zoom={14}
+        label="Recenter to my pin"
+        bottomOffset={bottomInset + 100}
+      />
     </MapContainer>
   );
 }

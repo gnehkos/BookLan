@@ -5,11 +5,14 @@ import { useState } from "react";
 /**
  * Company logo with a graceful fallback.
  *
- * Real artwork is expected at `/logos/<company-slug>.png`. None ship with the
- * app yet, so until a file is dropped in `public/logos/` this renders a tinted
- * square with the company's initial. Slugs that 404 are remembered for the rest
- * of the session so we don't re-request a known-missing file on every card.
+ * Artwork lives in `public/logos/` named after the company slug. Each slug
+ * walks a short list of extensions — operators supply whatever they have — and
+ * a company with no file at all falls back to a tinted square with its initial.
+ * Slugs that exhaust the list are remembered for the session so a missing logo
+ * isn't re-requested on every card.
  */
+const EXTENSIONS = ["png", "jpg", "webp"] as const;
+
 const missingLogos = new Set<string>();
 
 export function companySlug(name: string) {
@@ -44,12 +47,13 @@ export default function CompanyLogo({
   className?: string;
 }) {
   const slug = companySlug(name || "unknown");
-  const [failed, setFailed] = useState(() => missingLogos.has(slug));
+  const [attempt, setAttempt] = useState(() => (missingLogos.has(slug) ? EXTENSIONS.length : 0));
 
   const shared = "shrink-0 overflow-hidden rounded-[10px]";
   const style = { width: size, height: size };
+  const exhausted = attempt >= EXTENSIONS.length;
 
-  if (failed) {
+  if (exhausted) {
     return (
       <span
         style={style}
@@ -66,13 +70,14 @@ export default function CompanyLogo({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={`/logos/${slug}.png`}
+      src={`/logos/${slug}.${EXTENSIONS[attempt]}`}
       alt={`${name} logo`}
       style={style}
-      className={`${shared} bg-surface object-cover ${className}`}
+      className={`${shared} bg-white object-contain ${className}`}
       onError={() => {
-        missingLogos.add(slug);
-        setFailed(true);
+        const next = attempt + 1;
+        if (next >= EXTENSIONS.length) missingLogos.add(slug);
+        setAttempt(next);
       }}
     />
   );
