@@ -173,35 +173,33 @@ export default function BookingsPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-28">
-        {/* Navy hero with the tab switcher riding its lower edge, so the top of
-            the screen reads as one shape rather than stacked white blocks. */}
-        <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-12 pt-9">
+        {/* The tabs sit inside the header rather than being pulled up over it
+            with a negative margin, which was overlapping the title. */}
+        <div className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-5 pt-9">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-secondary/30 blur-3xl"
+            className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10 blur-3xl"
           />
-          <h1 className="relative text-[27px] font-extrabold tracking-[-0.7px] text-white">
+          <h1 className="relative text-[26px] font-extrabold tracking-[-0.6px] text-white">
             My bookings
           </h1>
-          <p className="relative mt-1.5 text-[13.5px] text-white/65">
+          <p className="relative mt-1 text-[13px] text-white/60">
             Your tickets, past and present.
           </p>
-        </div>
 
-        <div className="mx-4 -mt-7 flex gap-1 rounded-pill bg-white p-1 shadow-[var(--shadow-float)]">
-          {TABS.map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => setTab(mode)}
-              className={`flex-1 rounded-pill py-2.5 text-[13px] font-bold transition-colors ${
-                tab === mode
-                  ? "bg-secondary text-white shadow-[0_4px_12px_rgba(0,167,157,0.3)]"
-                  : "text-text-secondary hover:bg-surface"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          <div className="relative mt-5 flex gap-1 rounded-pill bg-white/10 p-1">
+            {TABS.map(({ mode, label }) => (
+              <button
+                key={mode}
+                onClick={() => setTab(mode)}
+                className={`flex-1 rounded-pill py-2 text-[13px] font-bold transition-colors ${
+                  tab === mode ? "bg-white text-primary" : "text-white/70 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 px-4 pt-4">

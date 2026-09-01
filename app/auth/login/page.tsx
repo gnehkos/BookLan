@@ -32,9 +32,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen justify-center bg-white">
       <div className="flex w-full max-w-[393px] flex-col px-6 pb-14 pt-24">
         <div className="flex flex-1 flex-col">
-          {/* The mark itself rather than a stock bus glyph. */}
-          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-[20px] bg-primary shadow-[var(--shadow-float)]">
-            <BooklanLogo tone="mono" className="h-6 w-auto" />
+          {/* The mark itself rather than a stock bus glyph, on a light tile so
+              it keeps its own colours. */}
+          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-[20px] border border-border bg-white shadow-[var(--shadow-soft)]">
+            <BooklanLogo className="h-6 w-auto" />
           </div>
 
           {/* Deliberately neutral: this screen is the entry point for new

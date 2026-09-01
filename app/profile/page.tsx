@@ -380,7 +380,7 @@ export default function ProfilePage() {
               <button
                 onClick={saveProfile}
                 disabled={saving}
-                className="flex h-[52px] flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-secondary text-[15px] font-bold text-white shadow-[0_6px_18px_rgba(0,167,157,0.35)] transition-transform active:scale-[0.99] disabled:opacity-60"
+                className="flex h-[52px] flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-primary to-primary-dark text-[15px] font-bold text-white shadow-[0_2px_8px_rgba(16,37,68,0.18)] transition-transform active:scale-[0.99] disabled:opacity-60 disabled:shadow-none"
               >
                 {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save changes"}
               </button>

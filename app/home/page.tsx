@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
+import BooklanLogo from "@/components/BooklanLogo";
 import BottomNav from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
 
@@ -59,14 +60,8 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/95 via-white/80 to-transparent pb-10">
           <div className="pointer-events-auto w-full px-5 pt-4">
             <div className="flex items-center justify-between">
-              <div className="flex min-w-0 flex-col">
-                <span className="text-[13px] font-semibold text-text-secondary">
-                  Hi, {name || "there"} 👋
-                </span>
-                <h1 className="text-[22px] font-extrabold tracking-[-0.5px] text-text-primary">
-                  Where to today?
-                </h1>
-              </div>
+              <BooklanLogo className="h-[22px] w-auto shrink-0" />
+
               <div className="flex shrink-0 items-center gap-2">
                 <button
                   onClick={() => router.push("/inbox")}
@@ -88,6 +83,15 @@ export default function HomePage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="mt-3.5 flex min-w-0 flex-col">
+              <span className="text-[13px] font-semibold text-text-secondary">
+                Hi, {name || "there"} 👋
+              </span>
+              <h1 className="text-[22px] font-extrabold tracking-[-0.5px] text-text-primary">
+                Where to today?
+              </h1>
             </div>
 
             <button

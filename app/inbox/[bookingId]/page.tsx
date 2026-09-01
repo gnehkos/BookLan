@@ -91,7 +91,7 @@ export default function ChatThreadPage() {
           <button
             onClick={() => setCalling(true)}
             aria-label="Call driver"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-white shadow-[0_4px_12px_rgba(0,167,157,0.35)] transition-transform active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-white transition-transform active:scale-95"
           >
             <Phone className="h-[18px] w-[18px]" />
           </button>

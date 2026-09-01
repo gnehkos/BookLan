@@ -64,7 +64,7 @@ export default function AdvancedBookingPage() {
         <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-16 pt-9">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-secondary/30 blur-3xl"
+            className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10 blur-3xl"
           />
           <h1 className="relative text-[27px] font-extrabold tracking-[-0.7px] text-white">
             Plan a trip
@@ -104,7 +104,7 @@ export default function AdvancedBookingPage() {
             <div className="mx-4 h-px bg-border" />
 
             <label className="flex items-center gap-3 rounded-[15px] p-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary shadow-[0_4px_12px_rgba(0,167,157,0.35)]">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary">
                 <MapPin className="h-4 w-4 text-white" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
@@ -147,7 +147,7 @@ export default function AdvancedBookingPage() {
                   onClick={() => setDate(chip.iso)}
                   className={`flex flex-1 flex-col items-center rounded-[16px] py-2.5 transition-all ${
                     date === chip.iso
-                      ? "bg-secondary text-white shadow-[0_6px_16px_rgba(0,167,157,0.3)]"
+                      ? "bg-secondary text-white"
                       : "bg-surface text-text-primary"
                   }`}
                 >
@@ -177,7 +177,7 @@ export default function AdvancedBookingPage() {
 
           <button
             onClick={handleSearch}
-            className="flex h-[54px] w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-b from-secondary to-secondary-dark text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(0,167,157,0.35)] transition-transform active:scale-[0.99]"
+            className="flex h-[54px] w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-b from-primary to-primary-dark text-[15px] font-bold text-white transition-transform active:scale-[0.99]"
           >
             <Search className="h-[18px] w-[18px]" />
             Search departures

@@ -2,27 +2,20 @@
  * The BookLan mark, inlined rather than loaded as a file.
  *
  * The supplied SVGs sit in a 251.91×326 canvas that the artwork fills only a
- * corner of, and their colours are baked into an embedded <style> block. Both
- * are a problem here: the mark has to sit flush in its container and has to be
- * able to turn white on the navy splash. So the three paths are reproduced
- * below against a tight viewBox, with the fills driven by props.
+ * corner of, so the mark would float tiny in any container it was dropped in.
+ * The three paths are reproduced below against a tight viewBox instead.
+ *
+ * The colours are the logo's own and are never overridden — anywhere the mark
+ * appears, the background is chosen to suit it rather than the artwork being
+ * repainted to suit the background.
  *
  * The original files remain in public/logos as the source of truth, alongside
  * cropped copies (booklan-mark.svg, booklan-wordmark.svg) for anywhere an
  * <img> is wanted.
  */
-export default function BooklanLogo({
-  className = "",
-  /** "brand" uses the logo's own navy and teal; "mono" paints it all one tone. */
-  tone = "brand",
-  monoColor = "#ffffff",
-}: {
-  className?: string;
-  tone?: "brand" | "mono";
-  monoColor?: string;
-}) {
-  const navy = tone === "mono" ? monoColor : "#19355F";
-  const teal = tone === "mono" ? monoColor : "#00A79D";
+export default function BooklanLogo({ className = "" }: { className?: string }) {
+  const navy = "#19355F";
+  const teal = "#00A79D";
 
   return (
     <svg

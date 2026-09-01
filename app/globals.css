@@ -4,18 +4,20 @@
   --background: #ffffff;
   --foreground: #0b1729;
 
-  /* Brand. Both taken straight from the logo artwork: the navy is the mark's
-     body, the teal is its centre band and the app's signature accent. */
+  /* The theme is navy, taken from the logo mark's body. The teal that also
+     appears in the logo stays in the logo: it is not an interface colour.
+     Where something needs to lift off the navy, `secondary` is a brighter
+     blue of the same hue rather than a second colour. */
   --color-primary: #19355f;
   --color-primary-dark: #102544;
   --color-primary-tint: #eef2f7;
 
-  --color-secondary: #00a79d;
-  --color-secondary-dark: #00857d;
-  --color-secondary-tint: #e3f7f5;
+  --color-secondary: #2e6fb8;
+  --color-secondary-dark: #245891;
+  --color-secondary-tint: #eaf1f9;
 
   --color-surface: #f5f8fa;
-  --color-accent: #e3f7f5;
+  --color-accent: #eaf1f9;
   --color-text-primary: #0b1729;
   --color-text-secondary: #5a6b81;
   --color-text-muted: #93a1b3;
@@ -233,8 +235,8 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 9999px;
-  background: rgba(0, 167, 157, 0.22);
-  box-shadow: 0 0 18px 7px rgba(0, 167, 157, 0.28);
+  background: rgba(46, 111, 184, 0.2);
+  box-shadow: 0 0 18px 7px rgba(46, 111, 184, 0.25);
 }
 
 .booklan-current-glow {
@@ -242,7 +244,7 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 9999px;
-  background: rgba(0, 167, 157, 0.38);
+  background: rgba(46, 111, 184, 0.35);
   animation: booklan-glow 2.4s ease-out infinite;
 }
 

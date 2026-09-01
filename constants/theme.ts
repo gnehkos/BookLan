@@ -4,19 +4,21 @@
  * Anything rendered outside Tailwind's reach — Leaflet marker HTML, inline SVG
  * fills — reads its colours from here, so the two must stay in step.
  *
- * The two brand colours come from the logo itself: `primary` is the navy of the
- * mark's body, `secondary` the teal of its centre band.
+ * The theme is navy. `primary` is the navy of the logo mark's body; `secondary`
+ * is a brighter blue of the same hue for anything that needs to lift off it.
+ * The teal that also appears in the logo is deliberately absent — it belongs to
+ * the artwork, not the interface.
  */
 export const colors = {
   primary: "#19355F",
   primaryDark: "#102544",
   primaryTint: "#EEF2F7",
-  secondary: "#00A79D",
-  secondaryDark: "#00857D",
-  secondaryTint: "#E3F7F5",
+  secondary: "#2E6FB8",
+  secondaryDark: "#245891",
+  secondaryTint: "#EAF1F9",
   background: "#FFFFFF",
   surface: "#F5F8FA",
-  accent: "#E3F7F5",
+  accent: "#EAF1F9",
   textPrimary: "#0B1729",
   textSecondary: "#5A6B81",
   textMuted: "#93A1B3",

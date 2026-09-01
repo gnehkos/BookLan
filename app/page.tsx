@@ -117,7 +117,7 @@ export default function OnboardingPage() {
               aria-label={`Go to step ${index + 1}`}
               aria-current={index === step ? "step" : undefined}
               className={`h-2 rounded-[4px] transition-all duration-300 ${
-                index === step ? "w-7 bg-secondary" : "w-2 bg-border"
+                index === step ? "w-7 bg-primary" : "w-2 bg-border"
               }`}
             />
           ))}
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
         <div className="flex flex-col gap-2.5 px-6 pb-14">
           <button
             onClick={next}
-            className="w-full rounded-[16px] bg-gradient-to-b from-secondary to-secondary-dark px-6 py-4 text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(0,167,157,0.35)] transition-transform hover:brightness-105 active:scale-[0.99]"
+            className="w-full rounded-[16px] bg-gradient-to-b from-primary to-primary-dark px-6 py-4 text-[15px] font-bold text-white transition-transform hover:brightness-105 active:scale-[0.99]"
           >
             {isLast ? "Get Started" : "Continue"}
           </button>

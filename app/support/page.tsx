@@ -129,7 +129,7 @@ export default function SupportPage() {
         {/* Contact card — the one thing someone in trouble is looking for. */}
         <div className="mx-4 overflow-hidden rounded-card bg-gradient-to-br from-primary to-primary-dark p-5 shadow-[var(--shadow-float)]">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/12">
-            <LifeBuoy className="h-5 w-5 text-secondary" />
+            <LifeBuoy className="h-5 w-5 text-white" />
           </span>
           <p className="mt-3 text-[16px] font-bold text-white">Stuck at the roadside?</p>
           <p className="mt-1 text-[13px] leading-[20px] text-white/70">
@@ -138,7 +138,7 @@ export default function SupportPage() {
           </p>
 
           <div className="mt-4 flex items-center gap-3 rounded-[14px] bg-white/10 px-4 py-3">
-            <Phone className="h-4 w-4 shrink-0 text-secondary" />
+            <Phone className="h-4 w-4 shrink-0 text-white/80" />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="font-mono text-[15px] font-semibold text-white">
                 {SUPPORT_PHONE}

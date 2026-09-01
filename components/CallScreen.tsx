@@ -49,16 +49,10 @@ export default function CallScreen({
   return (
     <div className="fixed inset-0 z-[60] flex justify-center bg-primary-dark">
       <div className="relative flex w-full max-w-[393px] flex-col items-center px-6 pb-14 pt-24">
-        {/* Teal bloom, matching the splash. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-16 h-[280px] w-[280px] rounded-full bg-secondary/20 blur-[80px]"
-        />
-
         <div className="relative flex flex-col items-center">
           <div className="relative">
             {!connected && (
-              <span className="absolute -inset-3 animate-[call-ring_1.8s_ease-out_infinite] rounded-full border-2 border-secondary/50" />
+              <span className="absolute -inset-3 animate-[call-ring_1.8s_ease-out_infinite] rounded-full border-2 border-white/40" />
             )}
             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-white/10 ring-2 ring-white/20">
               <CompanyLogo name={companyName} size={72} />
@@ -69,7 +63,7 @@ export default function CallScreen({
           <span className="mt-1 text-[13px] text-white/60">{subtitle}</span>
           <span className="mt-3 font-mono text-[14px] tracking-[0.4px] text-white/45">{phone}</span>
 
-          <span className="mt-6 text-[14px] font-medium text-secondary">
+          <span className="mt-6 text-[14px] font-medium text-white/80">
             {connected ? elapsed : "Calling…"}
           </span>
         </div>
@@ -89,7 +83,7 @@ export default function CallScreen({
           <button
             onClick={onClose}
             aria-label="End call"
-            className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-error text-white shadow-[0_8px_24px_rgba(229,72,77,0.45)] transition-transform active:scale-95"
+            className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-error text-white transition-transform active:scale-95"
           >
             <PhoneOff className="h-6 w-6" />
           </button>
