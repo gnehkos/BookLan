@@ -20,7 +20,7 @@ type StoredSchedule = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredSeat = { seatNumber: number; totalPrice: number };
+type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 
 export default function AdvancedSummaryPage() {
   const router = useRouter();
@@ -53,7 +53,7 @@ export default function AdvancedSummaryPage() {
   async function handlePaymentSuccess() {
     if (!schedule || !seat || !travelDate) return;
 
-    const userId = sessionStorage.getItem("booklan_user_id");
+    const userId = localStorage.getItem("booklan_user_id");
     const ticketId = generateTicketId();
 
     const { data: booking, error: insertError } = await safeQuery(
@@ -63,7 +63,7 @@ export default function AdvancedSummaryPage() {
           user_id: userId,
           schedule_id: schedule.id,
           travel_date: travelDate,
-          seat_number: seat.seatNumber,
+          seat_numbers: seat.seatNumbers,
           ticket_id: ticketId,
           status: "confirmed",
           total_price: seat.totalPrice,
@@ -89,7 +89,13 @@ export default function AdvancedSummaryPage() {
       if (currentSchedule) {
         await supabase
           .from("schedules")
-          .update({ seats_available: currentSchedule.seats_available - 1 })
+          .update({
+            // Never let a schedule go negative, however the count drifted.
+            seats_available: Math.max(
+              0,
+              currentSchedule.seats_available - seat.seatNumbers.length
+            ),
+          })
           .eq("id", schedule.id);
       }
     } catch {
@@ -122,7 +128,10 @@ export default function AdvancedSummaryPage() {
           <Row label="Route" value={`${schedule.origin} → ${schedule.destination}`} />
           <Row label="Travel date" value={travelDate ?? ""} />
           <Row label="Departure" value={`${schedule.departure_time} – ${schedule.arrival_time}`} />
-          <Row label="Seat number" value={String(seat.seatNumber)} />
+          <Row
+            label={seat.seatNumbers.length > 1 ? "Seat numbers" : "Seat number"}
+            value={seat.seatNumbers.join(", ")}
+          />
 
           <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
             <span className="text-[15px] font-bold text-text-primary">Total</span>

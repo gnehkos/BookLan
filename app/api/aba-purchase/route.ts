@@ -11,8 +11,11 @@ function reqTime() {
 }
 
 export async function POST(request: Request) {
-  const merchantId = process.env.NEXT_PUBLIC_ABA_MERCHANT_ID;
-  const apiKey = process.env.NEXT_PUBLIC_ABA_API_KEY;
+  // Server-only, deliberately NOT NEXT_PUBLIC_*: the API key signs the payment
+  // HMAC, and a NEXT_PUBLIC_ prefix would inline it into the browser bundle
+  // where anyone could lift it and forge signed requests for this merchant.
+  const merchantId = process.env.ABA_MERCHANT_ID;
+  const apiKey = process.env.ABA_API_KEY;
 
   if (!merchantId || !apiKey) {
     return Response.json(

@@ -29,7 +29,7 @@ export default function PhoneEntryPage() {
     setLoading(true);
 
     const fullPhone = `${COUNTRY_CODE}${digits}`;
-    sessionStorage.setItem("booklan_phone", fullPhone);
+    localStorage.setItem("booklan_phone", fullPhone);
 
     router.push("/auth/profile");
   }
@@ -46,23 +46,26 @@ export default function PhoneEntryPage() {
         </button>
 
         <div className="mt-6 flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-text-primary">
+          <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">
             What&apos;s your phone number?
           </h1>
-          <p className="text-[15px] leading-6 text-text-secondary">
+          <p className="text-[15px] leading-6 text-text-muted">
             We&apos;ll use this to identify your bookings.
           </p>
         </div>
 
-        <div className="mt-8">
-          <label htmlFor="phone" className="mb-2 block text-sm font-medium text-text-primary">
-            Phone number
+        <div className="mt-11">
+          <label
+            htmlFor="phone"
+            className="mb-2.5 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
+          >
+            PHONE NUMBER
           </label>
-          <div className="flex h-14 items-center gap-2 rounded-card border border-border bg-white px-4 focus-within:border-primary">
-            <span className="text-[15px] font-semibold text-text-primary">
+          <div className="flex h-[54px] items-center gap-3.5 rounded-2xl border border-border bg-surface px-5 focus-within:border-primary">
+            <span className="text-[15px] font-bold text-text-primary">
               {COUNTRY_CODE}
             </span>
-            <span className="h-6 w-px bg-border" />
+            <span className="h-[18px] w-px bg-border" />
             <input
               id="phone"
               type="tel"

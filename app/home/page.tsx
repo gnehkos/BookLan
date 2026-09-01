@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronRight, Search } from "lucide-react";
-import Logo from "@/components/Logo";
 import BottomNav from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { AVG_SPEED_KMH } from "@/constants/booking";
+import type { MapVehicle } from "@/components/BusMap";
 
 const BusMap = dynamic(() => import("@/components/BusMap"), {
   ssr: false,
@@ -29,12 +30,24 @@ type ActiveTrip = {
 
 type SortMode = "nearest" | "cheapest";
 
+const NAV_HEIGHT = 68;
+const COLLAPSED_SHEET_HEIGHT = 92;
+const EXPANDED_SHEET_HEIGHT = 380;
+const DRAG_THRESHOLD = 40;
+
 export default function HomePage() {
   const router = useRouter();
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>("nearest");
+  const [name, setName] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const dragStartY = useRef<number | null>(null);
+
+  useEffect(() => {
+    setName(localStorage.getItem("booklan_user_name") ?? "");
+  }, []);
 
   const loadTrips = useCallback(async () => {
     setLoading(true);
@@ -46,6 +59,8 @@ export default function HomePage() {
           "id, company_id, origin, destination, distance_km, seats_available, price_per_km, companies(name, vehicle_type)"
         )
         .eq("status", "active")
+        // A fully booked bus isn't bookable, so don't advertise it.
+        .gt("seats_available", 0)
     );
 
     if (fetchError) {
@@ -70,6 +85,19 @@ export default function HomePage() {
     return list;
   }, [trips, sortMode]);
 
+  const mapVehicles: MapVehicle[] = useMemo(
+    () =>
+      sortedTrips.map((trip) => ({
+        id: trip.id,
+        company: trip.companies?.name ?? "Unknown company",
+        vehicleType: trip.companies?.vehicle_type ?? "bus",
+        destination: trip.destination,
+        distanceKm: trip.distance_km,
+        price: trip.distance_km * trip.price_per_km,
+      })),
+    [sortedTrips]
+  );
+
   function selectTrip(trip: ActiveTrip) {
     sessionStorage.setItem(
       "booklan_trip",
@@ -86,104 +114,181 @@ export default function HomePage() {
     router.push("/booking/pickup");
   }
 
+  function handleDragStart(clientY: number) {
+    dragStartY.current = clientY;
+  }
+
+  function handleDragEnd(clientY: number) {
+    const start = dragStartY.current;
+    dragStartY.current = null;
+    if (start === null) return;
+
+    const delta = start - clientY;
+    if (delta > DRAG_THRESHOLD) setExpanded(true);
+    else if (delta < -DRAG_THRESHOLD) setExpanded(false);
+    else setExpanded((current) => !current);
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-24">
-        <div className="flex items-center justify-between bg-white px-4 py-3">
-          <Logo size="sm" />
-          <button
-            aria-label="Notifications"
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
-          >
-            <Bell className="h-6 w-6 text-text-primary" />
-          </button>
+    // Same 390px phone shell as every other screen, so the map doesn't sprawl
+    // across a laptop viewport while the rest of the app stays a narrow column.
+    <div className="fixed inset-0 flex justify-center overflow-hidden bg-surface">
+      <div className="relative w-full max-w-[390px] overflow-hidden bg-white">
+        {/* Within the shell the map is the page — everything else floats over it. */}
+        <div className="absolute inset-0 z-0">
+          <BusMap vehicles={mapVehicles} />
         </div>
 
-        <div className="bg-white px-4 pb-4">
-          <button
-            onClick={() => router.push("/search")}
-            className="flex h-12 w-full items-center gap-3 rounded-card border border-border bg-surface px-4 text-left"
-          >
-            <Search className="h-5 w-5 text-text-secondary" />
-            <span className="text-[15px] text-text-secondary">Where do you want to go?</span>
-          </button>
-        </div>
-
-        <div className="h-[50vh] w-full">
-          <BusMap />
-        </div>
-
-        <div className="flex items-center justify-between px-4 pt-5 pb-3">
-          <h2 className="text-lg font-bold text-text-primary">Nearby Buses</h2>
-          <div className="flex items-center gap-1 rounded-full bg-white p-1">
-            {(["nearest", "cheapest"] as SortMode[]).map((mode) => (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/95 via-white/80 to-transparent pb-10">
+          <div className="pointer-events-auto w-full px-5 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-[13px] font-semibold text-text-secondary">
+                  Hi, {name || "there"} 👋
+                </span>
+                <h1 className="text-[22px] font-extrabold tracking-[-0.5px] text-text-primary">
+                  Where to today?
+                </h1>
+              </div>
               <button
-                key={mode}
-                onClick={() => setSortMode(mode)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
-                  sortMode === mode
-                    ? "bg-primary text-white"
-                    : "text-text-secondary hover:bg-surface"
-                }`}
+                aria-label="Notifications"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-white shadow-sm"
               >
-                {mode}
+                <Bell className="h-5 w-5 text-text-primary" />
               </button>
-            ))}
+            </div>
+
+            <button
+              onClick={() => router.push("/search")}
+              className="mt-3.5 flex h-[52px] w-full items-center gap-3 rounded-[18px] border border-border bg-white pl-4 pr-1.5 text-left shadow-[0_4px_8px_rgba(13,17,23,0.08)]"
+            >
+              <Search className="h-[18px] w-[18px] shrink-0 text-text-secondary" />
+              <span className="flex-1 truncate text-[14px] font-medium text-text-muted">
+                Where are you going?
+              </span>
+              <span className="flex shrink-0 items-center gap-1.5 rounded-[13px] bg-gradient-to-b from-primary to-primary-dark px-4 py-2.5 text-[13px] font-bold text-white">
+                <Search className="h-[13px] w-[13px]" />
+                Search
+              </span>
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 px-4">
-          {loading && (
+        <div
+          className="absolute inset-x-0 z-20 rounded-t-[24px] border border-border bg-white shadow-[0_-8px_28px_rgba(13,17,23,0.14)] transition-[height] duration-300 ease-out"
+          style={{
+            bottom: NAV_HEIGHT,
+            height: expanded ? EXPANDED_SHEET_HEIGHT : COLLAPSED_SHEET_HEIGHT,
+          }}
+        >
+          <div
+            role="button"
+            tabIndex={0}
+            aria-expanded={expanded}
+            aria-label={expanded ? "Collapse nearby buses" : "Expand nearby buses"}
+            onPointerDown={(e) => handleDragStart(e.clientY)}
+            onPointerUp={(e) => handleDragEnd(e.clientY)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") setExpanded((current) => !current);
+            }}
+            className="cursor-grab touch-none select-none px-4 pt-2.5 active:cursor-grabbing"
+          >
+            <span className="mx-auto mb-3 block h-1 w-10 rounded-[2px] bg-border" />
+            <div className="flex items-center justify-between pb-2.5">
+              <span className="flex items-center gap-2 text-[14px] font-extrabold text-text-primary">
+                <span className="h-1.5 w-1.5 rounded-[3px] bg-success" />
+                Live near you
+                <span className="rounded-pill bg-success/10 px-2 py-0.5 text-[10px] font-bold tracking-[0.4px] text-success">
+                  LIVE
+                </span>
+              </span>
+              <span className="text-[12px] font-semibold text-text-secondary">
+                {sortedTrips.length} nearby
+              </span>
+            </div>
+          </div>
+
+          {expanded && (
             <>
-              <div className="h-24 w-full animate-pulse rounded-card bg-white" />
-              <div className="h-24 w-full animate-pulse rounded-card bg-white" />
+              <div className="flex items-center justify-between px-4 pb-2">
+                <div className="flex items-center gap-1 rounded-pill bg-surface p-1">
+                  {(["nearest", "cheapest"] as SortMode[]).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setSortMode(mode)}
+                      className={`rounded-pill px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                        sortMode === mode ? "bg-primary text-white" : "text-text-secondary"
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className="flex flex-col gap-2.5 overflow-y-auto px-4 pb-4"
+                style={{ maxHeight: 232 }}
+              >
+                {loading && (
+                  <>
+                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-card bg-surface" />
+                    <div className="h-[74px] w-full shrink-0 animate-pulse rounded-card bg-surface" />
+                  </>
+                )}
+
+                {!loading && error && <ErrorState message={error} onRetry={loadTrips} />}
+
+                {!loading && !error && sortedTrips.length === 0 && (
+                  <p className="py-8 text-center text-sm text-text-secondary">
+                    No active buses right now. Check back soon.
+                  </p>
+                )}
+
+                {!loading &&
+                  !error &&
+                  sortedTrips.map((trip) => {
+                    const lowSeats = trip.seats_available < 3;
+                    const price = (trip.distance_km * trip.price_per_km).toFixed(2);
+                    const etaMinutes = Math.round((trip.distance_km / AVG_SPEED_KMH) * 60);
+
+                    return (
+                      <button
+                        key={trip.id}
+                        onClick={() => selectTrip(trip)}
+                        className="flex shrink-0 items-center gap-3 rounded-card border border-border bg-white p-3 text-left"
+                      >
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="truncate text-[14px] font-bold text-text-primary">
+                              {trip.companies?.name ?? "Unknown company"}
+                            </span>
+                            <span className="shrink-0 rounded-pill bg-surface px-2 py-0.5 text-[10px] font-medium capitalize text-text-secondary">
+                              {trip.companies?.vehicle_type ?? "bus"}
+                            </span>
+                          </div>
+                          <span className="truncate text-[12px] text-text-secondary">
+                            {trip.origin} → {trip.destination}
+                          </span>
+                          <div className="flex items-center gap-2.5 text-[11px] text-text-muted">
+                            <span>{trip.distance_km} km</span>
+                            <span>~{etaMinutes} min</span>
+                            <span className={lowSeats ? "font-semibold text-error" : ""}>
+                              {trip.seats_available} seats
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className="text-[15px] font-extrabold text-primary">${price}</span>
+                          <ChevronRight className="h-4 w-4 text-text-muted" />
+                        </div>
+                      </button>
+                    );
+                  })}
+              </div>
             </>
           )}
-
-          {!loading && error && <ErrorState message={error} onRetry={loadTrips} />}
-
-          {!loading && !error && sortedTrips.length === 0 && (
-            <p className="py-8 text-center text-sm text-text-secondary">
-              No active buses right now. Check back soon.
-            </p>
-          )}
-
-          {!loading &&
-            !error &&
-            sortedTrips.map((trip) => {
-              const lowSeats = trip.seats_available < 3;
-              const price = (trip.distance_km * trip.price_per_km).toFixed(2);
-
-              return (
-                <button
-                  key={trip.id}
-                  onClick={() => selectTrip(trip)}
-                  className="flex items-center gap-3 rounded-card bg-white p-4 text-left shadow-sm"
-                >
-                  <div className="flex flex-1 flex-col gap-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-semibold text-text-primary">
-                        {trip.companies?.name ?? "Unknown company"}
-                      </span>
-                      <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
-                        {trip.companies?.vehicle_type ?? "bus"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-[13px] text-text-secondary">
-                      <span>{trip.distance_km} km away</span>
-                      <span className={lowSeats ? "font-semibold text-error" : ""}>
-                        {trip.seats_available} seats left
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-[15px] font-bold text-text-primary">${price}</span>
-                    <ChevronRight className="h-5 w-5 text-text-secondary" />
-                  </div>
-                </button>
-              );
-            })}
         </div>
       </div>
 

@@ -37,7 +37,7 @@ export default function DropoffPage() {
   useEffect(() => {
     const seatStored = sessionStorage.getItem("booklan_seat");
     if (!seatStored) {
-      router.replace(`/booking/${tripId}/seats`);
+      router.replace(`/booking/${tripId}`);
       return;
     }
   }, [router, tripId]);

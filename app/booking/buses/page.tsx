@@ -25,7 +25,7 @@ type ActiveTrip = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type SortMode = "nearest" | "cheapest";
+type SortMode = "soonest" | "cheapest" | "seats";
 
 export default function BusesPage() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function BusesPage() {
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("nearest");
+  const [sortMode, setSortMode] = useState<SortMode>("soonest");
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -65,6 +65,7 @@ export default function BusesPage() {
             "id, company_id, origin, destination, distance_km, seats_available, price_per_km, companies(name, vehicle_type)"
           )
           .eq("status", "active")
+          .gt("seats_available", 0)
           .eq("destination", destination)
       );
 
@@ -86,10 +87,12 @@ export default function BusesPage() {
 
   const sortedTrips = useMemo(() => {
     const list = [...trips];
-    if (sortMode === "nearest") {
+    if (sortMode === "soonest") {
       list.sort((a, b) => a.distance_km - b.distance_km);
-    } else {
+    } else if (sortMode === "cheapest") {
       list.sort((a, b) => a.distance_km * a.price_per_km - b.distance_km * b.price_per_km);
+    } else {
+      list.sort((a, b) => b.seats_available - a.seats_available);
     }
     return list;
   }, [trips, sortMode]);
@@ -107,7 +110,7 @@ export default function BusesPage() {
         companies: trip.companies,
       })
     );
-    router.push(`/booking/${trip.id}/seats`);
+    router.push(`/booking/${trip.id}`);
   }
 
   if (!destination) return null;
@@ -115,7 +118,7 @@ export default function BusesPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-24">
-        <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-4">
+        <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-2">
           <button
             onClick={() => router.back()}
             aria-label="Back"
@@ -126,19 +129,33 @@ export default function BusesPage() {
           <h1 className="text-lg font-bold text-text-primary">Buses to {destination}</h1>
         </div>
 
-        <div className="flex items-center justify-end px-4 pt-4 pb-3">
-          <div className="flex items-center gap-1 rounded-full bg-white p-1">
-            {(["nearest", "cheapest"] as SortMode[]).map((mode) => (
+        <div className="flex items-center gap-2 bg-white px-4 pb-4 text-[13px] text-text-secondary">
+          <span className="font-semibold text-text-primary">
+            {sortedTrips[0]?.origin ?? "Your location"}
+          </span>
+          <span>→</span>
+          <span className="font-semibold text-primary">{destination}</span>
+        </div>
+
+        <div className="flex items-center justify-center gap-1 px-4 pt-4 pb-3">
+          <div className="flex w-full items-center gap-1 rounded-pill bg-white p-1 shadow-sm">
+            {(
+              [
+                { mode: "soonest", label: "Soonest" },
+                { mode: "cheapest", label: "Cheapest" },
+                { mode: "seats", label: "Most seats" },
+              ] as { mode: SortMode; label: string }[]
+            ).map(({ mode, label }) => (
               <button
                 key={mode}
                 onClick={() => setSortMode(mode)}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                className={`flex-1 rounded-pill px-2 py-1.5 text-xs font-semibold transition-colors ${
                   sortMode === mode
                     ? "bg-primary text-white"
                     : "text-text-secondary hover:bg-surface"
                 }`}
               >
-                {mode}
+                {label}
               </button>
             ))}
           </div>
@@ -170,14 +187,22 @@ export default function BusesPage() {
               const etaMinutes = Math.round((trip.distance_km / AVG_SPEED_KMH) * 60);
 
               return (
-                <div key={trip.id} className="flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm">
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1.5">
+                <div
+                  key={trip.id}
+                  className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      <span className="flex items-center gap-1.5 text-[15px] font-bold text-text-primary">
+                        {trip.origin}
+                        <span className="text-text-muted">→</span>
+                        {trip.destination}
+                      </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[15px] font-bold text-text-primary">
+                        <span className="text-[13px] font-semibold text-text-secondary">
                           {trip.companies?.name ?? "Unknown company"}
                         </span>
-                        <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
+                        <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
                           {trip.companies?.vehicle_type ?? "bus"}
                         </span>
                       </div>
@@ -189,12 +214,12 @@ export default function BusesPage() {
                         </span>
                       </div>
                     </div>
-                    <span className="text-[15px] font-bold text-text-primary">${price}</span>
+                    <span className="text-[15px] font-extrabold text-primary">${price}</span>
                   </div>
 
                   <button
                     onClick={() => selectTrip(trip)}
-                    className="h-10 w-full rounded-card bg-primary text-[14px] font-semibold text-white hover:bg-[#15304c]"
+                    className="h-10 w-full rounded-[12px] bg-gradient-to-b from-primary to-primary-dark text-[14px] font-semibold text-white hover:brightness-110"
                   >
                     Select
                   </button>

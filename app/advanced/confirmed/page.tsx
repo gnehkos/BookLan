@@ -16,7 +16,7 @@ type StoredSchedule = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredSeat = { seatNumber: number; totalPrice: number };
+type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 
 export default function AdvancedConfirmedPage() {
   const router = useRouter();
@@ -77,7 +77,10 @@ export default function AdvancedConfirmedPage() {
               label="Departure"
               value={`${schedule.departure_time} – ${schedule.arrival_time}`}
             />
-            <TicketRow label="Seat" value={String(seat.seatNumber)} />
+            <TicketRow
+              label={seat.seatNumbers.length > 1 ? "Seats" : "Seat"}
+              value={seat.seatNumbers.join(", ")}
+            />
             <TicketRow label="Total paid" value={`$${seat.totalPrice.toFixed(2)}`} bold />
           </div>
         </div>

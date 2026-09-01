@@ -14,7 +14,7 @@ type StoredTrip = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredSeat = { seatNumber: number; totalPrice: number };
+type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredDropoff = { name: string };
 
 export default function ConfirmedPage() {
@@ -74,7 +74,10 @@ export default function ConfirmedPage() {
           <div className="flex flex-col gap-2 text-[14px]">
             <TicketRow label="Company" value={trip.companies?.name ?? "Unknown"} />
             <TicketRow label="Route" value={`${trip.origin} → ${trip.destination}`} />
-            <TicketRow label="Seat" value={String(seat.seatNumber)} />
+            <TicketRow
+              label={seat.seatNumbers.length > 1 ? "Seats" : "Seat"}
+              value={seat.seatNumbers.join(", ")}
+            />
             <TicketRow label="Drop-off" value={dropoff.name} />
             <TicketRow label="Total paid" value={`$${seat.totalPrice.toFixed(2)}`} bold />
           </div>

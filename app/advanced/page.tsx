@@ -38,7 +38,7 @@ export default function AdvancedBookingPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("booklan_user_id");
+    const stored = localStorage.getItem("booklan_user_id");
     if (!stored) {
       router.replace("/");
       return;
@@ -60,6 +60,7 @@ export default function AdvancedBookingPage() {
         )
         .eq("origin", from)
         .eq("destination", to)
+        .gt("seats_available", 0)
     );
 
     if (fetchError) {
@@ -159,7 +160,7 @@ export default function AdvancedBookingPage() {
 
           <button
             onClick={handleSearch}
-            className="h-12 w-full rounded-card bg-primary text-[15px] font-semibold text-white hover:bg-[#15304c]"
+            className="h-12 w-full rounded-card bg-gradient-to-b from-primary to-primary-dark text-[15px] font-semibold text-white hover:brightness-110"
           >
             Search Buses
           </button>
@@ -187,20 +188,28 @@ export default function AdvancedBookingPage() {
               schedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  className="flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm"
+                  className="flex flex-col gap-3 rounded-card border border-border bg-white p-4 shadow-sm"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-bold text-text-primary">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-[15px] font-bold text-text-primary">
+                      {schedule.origin}
+                      <span className="text-text-muted">→</span>
+                      {schedule.destination}
+                    </span>
+                    <span className="text-[15px] font-extrabold text-primary">
+                      ${schedule.price_per_seat.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-1 items-center gap-2">
+                      <span className="text-[14px] font-semibold text-text-secondary">
                         {schedule.companies?.name ?? "Unknown company"}
                       </span>
-                      <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
+                      <span className="rounded-pill bg-surface px-2 py-0.5 text-[11px] font-medium capitalize text-text-secondary">
                         {schedule.companies?.vehicle_type ?? "bus"}
                       </span>
                     </div>
-                    <span className="text-[15px] font-bold text-text-primary">
-                      ${schedule.price_per_seat.toFixed(2)}
-                    </span>
                   </div>
 
                   <div className="flex items-center gap-2 text-[15px] font-semibold text-text-primary">
@@ -220,7 +229,7 @@ export default function AdvancedBookingPage() {
 
                   <button
                     onClick={() => selectSchedule(schedule)}
-                    className="h-10 w-full rounded-card bg-primary text-[14px] font-semibold text-white hover:bg-[#15304c]"
+                    className="h-10 w-full rounded-[12px] bg-gradient-to-b from-primary to-primary-dark text-[14px] font-semibold text-white hover:brightness-110"
                   >
                     Select
                   </button>

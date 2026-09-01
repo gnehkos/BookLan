@@ -31,14 +31,14 @@ export default function ProfilePage() {
   const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedUserId = sessionStorage.getItem("booklan_user_id");
+    const storedUserId = localStorage.getItem("booklan_user_id");
     if (!storedUserId) {
       router.replace("/");
       return;
     }
     setUserId(storedUserId);
-    setPhone(sessionStorage.getItem("booklan_phone") ?? "");
-    setName(sessionStorage.getItem("booklan_user_name") ?? "");
+    setPhone(localStorage.getItem("booklan_phone") ?? "");
+    setName(localStorage.getItem("booklan_user_name") ?? "");
   }, [router]);
 
   function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -70,13 +70,16 @@ export default function ProfilePage() {
     }
 
     setName(trimmed);
-    sessionStorage.setItem("booklan_user_name", trimmed);
+    localStorage.setItem("booklan_user_name", trimmed);
     setSavingName(false);
     setEditingName(false);
   }
 
   async function handleLogout() {
     sessionStorage.clear();
+    localStorage.removeItem("booklan_user_id");
+    localStorage.removeItem("booklan_user_name");
+    localStorage.removeItem("booklan_phone");
     document.cookie = "booklan_session=; path=/; max-age=0";
     await supabase.auth.signOut();
     router.push("/");
@@ -143,10 +146,13 @@ export default function ProfilePage() {
             </button>
           )}
 
-          <span className="text-[13px] text-text-secondary">{phone}</span>
+          <span className="text-[13px] text-text-muted">{phone}</span>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 px-4">
+        <div className="mt-6 flex flex-col gap-2.5 px-4">
+          <span className="px-1 text-[12px] font-bold tracking-[0.4px] text-text-muted">
+            PREFERENCES
+          </span>
           <SettingsRow
             icon={<Bell className="h-5 w-5" />}
             label="Notifications"
@@ -159,6 +165,12 @@ export default function ProfilePage() {
             label="Language"
             trailing={<span className="text-[13px] text-text-secondary">English</span>}
           />
+        </div>
+
+        <div className="mt-6 flex flex-col gap-2.5 px-4">
+          <span className="px-1 text-[12px] font-bold tracking-[0.4px] text-text-muted">
+            SUPPORT
+          </span>
           <SettingsRow
             icon={<HelpCircle className="h-5 w-5" />}
             label="Help and Support"

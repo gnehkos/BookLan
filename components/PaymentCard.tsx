@@ -21,8 +21,8 @@ export default function PaymentCard({
     setError(null);
 
     try {
-      const userName = sessionStorage.getItem("booklan_user_name") ?? "";
-      const userPhone = sessionStorage.getItem("booklan_phone") ?? "";
+      const userName = localStorage.getItem("booklan_user_name") ?? "";
+      const userPhone = localStorage.getItem("booklan_phone") ?? "";
       const [firstname, ...rest] = userName.trim().split(" ");
 
       const payRes = await fetch("/api/aba-purchase", {

@@ -11,7 +11,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
-  primary: "bg-primary text-white hover:bg-[#15304c] disabled:bg-primary/50",
+  primary:
+    "bg-gradient-to-b from-primary to-primary-dark text-white shadow-[0_4px_10px_rgba(26,58,92,0.28)] hover:brightness-110 disabled:opacity-50 disabled:shadow-none",
   outline:
     "bg-white text-text-primary border border-border hover:bg-surface disabled:opacity-50",
   ghost: "bg-transparent text-text-secondary hover:bg-surface disabled:opacity-50",

@@ -16,7 +16,7 @@ export default function CreateProfilePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("booklan_phone");
+    const stored = localStorage.getItem("booklan_phone");
     if (!stored) {
       router.replace("/auth/phone");
       return;
@@ -48,8 +48,8 @@ export default function CreateProfilePage() {
       return;
     }
 
-    sessionStorage.setItem("booklan_user_id", data.id);
-    sessionStorage.setItem("booklan_user_name", finalName ?? "");
+    localStorage.setItem("booklan_user_id", data.id);
+    localStorage.setItem("booklan_user_name", finalName ?? "");
     document.cookie = `booklan_session=${data.id}; path=/; max-age=2592000; samesite=lax`;
     router.push("/home");
   }

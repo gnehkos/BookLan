@@ -1,15 +1,20 @@
 export const colors = {
   primary: "#1A3A5C",
+  primaryDark: "#112A46",
   secondary: "#2563EB",
   background: "#FFFFFF",
-  surface: "#F5F7FA",
-  textPrimary: "#111827",
-  textSecondary: "#6B7280",
-  success: "#16A34A",
-  error: "#DC2626",
-  border: "#E5E7EB",
+  surface: "#F4F7FB",
+  accent: "#EBF4FF",
+  textPrimary: "#0D1117",
+  textSecondary: "#64748B",
+  textMuted: "#94A3B8",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  error: "#EF4444",
+  border: "#E2E8F0",
 } as const;
 
 export const radius = {
-  card: "12px",
+  card: "16px",
+  pill: "100px",
 } as const;

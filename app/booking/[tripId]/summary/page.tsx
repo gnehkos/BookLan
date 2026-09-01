@@ -20,8 +20,8 @@ type StoredTrip = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredPickup = { lat: number; lng: number };
-type StoredSeat = { seatNumber: number; totalPrice: number };
+type StoredPickup = { lat: number; lng: number; stationName?: string };
+type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredDropoff = { id: string; name: string; address: string };
 
 export default function SummaryPage() {
@@ -46,7 +46,7 @@ export default function SummaryPage() {
       return;
     }
     if (!seatStored) {
-      router.replace(`/booking/${tripId}/seats`);
+      router.replace(`/booking/${tripId}`);
       return;
     }
     if (!dropoffStored) {
@@ -64,7 +64,7 @@ export default function SummaryPage() {
   async function handlePaymentSuccess() {
     if (!trip || !pickup || !seat || !dropoff) return;
 
-    const userId = sessionStorage.getItem("booklan_user_id");
+    const userId = localStorage.getItem("booklan_user_id");
     const ticketId = generateTicketId();
 
     const { data: booking, error: insertError } = await safeQuery(
@@ -73,7 +73,7 @@ export default function SummaryPage() {
         .insert({
           user_id: userId,
           trip_id: trip.id,
-          seat_number: seat.seatNumber,
+          seat_numbers: seat.seatNumbers,
           pickup_lat: pickup.lat,
           pickup_lng: pickup.lng,
           dropoff_station_id: dropoff.id,
@@ -103,7 +103,13 @@ export default function SummaryPage() {
       if (currentTrip) {
         await supabase
           .from("active_trips")
-          .update({ seats_available: currentTrip.seats_available - 1 })
+          .update({
+            // Never let a trip go negative, however the count drifted.
+            seats_available: Math.max(
+              0,
+              currentTrip.seats_available - seat.seatNumbers.length
+            ),
+          })
           .eq("id", trip.id);
       }
     } catch {
@@ -137,8 +143,11 @@ export default function SummaryPage() {
               From
             </span>
             <span className="text-[15px] text-text-primary">
-              {pickup.lat.toFixed(4)}, {pickup.lng.toFixed(4)}
+              {pickup.stationName ?? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
             </span>
+            {pickup.stationName && (
+              <span className="text-[13px] text-text-secondary">Station pickup</span>
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">
@@ -152,7 +161,10 @@ export default function SummaryPage() {
 
           <Row label="Company" value={trip.companies?.name ?? "Unknown"} />
           <Row label="Vehicle type" value={trip.companies?.vehicle_type ?? "bus"} capitalize />
-          <Row label="Seat number" value={String(seat.seatNumber)} />
+          <Row
+            label={seat.seatNumbers.length > 1 ? "Seat numbers" : "Seat number"}
+            value={seat.seatNumbers.join(", ")}
+          />
           <Row label="Distance" value={`${trip.distance_km} km`} />
           <Row label="Price per km" value={`$${trip.price_per_km.toFixed(2)}`} />
           <Row label="Service fee" value={`$${SERVICE_FEE_USD.toFixed(2)}`} />

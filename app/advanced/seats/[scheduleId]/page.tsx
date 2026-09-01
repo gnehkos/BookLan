@@ -18,6 +18,8 @@ type ScheduleDetail = {
   departure_time: string;
   arrival_time: string;
   price_per_seat: number;
+  seats_total: number;
+  seats_available: number;
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
@@ -29,7 +31,7 @@ export default function AdvancedSeatsPage() {
   const [schedule, setSchedule] = useState<ScheduleDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSeat, setSelectedSeat] = useState<number | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function AdvancedSeatsPage() {
         supabase
           .from("schedules")
           .select(
-            "id, origin, destination, departure_time, arrival_time, price_per_seat, companies(name, vehicle_type)"
+            "id, origin, destination, departure_time, arrival_time, price_per_seat, seats_total, seats_available, companies(name, vehicle_type)"
           )
           .eq("id", scheduleId)
           .single()
@@ -71,13 +73,21 @@ export default function AdvancedSeatsPage() {
     };
   }, [scheduleId, refreshKey]);
 
-  const vehicleType = schedule?.companies?.vehicle_type ?? "bus";
+  const totalPrice = schedule ? schedule.price_per_seat * selectedSeats.length : 0;
+
+  function toggleSeat(seat: number) {
+    setSelectedSeats((current) => {
+      if (current.includes(seat)) return current.filter((s) => s !== seat);
+      if (!schedule || current.length >= schedule.seats_available) return current;
+      return [...current, seat].sort((a, b) => a - b);
+    });
+  }
 
   function handleContinue() {
-    if (!selectedSeat || !schedule) return;
+    if (selectedSeats.length === 0 || !schedule) return;
     sessionStorage.setItem(
       "booklan_advanced_seat",
-      JSON.stringify({ seatNumber: selectedSeat, totalPrice: schedule.price_per_seat })
+      JSON.stringify({ seatNumbers: selectedSeats, totalPrice })
     );
     router.push("/advanced/summary");
   }
@@ -147,18 +157,39 @@ export default function AdvancedSeatsPage() {
 
         <div className="mt-6 px-4">
           <SeatMap
-            vehicleType={vehicleType}
-            selectedSeat={selectedSeat}
-            onSelect={setSelectedSeat}
+            seatsTotal={schedule.seats_total}
+            seatsAvailable={schedule.seats_available}
+            selectedSeats={selectedSeats}
+            onToggle={toggleSeat}
             seedKey={scheduleId}
           />
         </div>
 
-        {selectedSeat && (
-          <div className="mt-auto px-4 pt-8">
-            <Button onClick={handleContinue}>Continue</Button>
+        <div className="mt-auto px-4 pt-8">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[12px] font-semibold text-text-secondary">
+                Selected seats
+              </span>
+              <span
+                className={`text-[14px] font-bold ${
+                  selectedSeats.length ? "text-text-primary" : "text-text-muted"
+                }`}
+              >
+                {selectedSeats.length ? selectedSeats.join(", ") : "None selected"}
+              </span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[12px] font-semibold text-text-secondary">Subtotal</span>
+              <span className="text-[16px] font-extrabold text-primary">
+                ${totalPrice.toFixed(2)}
+              </span>
+            </div>
           </div>
-        )}
+          <Button disabled={selectedSeats.length === 0} onClick={handleContinue}>
+            Continue
+          </Button>
+        </div>
       </div>
 
       <BottomNav />
