@@ -223,26 +223,30 @@ export default function ProfilePage() {
         </div>
 
         <div className="mx-4 flex flex-col items-center gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          {/* overflow-hidden lives on the inner circle only — on the button it
+              clipped the camera badge that hangs off the bottom-right. */}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingPhoto}
-            className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface"
+            className="relative h-24 w-24"
             aria-label="Change profile photo"
           >
-            {photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photoUrl} alt="Your profile" className="h-full w-full object-cover" />
-            ) : (
-              <UserIcon className="h-10 w-10 text-text-muted" />
-            )}
+            <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface">
+              {photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={photoUrl} alt="Your profile" className="h-full w-full object-cover" />
+              ) : (
+                <UserIcon className="h-10 w-10 text-text-muted" />
+              )}
 
-            {uploadingPhoto && (
-              <span className="absolute inset-0 flex items-center justify-center bg-black/40">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
-              </span>
-            )}
+              {uploadingPhoto && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </span>
+              )}
+            </span>
 
-            <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary ring-2 ring-white">
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-primary ring-[3px] ring-white">
               <Camera className="h-4 w-4 text-white" />
             </span>
           </button>

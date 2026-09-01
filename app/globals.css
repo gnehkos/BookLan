@@ -88,6 +88,11 @@ body {
   outline: none;
 }
 
+/* Tiles are CARTO Positron (keyed via NEXT_PUBLIC_MAP_TILE_URL) — already the
+   pale blue-grey the UI is designed against, so no filtering here. If the key
+   is ever removed the base falls back to OpenStreetMap, which will look
+   noticeably more colourful. */
+
 /* Kill the default focus ring that clashes with the design. */
 .leaflet-container:focus,
 .leaflet-container *:focus,

@@ -8,9 +8,23 @@ import { colors } from "@/constants/theme";
  * marker markup as raw HTML outside React.
  */
 
-/** CartoDB Positron: light and low-contrast, so our navy UI reads on top. */
-export const TILE_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-export const TILE_ATTRIBUTION = "© OpenStreetMap contributors © CARTO";
+/**
+ * Base map tiles.
+ *
+ * Standard OpenStreetMap by default: keyless, and it renders clean. CARTO's
+ * Positron looked better under our navy UI, but CARTO now watermarks
+ * "API KEY REQUIRED" across unauthenticated tiles, so it can't be used bare.
+ *
+ * To go back to Positron (or any keyed provider), set NEXT_PUBLIC_MAP_TILE_URL
+ * and NEXT_PUBLIC_MAP_ATTRIBUTION — no code change needed. For a free CARTO
+ * key that would be:
+ *   NEXT_PUBLIC_MAP_TILE_URL=https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?api_key=YOUR_KEY
+ */
+export const TILE_URL =
+  process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+export const TILE_ATTRIBUTION =
+  process.env.NEXT_PUBLIC_MAP_ATTRIBUTION || "© OpenStreetMap contributors";
 
 export const userIcon = L.divIcon({
   className: "",

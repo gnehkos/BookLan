@@ -38,11 +38,29 @@ type TripBooking = {
 
 /**
  * Trip simulation. With no driver app and no live vehicle feed, the journey is
- * played back client-side: the bus advances along the pickup → station line on
- * a timer. Distances and the destination are real; the movement is simulated.
+ * played back client-side. Distances and the destination are real; the movement
+ * is simulated.
+ *
+ * Progress is derived from a start timestamp kept in localStorage, not from a
+ * counter in component state — otherwise leaving the screen and coming back
+ * remounts the page and restarts the journey from the beginning.
  */
-const TICK_MS = 1200;
-const TRIP_TICKS = 24;
+const TRIP_DURATION_MS = 29_000;
+const TICK_MS = 500;
+
+function startedAtKey(bookingId: string) {
+  return `booklan_trip_started_${bookingId}`;
+}
+
+/** First view of a trip stamps its start; later views read it back. */
+function readOrStampStart(bookingId: string) {
+  const key = startedAtKey(bookingId);
+  const existing = Number(localStorage.getItem(key));
+  if (existing > 0) return existing;
+  const now = Date.now();
+  localStorage.setItem(key, String(now));
+  return now;
+}
 
 /** Starting estimate for the panel; the real height is measured on mount. */
 const PANEL_HEIGHT_FALLBACK = 240;
@@ -55,9 +73,9 @@ export default function TripPage() {
   const [booking, setBooking] = useState<TripBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
-  const startedAt = useRef<number | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [panelRef, panelHeight] = useMeasuredHeight<HTMLDivElement>(PANEL_HEIGHT_FALLBACK);
 
   useEffect(() => {
@@ -86,8 +104,9 @@ export default function TripPage() {
         setLoadError("This trip belongs to a different account.");
       } else {
         setBooking(row);
-        // An already-finished trip opens at the end, rather than replaying.
-        if (row.status === "completed") setProgress(1);
+        // A finished trip opens at the end; a running one resumes from when it
+        // actually started rather than replaying from zero.
+        setStartedAt(row.status === "completed" ? 0 : readOrStampStart(bookingId));
       }
       setLoading(false);
     }
@@ -98,19 +117,24 @@ export default function TripPage() {
     };
   }, [bookingId, refreshKey]);
 
-  // Advance the simulated journey.
+  // Re-render on a tick; the actual position comes from elapsed wall-clock time.
   useEffect(() => {
-    if (!booking || progress >= 1) return;
-    if (startedAt.current === null) startedAt.current = Date.now();
+    if (!booking || startedAt === null) return;
+    if (Date.now() - startedAt >= TRIP_DURATION_MS) return;
 
-    const interval = setInterval(() => {
-      setProgress((current) => Math.min(1, current + 1 / TRIP_TICKS));
-    }, TICK_MS);
-
+    const interval = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(interval);
-  }, [booking, progress]);
+  }, [booking, startedAt, now]);
 
   const handleRetry = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  // How far along the journey is, measured from when it actually began.
+  const progress =
+    startedAt === null
+      ? 0
+      : startedAt === 0
+        ? 1
+        : Math.min(1, (now - startedAt) / TRIP_DURATION_MS);
 
   // Arriving ends the booking; without this it stays "confirmed" forever and
   // keeps blocking the next pickup booking.
