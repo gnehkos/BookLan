@@ -7,9 +7,19 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
+/**
+ * The browser tab carries the name and the slogan; app/icon.svg supplies the
+ * mark beside them. `template` keeps the name on any page that sets its own
+ * title rather than replacing the branding outright.
+ */
 export const metadata: Metadata = {
-  title: "BookLan",
-  description: "Book a seat on any passing intercity bus. No station. No waiting.",
+  title: {
+    default: "BookLan — No station. No waiting.",
+    template: "%s · BookLan",
+  },
+  description:
+    "Book a seat on any passing intercity bus in Cambodia. Flag one down from the roadside, or reserve a scheduled departure in advance.",
+  applicationName: "BookLan",
 };
 
 export const viewport: Viewport = {

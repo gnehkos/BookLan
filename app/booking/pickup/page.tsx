@@ -101,7 +101,7 @@ export default function PickupPage() {
 
         {/* Floating instruction bar */}
         <div className="absolute inset-x-4 top-5 z-20">
-          <div className="flex items-center gap-3 rounded-[16px] bg-white px-3.5 py-3 shadow-[0_4px_10px_rgba(0,0,0,0.12)]">
+          <div className="glass glass-solid flex items-center gap-3 rounded-[16px] px-3.5 py-3">
             <button
               onClick={() => router.push("/search")}
               aria-label="Back"
@@ -121,7 +121,7 @@ export default function PickupPage() {
         </div>
 
         {/* Zone legend */}
-        <div className="absolute left-4 top-[104px] z-20 flex w-[158px] flex-col gap-2.5 rounded-[14px] border border-[#f1f5f9] bg-white px-3.5 py-3 shadow-[0_4px_8px_rgba(0,0,0,0.12)]">
+        <div className="glass glass-solid absolute left-4 top-[104px] z-20 flex w-[158px] flex-col gap-2.5 rounded-[14px] px-3.5 py-3">
           <span className="text-[9px] font-extrabold uppercase tracking-[0.6px] text-text-muted">
             Pickup zones
           </span>
@@ -154,7 +154,7 @@ export default function PickupPage() {
         {/* Bottom sheet, kept deliberately short so the map stays readable */}
         <div
           ref={sheetRef}
-          className="absolute inset-x-4 bottom-4 z-20 rounded-[22px] border border-border bg-white/95 px-4 py-3.5 shadow-[var(--shadow-lift)] backdrop-blur-xl"
+          className="glass glass-solid absolute inset-x-4 bottom-4 z-20 rounded-[22px] px-4 py-3.5"
         >
           <div className="flex items-center gap-2.5">
             <span

@@ -300,7 +300,7 @@ export default function TrackingPage() {
           <button
             onClick={() => router.back()}
             aria-label="Back"
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white shadow-sm"
+            className="glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
@@ -308,7 +308,7 @@ export default function TrackingPage() {
 
         {/* Ticket pill — what the driver checks against on arrival. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-end px-4 pt-5">
-          <span className="inline-flex items-center gap-1.5 rounded-pill border border-border bg-white px-3 py-1.5 shadow-[var(--shadow-float)]">
+          <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5">
             <Ticket className="h-3.5 w-3.5 text-primary" />
             <span className="font-mono text-[12px] font-medium text-text-primary">
               {booking.ticket_id}
@@ -319,7 +319,7 @@ export default function TrackingPage() {
         {/* Floating panel: detached from the edges and clear of the nav. */}
         <div
           ref={panelRef}
-          className="absolute inset-x-4 z-20 rounded-[16px] bg-white p-4 shadow-[var(--shadow-float)]"
+          className="glass glass-solid absolute inset-x-4 z-20 rounded-[20px] p-4"
           style={{ bottom: NAV_CLEARANCE + 8 }}
         >
           <div className="flex items-center gap-3">

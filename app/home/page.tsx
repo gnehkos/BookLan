@@ -23,22 +23,18 @@ const BusMap = dynamic(() => import("@/components/BusMap"), {
  */
 export default function HomePage() {
   const router = useRouter();
-  const [name, setName] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    setName(localStorage.getItem("booklan_user_name") ?? "");
-
     const userId = localStorage.getItem("booklan_user_id");
     if (!userId) return;
 
     let cancelled = false;
     (async () => {
       const { data } = await safeQuery(
-        supabase.from("users").select("name, profile_photo_url").eq("id", userId).single()
+        supabase.from("users").select("profile_photo_url").eq("id", userId).single()
       );
       if (cancelled || !data) return;
-      setName(data.name ?? "");
       setPhotoUrl(data.profile_photo_url);
     })();
 
@@ -70,14 +66,14 @@ export default function HomePage() {
                 <button
                   onClick={() => router.push("/inbox")}
                   aria-label="Inbox"
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white shadow-sm"
+                  className="glass flex h-11 w-11 items-center justify-center rounded-full"
                 >
                   <Inbox className="h-5 w-5 text-text-primary" />
                 </button>
                 <button
                   onClick={() => router.push("/profile")}
                   aria-label="Your profile"
-                  className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-border bg-white shadow-sm"
+                  className="glass flex h-11 w-11 items-center justify-center overflow-hidden rounded-full"
                 >
                   {photoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -89,18 +85,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="mt-3.5 flex min-w-0 flex-col">
-              <span className="text-[13px] font-semibold text-text-secondary">
-                Hi, {name || "there"} 👋
-              </span>
-              <h1 className="text-[22px] font-extrabold tracking-[-0.5px] text-text-primary">
-                Where to today?
-              </h1>
-            </div>
-
             <button
               onClick={() => router.push("/search")}
-              className="mt-3.5 flex h-[52px] w-full items-center gap-3 rounded-[18px] border border-border bg-white pl-4 pr-1.5 text-left shadow-[0_4px_8px_rgba(13,17,23,0.08)]"
+              className="glass mt-4 flex h-[54px] w-full items-center gap-3 rounded-[18px] pl-4 pr-1.5 text-left"
             >
               <Search className="h-[18px] w-[18px] shrink-0 text-text-secondary" />
               <span className="flex-1 truncate text-[14px] font-medium text-text-muted">

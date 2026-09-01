@@ -20,16 +20,16 @@ export const CITIES = [
  * actually travel there rather than alphabetically.
  */
 export const POPULAR_DESTINATIONS = [
-  { name: "Siem Reap", note: "Angkor Wat" },
-  { name: "Sihanoukville", note: "Beaches" },
-  { name: "Battambang", note: "Northwest" },
-  { name: "Kampot", note: "Riverside" },
-  { name: "Kep", note: "Crab market" },
-  { name: "Kampong Cham", note: "Mekong" },
-  { name: "Svay Rieng", note: "Southeast" },
-  { name: "Prey Veng", note: "Southeast" },
-  { name: "Takeo", note: "South" },
-  { name: "Kratie", note: "Dolphins" },
+  { name: "Siem Reap", note: "Angkor Wat and the temples" },
+  { name: "Sihanoukville", note: "Beaches and the islands" },
+  { name: "Battambang", note: "Colonial streets, rice country" },
+  { name: "Kampot", note: "Riverside and pepper farms" },
+  { name: "Kep", note: "Crab market and the coast" },
+  { name: "Kampong Cham", note: "Mekong riverside town" },
+  { name: "Svay Rieng", note: "Southeast, toward the border" },
+  { name: "Prey Veng", note: "Southeast farmland" },
+  { name: "Takeo", note: "Temple country, south" },
+  { name: "Kratie", note: "Mekong river dolphins" },
 ] as const;
 
 /**

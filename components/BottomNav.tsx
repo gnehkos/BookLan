@@ -13,7 +13,10 @@ const TABS: { label: string; href: string; icon: ComponentType<{ className?: str
 ];
 
 /** Height of the bar plus its bottom margin — screens pad past this. */
-export const NAV_CLEARANCE = 88;
+export const NAV_CLEARANCE = 80;
+
+/** One shared curve, with a little overshoot so movement settles rather than stops. */
+const EASE = "ease-[cubic-bezier(0.32,1.28,0.5,1)]";
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -23,20 +26,8 @@ export default function BottomNav() {
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
-      <div className="pointer-events-auto relative flex w-full max-w-[358px] items-stretch rounded-pill border border-border bg-white/90 p-1.5 shadow-[var(--shadow-float)] backdrop-blur-xl">
-        {/* One pill that slides between tabs, rather than four that pop in and
-            out. The overshooting easing gives it the small settle that makes
-            the movement feel physical. */}
-        <span
-          aria-hidden
-          className="absolute inset-y-1.5 rounded-pill bg-primary transition-[left,opacity] duration-[420ms] ease-[cubic-bezier(0.34,1.32,0.5,1)]"
-          style={{
-            width: `calc((100% - 12px) / ${TABS.length})`,
-            left: `calc(6px + ${activeIndex < 0 ? 0 : activeIndex} * (100% - 12px) / ${TABS.length})`,
-            opacity: activeIndex < 0 ? 0 : 1,
-          }}
-        />
-
+      {/* `.glass` lives in globals.css so every frosted panel is tuned in one place. */}
+      <div className="glass pointer-events-auto flex w-full max-w-[358px] gap-1 rounded-pill p-1.5">
         {TABS.map(({ label, href, icon: Icon }, index) => {
           const active = index === activeIndex;
           return (
@@ -44,22 +35,32 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              // Icon over label keeps all four labels fully readable, so
-              // nothing truncates to "Plan T…" at narrow widths.
-              className="relative z-10 flex flex-1 flex-col items-center justify-center gap-1 rounded-pill py-2"
+              /*
+               * The selected tab grows to make room for its own label and the
+               * others shrink to icons, so the highlight expands into place
+               * rather than jumping between four fixed slots. It also removes
+               * the truncation the four-label layout used to suffer at narrow
+               * widths.
+               */
+              className={`group relative flex items-center justify-center gap-2 overflow-hidden rounded-pill py-2.5 transition-[flex-grow,background-color,color] duration-[420ms] ${EASE} ${
+                active
+                  ? "flex-[2.2] bg-primary text-white shadow-[0_4px_12px_rgba(16,37,68,0.25)]"
+                  : "flex-1 text-text-secondary hover:bg-white/60"
+              }`}
             >
               <Icon
-                className={`h-[20px] w-[20px] shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.4,0.5,1)] ${
-                  active ? "-translate-y-0.5 scale-110 text-white" : "text-text-muted"
+                className={`h-[19px] w-[19px] shrink-0 transition-transform duration-[420ms] ${EASE} ${
+                  active ? "scale-105" : "group-active:scale-90"
                 }`}
               />
               <span
-                className={`whitespace-nowrap text-[11px] leading-none transition-colors duration-200 ${
-                  active ? "font-bold text-white" : "font-medium text-text-muted"
+                className={`overflow-hidden whitespace-nowrap text-[12.5px] font-bold transition-[max-width,opacity] duration-[420ms] ${EASE} ${
+                  active ? "max-w-[90px] opacity-100" : "max-w-0 opacity-0"
                 }`}
               >
                 {label}
               </span>
+              <span className="sr-only">{label}</span>
             </Link>
           );
         })}

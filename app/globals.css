@@ -57,6 +57,30 @@
   --shadow-lift: 0 16px 44px rgba(16, 37, 68, 0.14);
 }
 
+/* --------------------------------------------------------------------------
+   Frosted panels.
+
+   Used sparingly, for elements that float over the map or over scrolling
+   content — the nav, the search bar, the sheets that sit on a map. Saturating
+   the backdrop is what keeps colour showing through the blur instead of the
+   whole thing going grey, and the inset highlight stands in for light catching
+   the top edge.
+   -------------------------------------------------------------------------- */
+.glass {
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    0 8px 32px rgba(16, 37, 68, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+}
+
+/* For panels carrying body text, where too much show-through hurts reading. */
+.glass-solid {
+  background: rgba(255, 255, 255, 0.85);
+}
+
 html {
   /* Reserve the scrollbar track on every page. Without this, a tall page like
      Profile gains a scrollbar, the viewport narrows, and the centred phone
