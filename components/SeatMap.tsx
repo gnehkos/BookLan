@@ -60,38 +60,38 @@ export default function SeatMap({
   }, [seatsTotal, seatsAvailable, seedKey]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-4 text-[11px] font-semibold text-text-secondary">
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-3 text-[11px] font-medium text-text-secondary">
         <span className="flex items-center gap-1.5">
-          <span className="h-[22px] w-[22px] rounded-[6px] border border-border bg-surface" />
+          <span className="h-[18px] w-[18px] rounded-[5px] border border-border bg-surface" />
           Available
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] border border-primary bg-primary">
+          <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border border-primary bg-primary">
             <Check className="h-[9px] w-[9px] text-white" strokeWidth={3} />
           </span>
           Selected
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="flex h-[22px] w-[22px] items-center justify-center rounded-[6px] border border-border bg-border">
+          <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border border-border bg-border">
             <X className="h-[9px] w-[9px] text-text-secondary" strokeWidth={3} />
           </span>
           Occupied
         </span>
       </div>
 
-      <div className="rounded-[28px] bg-surface px-5 pb-5 pt-4">
-        <span className="mx-auto mb-3 block w-fit rounded-pill border border-border bg-white px-4 py-1 text-[10px] font-extrabold tracking-[0.5px] text-text-secondary">
+      <div className="rounded-[20px] bg-surface px-4 pb-4 pt-3">
+        <span className="mx-auto mb-2.5 block w-fit rounded-pill border border-border bg-white px-3 py-0.5 text-[10px] font-semibold tracking-[0.5px] text-text-secondary">
           FRONT
         </span>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           {Array.from({ length: rows }).map((_, rowIndex) => (
-            <div key={rowIndex} className="flex items-center gap-2">
+            <div key={rowIndex} className="flex items-center gap-1.5">
               {Array.from({ length: SEATS_PER_ROW }).map((_, colIndex) => {
                 const seatNumber = rowIndex * SEATS_PER_ROW + colIndex + 1;
                 if (seatNumber > seatsTotal) {
-                  return <span key={seatNumber} className="h-11 w-12" />;
+                  return <span key={seatNumber} className="h-9 w-10" />;
                 }
 
                 const isTaken = takenSeats.has(seatNumber);
@@ -106,8 +106,8 @@ export default function SeatMap({
                     disabled={isTaken || blockedByLimit}
                     onClick={() => onToggle(seatNumber)}
                     aria-label={`Seat ${seatNumber}`}
-                    className={`flex h-11 w-12 items-center justify-center rounded-[10px] border text-[13px] font-bold transition-colors ${
-                      colIndex === 1 ? "mr-3" : ""
+                    className={`flex h-9 w-10 items-center justify-center rounded-[8px] border text-[12px] font-semibold transition-colors ${
+                      colIndex === 1 ? "mr-2.5" : ""
                     } ${
                       isTaken
                         ? "cursor-not-allowed border-border bg-border text-text-secondary"

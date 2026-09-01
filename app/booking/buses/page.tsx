@@ -2,20 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Clock,
+  MapPin,
+  Navigation,
+  Star,
+  Users,
+} from "lucide-react";
 import BottomNav from "@/components/BottomNav";
-import DistanceLabel from "@/components/DistanceLabel";
-import Price from "@/components/Price";
-import VehicleBadge from "@/components/VehicleBadge";
+import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
+import { companyProfile } from "@/constants/companyProfile";
 
 type VehicleType = "bus" | "van";
 
-type StoredTrip = {
-  destination: string;
-};
+type StoredTrip = { origin: string; destination: string };
+type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?: string };
 
 type ActiveTrip = {
   id: string;
@@ -30,9 +36,55 @@ type ActiveTrip = {
 
 type SortMode = "soonest" | "cheapest" | "seats";
 
+/**
+ * Per-sort styling. The top result in each mode gets the highlight border and
+ * the tagged price badge, so it reads as the pick for that criterion.
+ */
+const SORT_ACCENT: Record<
+  SortMode,
+  { label: string; strip: string; border: string; badgeBg: string; badgeText: string }
+> = {
+  soonest: {
+    label: "NEAREST",
+    strip: "bg-secondary",
+    border: "border-secondary",
+    badgeBg: "bg-[#EFF6FF]",
+    badgeText: "text-secondary",
+  },
+  cheapest: {
+    label: "CHEAPEST",
+    strip: "bg-success",
+    border: "border-warning",
+    badgeBg: "bg-[#FEF2F2]",
+    badgeText: "text-error",
+  },
+  seats: {
+    label: "MOST SEATS",
+    strip: "bg-success",
+    border: "border-success",
+    badgeBg: "bg-[#F0FDF4]",
+    badgeText: "text-success",
+  },
+};
+
+const SORT_TABS: { mode: SortMode; label: string }[] = [
+  { mode: "soonest", label: "Soonest" },
+  { mode: "cheapest", label: "Cheapest" },
+  { mode: "seats", label: "Most seats" },
+];
+
+function formatDuration(km: number) {
+  const totalMinutes = Math.max(1, Math.round((km / AVG_SPEED_KMH) * 60));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
 export default function BusesPage() {
   const router = useRouter();
+  const [origin, setOrigin] = useState<string | null>(null);
   const [destination, setDestination] = useState<string | null>(null);
+  const [pickup, setPickup] = useState<StoredPickup | null>(null);
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +103,9 @@ export default function BusesPage() {
       return;
     }
     const trip = JSON.parse(tripStored) as StoredTrip;
+    setOrigin(trip.origin);
     setDestination(trip.destination);
+    setPickup(JSON.parse(pickupStored) as StoredPickup);
   }, [router]);
 
   useEffect(() => {
@@ -74,7 +128,7 @@ export default function BusesPage() {
 
       if (!cancelled) {
         if (fetchError) {
-          setError("Couldn't load buses for this route. Check your connection and try again.");
+          setError("Couldn't load buses. Check your connection and try again.");
         } else {
           setTrips((data as unknown as ActiveTrip[]) ?? []);
         }
@@ -118,44 +172,92 @@ export default function BusesPage() {
 
   if (!destination) return null;
 
+  const pickupName =
+    pickup?.stationName ??
+    pickup?.placeName ??
+    (pickup ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}` : "Your location");
+  const longestLeg = sortedTrips.reduce((max, t) => Math.max(max, t.distance_km), 0);
+  const accent = SORT_ACCENT[sortMode];
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-24">
-        <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-2">
+      <div className="flex w-full max-w-[390px] flex-1 flex-col pb-28">
+        <div className="flex items-start gap-3 px-4 pt-6 pb-4">
           <button
             onClick={() => router.back()}
             aria-label="Back"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full hover:bg-surface"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
-            <ArrowLeft className="h-6 w-6 text-text-primary" />
+            <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
-          <h1 className="text-[16px] font-semibold text-text-primary">Buses to {destination}</h1>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h1 className="truncate text-[16px] font-semibold text-text-primary">
+              Buses to {destination}
+            </h1>
+            <span className="mt-0.5 flex items-center gap-1.5 truncate text-[12px]">
+              <span className="text-text-secondary">{origin ?? "Your location"}</span>
+              <span className="text-text-muted">→</span>
+              <span className="font-medium text-primary">{destination}</span>
+            </span>
+          </div>
+          {longestLeg > 0 && (
+            <span className="shrink-0 rounded-pill bg-white px-3 py-1.5 text-[12px] font-medium text-text-secondary shadow-[var(--shadow-float)]">
+              {longestLeg} km
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 bg-white px-4 pb-4 text-[13px] text-text-secondary">
-          <span className="font-semibold text-text-primary">
-            {sortedTrips[0]?.origin ?? "Your location"}
-          </span>
-          <span>→</span>
-          <span className="font-semibold text-primary">{destination}</span>
+        {/* FROM / TO card */}
+        <div className="mx-4 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface">
+              <Navigation className="h-4 w-4 text-text-secondary" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-[12px] text-text-secondary">Your location</span>
+              <span className="truncate text-[14px] font-semibold text-text-primary">
+                {pickupName}
+              </span>
+            </span>
+            <button
+              onClick={() => router.push("/booking/pickup")}
+              aria-label="Change pickup point"
+              className="shrink-0 text-text-muted"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="my-3 h-px bg-border" />
+
+          <button
+            onClick={() => router.push("/search")}
+            className="flex w-full items-center gap-3 text-left"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent">
+              <MapPin className="h-4 w-4 text-primary" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="text-[12px] text-text-secondary">TO · tap to change</span>
+              <span className="truncate text-[14px] font-semibold text-primary">
+                {destination}
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
+          </button>
         </div>
 
-        <div className="flex items-center justify-center gap-1 px-4 pt-4 pb-3">
-          <div className="flex w-full items-center gap-1 rounded-pill bg-white p-1 shadow-sm">
-            {(
-              [
-                { mode: "soonest", label: "Soonest" },
-                { mode: "cheapest", label: "Cheapest" },
-                { mode: "seats", label: "Most seats" },
-              ] as { mode: SortMode; label: string }[]
-            ).map(({ mode, label }) => (
+        {/* Sort tabs */}
+        <div className="px-4 pt-4">
+          <div className="flex items-center gap-1 rounded-pill bg-white/70 p-1">
+            {SORT_TABS.map(({ mode, label }) => (
               <button
                 key={mode}
                 onClick={() => setSortMode(mode)}
-                className={`flex-1 rounded-pill px-2 py-1.5 text-xs font-semibold transition-colors ${
+                className={`flex-1 rounded-pill px-2 py-2 text-[12px] font-medium transition-colors ${
                   sortMode === mode
                     ? "bg-primary text-white"
-                    : "text-text-secondary hover:bg-surface"
+                    : "bg-white text-text-secondary hover:bg-surface"
                 }`}
               >
                 {label}
@@ -164,11 +266,11 @@ export default function BusesPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 px-4">
+        <div className="flex flex-col gap-3 px-4 pt-4">
           {loading && (
             <>
-              <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
-              <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
+              <div className="h-56 w-full animate-pulse rounded-[16px] bg-white" />
+              <div className="h-56 w-full animate-pulse rounded-[16px] bg-white" />
             </>
           )}
 
@@ -178,61 +280,165 @@ export default function BusesPage() {
 
           {!loading && !error && sortedTrips.length === 0 && (
             <p className="py-8 text-center text-sm text-text-secondary">
-              No active buses to {destination} right now.
+              No buses heading to {destination} right now.
             </p>
           )}
 
           {!loading &&
             !error &&
-            sortedTrips.map((trip) => {
-              const lowSeats = trip.seats_available < 3;
-              const price = (trip.distance_km * trip.price_per_km).toFixed(2);
-              const etaMinutes = Math.round((trip.distance_km / AVG_SPEED_KMH) * 60);
-
-              return (
-                <div
-                  key={trip.id}
-                  className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                      <span className="truncate text-[16px] font-semibold text-text-primary">
-                        {trip.origin} → {trip.destination}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-[14px] text-text-secondary">
-                          {trip.companies?.name ?? "Unknown company"}
-                        </span>
-                        <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <DistanceLabel km={trip.distance_km} suffix="away" />
-                        <span className="text-[12px] text-text-secondary">~{etaMinutes} min</span>
-                        <span
-                          className={`text-[12px] ${
-                            lowSeats ? "font-medium text-error" : "text-text-secondary"
-                          }`}
-                        >
-                          {trip.seats_available} seats left
-                        </span>
-                      </div>
-                    </div>
-                    <Price amount={Number(price)} />
-                  </div>
-
-                  <button
-                    onClick={() => selectTrip(trip)}
-                    className="h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
-                  >
-                    Select
-                  </button>
-                </div>
-              );
-            })}
+            sortedTrips.map((trip, index) => (
+              <BusCard
+                key={trip.id}
+                trip={trip}
+                accent={accent}
+                topPick={index === 0}
+                pickupName={pickupName}
+                onSelect={() => selectTrip(trip)}
+              />
+            ))}
         </div>
       </div>
 
       <BottomNav />
     </div>
+  );
+}
+
+function BusCard({
+  trip,
+  accent,
+  topPick,
+  pickupName,
+  onSelect,
+}: {
+  trip: ActiveTrip;
+  accent: (typeof SORT_ACCENT)[SortMode];
+  topPick: boolean;
+  pickupName: string;
+  onSelect: () => void;
+}) {
+  const companyName = trip.companies?.name ?? "Unknown company";
+  const vehicleType = trip.companies?.vehicle_type ?? "bus";
+  const profile = companyProfile(companyName);
+
+  const price = trip.distance_km * trip.price_per_km;
+  const etaMinutes = Math.max(1, Math.round((trip.distance_km / AVG_SPEED_KMH) * 60));
+  const lowSeats = trip.seats_available <= 3;
+
+  return (
+    <article
+      className={`relative overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)] ${
+        topPick ? `border-2 ${accent.border}` : "border border-transparent"
+      }`}
+    >
+      {/* Category strip down the left edge. */}
+      <span className={`absolute inset-y-0 left-0 w-1 ${accent.strip}`} aria-hidden />
+
+      <div className="p-4 pl-5">
+        <div className="flex items-start gap-3">
+          <CompanyLogo name={companyName} size={40} />
+
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-[16px] font-semibold text-text-primary">
+              {companyName}
+            </span>
+            <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+              <span className="font-medium text-text-primary">{profile.rating}</span>
+              <span className="capitalize">· {vehicleType}</span>
+            </span>
+          </div>
+
+          <div
+            className={`shrink-0 rounded-[12px] px-3 py-2 text-right ${accent.badgeBg}`}
+          >
+            {topPick && (
+              <span
+                className={`block text-[9px] font-bold tracking-[0.5px] ${accent.badgeText}`}
+              >
+                {accent.label}
+              </span>
+            )}
+            <span className="block text-[20px] font-bold leading-tight text-primary">
+              ${price.toFixed(2)}
+            </span>
+            <span className="block text-[10px] text-text-secondary">per seat</span>
+          </div>
+        </div>
+
+        {/* Route progress: your spot ─── duration ─── destination */}
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[10px] uppercase tracking-[0.4px] text-text-muted">
+              Your spot
+            </span>
+            <span className="truncate text-[12px] font-medium text-text-primary">
+              {pickupName}
+            </span>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-center">
+            <span className="text-[11px] font-semibold text-text-primary">
+              {formatDuration(trip.distance_km)}
+            </span>
+            <span className="my-1 h-px w-14 bg-border" />
+            <span className="text-[10px] text-text-muted">direct</span>
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col items-end">
+            <span className="text-[10px] uppercase tracking-[0.4px] text-text-muted">To</span>
+            <span className="truncate text-[12px] font-semibold text-primary">
+              {trip.destination}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <InfoChip
+            icon={<MapPin className="h-3.5 w-3.5" />}
+            text={`${trip.distance_km} km away`}
+            className="bg-[#EFF6FF] text-secondary"
+          />
+          <InfoChip
+            icon={<Clock className="h-3.5 w-3.5" />}
+            text={`${etaMinutes} min`}
+            className="bg-[#FEF3C7] text-warning"
+          />
+          <InfoChip
+            icon={<Users className="h-3.5 w-3.5" />}
+            text={`${trip.seats_available} left`}
+            className={
+              lowSeats ? "bg-[#FEF2F2] text-error" : "bg-[#F0FDF4] text-success"
+            }
+          />
+        </div>
+
+        <button
+          onClick={onSelect}
+          className="mt-4 h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
+        >
+          Select
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function InfoChip({
+  icon,
+  text,
+  className,
+}: {
+  icon: React.ReactNode;
+  text: string;
+  className: string;
+}) {
+  return (
+    <span
+      className={`flex items-center justify-center gap-1 rounded-[10px] px-2 py-2 text-[11px] font-medium ${className}`}
+    >
+      {icon}
+      <span className="truncate">{text}</span>
+    </span>
   );
 }

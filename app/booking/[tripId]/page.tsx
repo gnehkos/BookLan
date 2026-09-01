@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Bus, Check, ChevronRight, MapPin, Star, X } from "lucide-react";
 import Button from "@/components/Button";
 import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import CompanyLogo from "@/components/CompanyLogo";
+import CompanyPhotos from "@/components/CompanyPhotos";
 import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
 import VehicleBadge from "@/components/VehicleBadge";
@@ -16,6 +18,7 @@ type VehicleType = "bus" | "van";
 
 type TripDetail = {
   id: string;
+  company_id: string;
   origin: string;
   destination: string;
   distance_km: number;
@@ -25,7 +28,9 @@ type TripDetail = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredPickup = { lat: number; lng: number; stationName?: string };
+type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?: string };
+
+type Review = { id: string; rating: number; comment: string | null; users: { name: string | null } | null };
 
 /** Height of the sticky action bar, so scrolled content never hides under it. */
 const ACTION_BAR_HEIGHT = 92;
@@ -41,6 +46,7 @@ export default function BusDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [seatSheetOpen, setSeatSheetOpen] = useState(false);
+  const [reviews, setReviews] = useState<Review[] | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export default function BusDetailPage() {
         supabase
           .from("active_trips")
           .select(
-            "id, origin, destination, distance_km, price_per_km, seats_total, seats_available, companies(name, vehicle_type)"
+            "id, company_id, origin, destination, distance_km, price_per_km, seats_total, seats_available, companies(name, vehicle_type)"
           )
           .eq("id", tripId)
           .single()
@@ -79,6 +85,28 @@ export default function BusDetailPage() {
       cancelled = true;
     };
   }, [tripId, refreshKey]);
+
+  // Real passenger reviews, once any exist for this company.
+  useEffect(() => {
+    if (!trip?.company_id) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await safeQuery(
+        supabase
+          .from("reviews")
+          .select("id, rating, comment, users(name)")
+          .eq("company_id", trip.company_id)
+          .order("created_at", { ascending: false })
+          .limit(3)
+      );
+      if (!cancelled) setReviews((data as unknown as Review[]) ?? []);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [trip?.company_id]);
 
   const companyName = trip?.companies?.name ?? "Unknown company";
   const vehicleType = trip?.companies?.vehicle_type ?? "bus";
@@ -170,6 +198,7 @@ export default function BusDetailPage() {
         >
           <Card>
             <div className="flex items-center gap-3">
+              <CompanyLogo name={companyName} size={44} />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="truncate text-[16px] font-semibold text-text-primary">
                   {companyName}
@@ -193,6 +222,7 @@ export default function BusDetailPage() {
                 <span className="text-[12px] text-text-secondary">Pickup point</span>
                 <span className="truncate text-[14px] font-medium text-text-primary">
                   {pickup?.stationName ??
+                    pickup?.placeName ??
                     (pickup
                       ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`
                       : "Not set yet")}
@@ -223,37 +253,21 @@ export default function BusDetailPage() {
 
           <Card>
             <span className="text-[16px] font-semibold text-text-primary">Photos</span>
-            <div className="mt-3 flex gap-3 overflow-x-auto">
-              {[0, 1, 2].map((index) => (
-                <div
-                  key={index}
-                  className="flex h-[104px] w-[168px] shrink-0 items-center justify-center rounded-[12px] bg-surface"
-                >
-                  <Bus className="h-8 w-8 text-text-muted" strokeWidth={1.5} />
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <span className="text-[16px] font-semibold text-text-primary">Amenities</span>
-            <div className="mt-3 flex gap-3">
-              {profile.amenities.map((amenity) => (
-                <div
-                  key={amenity.label}
-                  className="flex-1 rounded-[12px] bg-surface py-2 text-center text-[12px] font-medium text-text-primary"
-                >
-                  {amenity.label}
-                </div>
-              ))}
-            </div>
+            <CompanyPhotos name={companyName} />
           </Card>
 
           <Card>
             <span className="text-[16px] font-semibold text-text-primary">Ratings &amp; Reviews</span>
             <div className="mt-3 flex flex-col gap-3">
-              {profile.reviews.map((review) => (
-                <div key={review.author} className="rounded-[12px] bg-surface p-4">
+              {(reviews && reviews.length > 0
+                ? reviews.map((r) => ({
+                    author: r.users?.name || "Passenger",
+                    stars: r.rating,
+                    text: r.comment || "Rated this trip.",
+                  }))
+                : profile.reviews
+              ).map((review, i) => (
+                <div key={`${review.author}-${i}`} className="rounded-[12px] bg-surface p-4">
                   <div className="flex items-center gap-2">
                     <span className="flex-1 text-[14px] font-medium text-text-primary">
                       {review.author}
@@ -324,7 +338,7 @@ export default function BusDetailPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex h-[60vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[24px] bg-white"
+            className="flex h-[88vh] max-h-[88vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[24px] bg-white"
           >
             <div className="flex items-start justify-between px-4 pt-4">
               <div className="flex flex-col">

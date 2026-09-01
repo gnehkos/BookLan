@@ -8,6 +8,7 @@ import PaymentCard from "@/components/PaymentCard";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
 import { SERVICE_FEE_USD } from "@/constants/booking";
+import { getActivePickupBooking } from "@/lib/activeBooking";
 
 type VehicleType = "bus" | "van";
 
@@ -20,7 +21,7 @@ type StoredTrip = {
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
-type StoredPickup = { lat: number; lng: number; stationName?: string };
+type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?: string };
 type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredDropoff = { id: string; name: string; address: string };
 
@@ -65,6 +66,18 @@ export default function SummaryPage() {
     if (!trip || !pickup || !seat || !dropoff) return;
 
     const userId = localStorage.getItem("booklan_user_id");
+
+    // Final guard: the flow blocks this earlier, but a direct navigation must
+    // not be able to create a second live pickup booking.
+    if (userId) {
+      const existing = await getActivePickupBooking(userId);
+      if (existing) {
+        throw new Error(
+          `You already have an active booking (${existing.ticket_id}). Finish or cancel it before booking another pickup.`
+        );
+      }
+    }
+
     const ticketId = generateTicketId();
 
     const { data: booking, error: insertError } = await safeQuery(
@@ -143,11 +156,13 @@ export default function SummaryPage() {
               From
             </span>
             <span className="text-[15px] text-text-primary">
-              {pickup.stationName ?? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
+              {pickup.stationName ??
+                pickup.placeName ??
+                `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
             </span>
-            {pickup.stationName && (
-              <span className="text-[13px] text-text-secondary">Station pickup</span>
-            )}
+            <span className="text-[13px] text-text-secondary">
+              {pickup.stationName ? "Station pickup" : "Roadside pickup"}
+            </span>
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-[12px] font-medium uppercase tracking-wide text-text-secondary">

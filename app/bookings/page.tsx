@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Ticket as TicketIcon } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import Button from "@/components/Button";
+import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import Price from "@/components/Price";
 import VehicleBadge from "@/components/VehicleBadge";
@@ -12,7 +13,7 @@ import { safeQuery, supabase } from "@/lib/supabase";
 import { releaseScheduleSeats, releaseTripSeats } from "@/lib/seats";
 
 type VehicleType = "bus" | "van";
-type TabMode = "active" | "scheduled" | "past";
+type TabMode = "current" | "past";
 
 type BookingRow = {
   id: string;
@@ -47,15 +48,14 @@ type AdvancedBookingRow = {
 };
 
 const TABS: { mode: TabMode; label: string }[] = [
-  { mode: "active", label: "Active" },
-  { mode: "scheduled", label: "Scheduled" },
+  { mode: "current", label: "Current Bookings" },
   { mode: "past", label: "History" },
 ];
 
 export default function BookingsPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabMode>("active");
+  const [tab, setTab] = useState<TabMode>("current");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [scheduled, setScheduled] = useState<AdvancedBookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,27 +76,7 @@ export default function BookingsPage() {
     setLoading(true);
     setError(null);
 
-    if (currentTab === "scheduled") {
-      const { data, error: fetchError } = await safeQuery(
-        supabase
-          .from("advanced_bookings")
-          .select(
-            "id, schedule_id, ticket_id, seat_numbers, travel_date, total_price, status, schedules(origin, destination, departure_time, arrival_time, companies(name, vehicle_type))"
-          )
-          .eq("user_id", uid)
-          .order("travel_date", { ascending: true })
-      );
-
-      if (fetchError) {
-        setError("Couldn't load your scheduled bookings. Check your connection and try again.");
-      } else {
-        setScheduled((data as unknown as AdvancedBookingRow[]) ?? []);
-      }
-      setLoading(false);
-      return;
-    }
-
-    const query = supabase
+    const roadQuery = supabase
       .from("bookings")
       .select(
         "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, companies(name, vehicle_type))"
@@ -104,16 +84,35 @@ export default function BookingsPage() {
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
 
-    const { data, error: fetchError } = await safeQuery(
-      currentTab === "active"
-        ? query.eq("status", "confirmed").gt("distance_remaining_km", 0)
-        : query.or("status.eq.cancelled,distance_remaining_km.eq.0")
-    );
+    const scheduledQuery = supabase
+      .from("advanced_bookings")
+      .select(
+        "id, schedule_id, ticket_id, seat_numbers, travel_date, total_price, status, schedules(origin, destination, departure_time, arrival_time, companies(name, vehicle_type))"
+      )
+      .eq("user_id", uid)
+      .order("travel_date", { ascending: true });
 
-    if (fetchError) {
+    // Both kinds of booking share a tab, so both are fetched together.
+    const [road, sched] = await Promise.all([
+      safeQuery(
+        // 'confirmed' covers both waiting for pickup and riding; a finished
+        // trip is marked 'completed' and drops into History.
+        currentTab === "current"
+          ? roadQuery.eq("status", "confirmed")
+          : roadQuery.in("status", ["completed", "cancelled"])
+      ),
+      safeQuery(
+        currentTab === "current"
+          ? scheduledQuery.eq("status", "confirmed")
+          : scheduledQuery.in("status", ["completed", "cancelled"])
+      ),
+    ]);
+
+    if (road.error || sched.error) {
       setError("Couldn't load your bookings. Check your connection and try again.");
     } else {
-      setBookings((data as unknown as BookingRow[]) ?? []);
+      setBookings((road.data as unknown as BookingRow[]) ?? []);
+      setScheduled((sched.data as unknown as AdvancedBookingRow[]) ?? []);
     }
     setLoading(false);
   }, []);
@@ -157,10 +156,7 @@ export default function BookingsPage() {
 
   if (!userId) return null;
 
-  const isEmpty =
-    !loading &&
-    !error &&
-    (tab === "scheduled" ? scheduled.length === 0 : bookings.length === 0);
+  const isEmpty = !loading && !error && bookings.length === 0 && scheduled.length === 0;
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
@@ -199,17 +195,13 @@ export default function BookingsPage() {
 
           {isEmpty && (
             <div className="flex flex-col items-center gap-2 py-16 text-center">
-              {tab === "scheduled" ? (
-                <CalendarClock className="h-10 w-10 text-text-muted" />
-              ) : (
+              {tab === "current" ? (
                 <TicketIcon className="h-10 w-10 text-text-muted" />
+              ) : (
+                <CalendarClock className="h-10 w-10 text-text-muted" />
               )}
               <p className="text-[14px] text-text-secondary">
-                {tab === "active"
-                  ? "No active bookings yet."
-                  : tab === "scheduled"
-                    ? "No scheduled bookings yet."
-                    : "No past bookings yet."}
+                {tab === "current" ? "No current bookings yet." : "No past bookings yet."}
               </p>
             </div>
           )}
@@ -220,21 +212,26 @@ export default function BookingsPage() {
 
           {!loading &&
             !error &&
-            tab !== "scheduled" &&
             bookings.map((booking) => (
               <BookingCard
                 key={booking.id}
                 booking={booking}
                 tab={tab}
                 cancelling={cancellingId === booking.id}
-                onTrack={() => router.push(`/tracking/${booking.id}`)}
+                onTrack={() =>
+                  // Already boarded? Go to the live trip, not the pickup handover.
+                  router.push(
+                    booking.distance_remaining_km > 0
+                      ? `/tracking/${booking.id}`
+                      : `/trip/${booking.id}`
+                  )
+                }
                 onCancel={() => handleCancel(booking)}
               />
             ))}
 
           {!loading &&
             !error &&
-            tab === "scheduled" &&
             scheduled.map((booking) => (
               <ScheduledCard
                 key={booking.id}
@@ -290,8 +287,9 @@ function ScheduledCard({
 
   return (
     <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start gap-3">
+        <CompanyLogo name={company?.name ?? "Unknown"} size={40} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <RouteLine origin={schedule?.origin} destination={schedule?.destination} />
           <div className="flex items-center gap-2">
             <span className="text-[13px] font-semibold text-text-secondary">
@@ -378,8 +376,9 @@ function BookingCard({
 
   return (
     <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start gap-3">
+        <CompanyLogo name={company?.name ?? "Unknown"} size={40} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
           <RouteLine
             origin={booking.active_trips?.origin}
             destination={booking.active_trips?.destination}
@@ -421,16 +420,18 @@ function BookingCard({
         <Price amount={booking.total_price} />
       </div>
 
-      {tab === "active" && !confirmingCancel && (
+      {tab === "current" && !confirmingCancel && (
         <div className="flex gap-2">
-          <Button onClick={onTrack}>Track</Button>
+          <Button onClick={onTrack}>
+            {booking.distance_remaining_km > 0 ? "Track" : "View trip"}
+          </Button>
           <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
             Cancel Booking
           </Button>
         </div>
       )}
 
-      {tab === "active" && confirmingCancel && (
+      {tab === "current" && confirmingCancel && (
         <div className="flex flex-col gap-2 rounded-card bg-surface p-3">
           <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
           <div className="flex gap-2">

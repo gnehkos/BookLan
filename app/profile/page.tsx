@@ -36,6 +36,10 @@ export default function ProfilePage() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [phoneDraft, setPhoneDraft] = useState("");
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("booklan_user_id");
@@ -103,7 +107,12 @@ export default function ProfilePage() {
     if (uploadError) {
       URL.revokeObjectURL(localPreview);
       setPhotoUrl(previousUrl);
-      setPhotoError("Couldn't upload your photo. Please try again.");
+      const missingBucket = /bucket|not found/i.test(uploadError.message);
+      setPhotoError(
+        missingBucket
+          ? "Photo storage isn't set up yet. Run supabase-setup.sql in the Supabase SQL editor."
+          : "Couldn't upload your photo. Please try again."
+      );
       setUploadingPhoto(false);
       return;
     }
@@ -125,6 +134,44 @@ export default function ProfilePage() {
 
     setPhotoUrl(publicUrl);
     setUploadingPhoto(false);
+  }
+
+  function startEditingPhone() {
+    setPhoneDraft(phone);
+    setPhoneError(null);
+    setEditingPhone(true);
+  }
+
+  async function savePhone() {
+    if (!userId) return;
+    const trimmed = phoneDraft.trim();
+    if (trimmed.replace(/\D/g, "").length < 8) {
+      setPhoneError("Enter a valid phone number.");
+      return;
+    }
+
+    setSavingPhone(true);
+    setPhoneError(null);
+
+    const { error } = await safeQuery(
+      supabase.from("users").update({ phone: trimmed }).eq("id", userId)
+    );
+
+    if (error) {
+      // `users.phone` is unique, so a clash is the likely cause.
+      setPhoneError(
+        /duplicate|unique/i.test(error.message)
+          ? "That number is already used by another account."
+          : "Couldn't save your number. Please try again."
+      );
+      setSavingPhone(false);
+      return;
+    }
+
+    setPhone(trimmed);
+    localStorage.setItem("booklan_phone", trimmed);
+    setSavingPhone(false);
+    setEditingPhone(false);
   }
 
   function startEditingName() {
@@ -238,7 +285,37 @@ export default function ProfilePage() {
             </button>
           )}
 
-          <span className="text-[12px] text-text-secondary">{phone}</span>
+          {editingPhone ? (
+            <div className="flex w-full flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  type="tel"
+                  inputMode="tel"
+                  value={phoneDraft}
+                  onChange={(e) => setPhoneDraft(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && savePhone()}
+                  className="h-10 rounded-[12px] border border-border px-3 text-[14px] text-text-primary outline-none focus:border-primary"
+                />
+                <button
+                  onClick={savePhone}
+                  disabled={savingPhone}
+                  aria-label="Save phone number"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white disabled:opacity-50"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+              </div>
+              {phoneError && <p className="text-center text-[12px] text-error">{phoneError}</p>}
+            </div>
+          ) : (
+            <button onClick={startEditingPhone} className="flex items-center gap-2">
+              <span className="text-[12px] text-text-secondary">
+                {phone || "Add your phone number"}
+              </span>
+              <Pencil className="h-3.5 w-3.5 text-text-muted" />
+            </button>
+          )}
         </div>
 
         <SectionLabel>Preferences</SectionLabel>

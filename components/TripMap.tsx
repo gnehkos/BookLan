@@ -5,9 +5,15 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
 import { MapPin } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
-import { TILE_ATTRIBUTION, TILE_URL, stationIcon, vehicleIcon } from "@/lib/mapTheme";
+import {
+  TILE_ATTRIBUTION,
+  TILE_URL,
+  currentLocationIcon,
+  destinationPinIcon,
+} from "@/lib/mapTheme";
 import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
 
@@ -111,7 +117,7 @@ export default function TripMap({
 
       <FitOnce points={path} bottomPadding={panelHeight} follow={position} />
 
-      <Marker position={destination} icon={stationIcon}>
+      <Marker position={destination} icon={destinationPinIcon}>
         <Popup>
           <span className="block text-[14px] font-semibold text-text-primary">
             {destinationName}
@@ -120,9 +126,12 @@ export default function TripMap({
         </Popup>
       </Marker>
 
-      <Marker position={position} icon={vehicleIcon(company)}>
+      <Marker position={position} icon={currentLocationIcon}>
         <Popup>
-          <span className="block text-[14px] font-semibold text-text-primary">{company}</span>
+          <span className="mb-1.5 flex items-center gap-2">
+            <CompanyLogo name={company} size={28} />
+            <span className="text-[14px] font-semibold text-text-primary">{company}</span>
+          </span>
           <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
             <MapPin className="h-3 w-3 text-text-secondary" />
             <span className="font-medium text-text-primary">{remainingKm} km</span>
@@ -134,7 +143,12 @@ export default function TripMap({
         </Popup>
       </Marker>
 
-      <RecenterControl target={position} zoom={11} label="Recenter to the bus" />
+      <RecenterControl
+        target={position}
+        zoom={11}
+        label="Recenter to the bus"
+        bottomOffset={panelHeight + 16}
+      />
     </MapContainer>
   );
 }

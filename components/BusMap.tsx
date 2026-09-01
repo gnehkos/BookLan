@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { MapPin } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
 import { TILE_ATTRIBUTION, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
@@ -101,8 +102,11 @@ export default function BusMap({ vehicles = [] }: { vehicles?: MapVehicle[] }) {
         return (
           <Marker key={vehicle.id} position={position} icon={vehicleIcon(vehicle.company)}>
             <Popup>
-              <span className="block text-[14px] font-semibold text-text-primary">
-                {vehicle.company}
+              <span className="mb-1.5 flex items-center gap-2">
+                <CompanyLogo name={vehicle.company} size={28} />
+                <span className="text-[14px] font-semibold text-text-primary">
+                  {vehicle.company}
+                </span>
               </span>
               <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
                 <MapPin className="h-3 w-3 text-text-secondary" />

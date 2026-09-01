@@ -1,12 +1,13 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Rectangle } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import { NATIONAL_ROADS, ROAD_TOLERANCE_KM, isPickupAllowed } from "@/lib/geo";
+import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad } from "@/lib/geo";
+import { useNationalRoads } from "@/lib/useNationalRoads";
 import { TILE_ATTRIBUTION, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
 
 /** Zone colours are deliberately deeper than the UI status colours so the
@@ -57,16 +58,35 @@ function DraggableMarker({
 export default function PickupMap({
   onPositionChange,
 }: {
-  onPositionChange: (position: [number, number], allowed: boolean) => void;
+  onPositionChange: (
+    position: [number, number],
+    allowed: boolean,
+    roadName: string | null
+  ) => void;
 }) {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
+  // Real routed geometry; falls back to the coarse waypoints until it lands.
+  const { roads } = useNationalRoads();
+
+  const report = useCallback(
+    (pos: [number, number]) => {
+      const nearest = nearestRoad(pos[0], pos[1], roads);
+      onPositionChange(pos, isPickupAllowed(pos[0], pos[1], roads), nearest?.road.name ?? null);
+    },
+    [onPositionChange, roads]
+  );
+
+  // Re-check once the real road shapes arrive: a pin that looked off-road
+  // against the straight-line approximation may sit on the actual highway.
+  useEffect(() => {
+    if (position) report(position);
+  }, [report, position]);
 
   useEffect(() => {
     function resolve(pos: [number, number]) {
       setCenter(pos);
       setPosition(pos);
-      onPositionChange(pos, isPickupAllowed(pos[0], pos[1]));
     }
 
     if (!("geolocation" in navigator)) {
@@ -82,14 +102,14 @@ export default function PickupMap({
 
   function handleChange(pos: [number, number]) {
     setPosition(pos);
-    onPositionChange(pos, isPickupAllowed(pos[0], pos[1]));
+    report(pos);
   }
 
   if (!center || !position) {
     return <div className="h-full w-full animate-pulse bg-surface" />;
   }
 
-  const allowed = isPickupAllowed(position[0], position[1]);
+  const allowed = isPickupAllowed(position[0], position[1], roads);
 
   return (
     <MapContainer center={center} zoom={12} zoomControl={false} className="h-full w-full">
@@ -109,7 +129,7 @@ export default function PickupMap({
       />
 
       {/* …with the allowed national-road corridors punched back in green. */}
-      {NATIONAL_ROADS.map((road) => (
+      {roads.map((road) => (
         <Polyline
           key={`${road.id}-corridor`}
           positions={road.path}
@@ -123,7 +143,7 @@ export default function PickupMap({
           }}
         />
       ))}
-      {NATIONAL_ROADS.map((road) => (
+      {roads.map((road) => (
         <Polyline
           key={road.id}
           positions={road.path}

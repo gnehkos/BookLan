@@ -140,14 +140,21 @@ function distancePointToSegmentKm(
   return Math.hypot(px - closestX, py - closestY);
 }
 
-/** Nearest national road to a point, with the distance to its centre-line. */
+/**
+ * Nearest national road to a point, with the distance to its centre-line.
+ *
+ * Pass `roads` to measure against real routed geometry (see useNationalRoads);
+ * without it this falls back to the coarse hand-plotted corridors above, which
+ * are straight between waypoints and therefore only roughly right.
+ */
 export function nearestRoad(
   lat: number,
-  lng: number
+  lng: number,
+  roads: RoadCorridor[] = NATIONAL_ROADS
 ): { road: RoadCorridor; distanceKm: number } | null {
   let best: { road: RoadCorridor; distanceKm: number } | null = null;
 
-  for (const road of NATIONAL_ROADS) {
+  for (const road of roads) {
     for (let i = 0; i < road.path.length - 1; i++) {
       const distanceKm = distancePointToSegmentKm(
         [lat, lng],
@@ -164,7 +171,11 @@ export function nearestRoad(
   return best;
 }
 
-export function isPickupAllowed(lat: number, lng: number): boolean {
-  const nearest = nearestRoad(lat, lng);
+export function isPickupAllowed(
+  lat: number,
+  lng: number,
+  roads: RoadCorridor[] = NATIONAL_ROADS
+): boolean {
+  const nearest = nearestRoad(lat, lng, roads);
   return nearest !== null && nearest.distanceKm <= ROAD_TOLERANCE_KM;
 }

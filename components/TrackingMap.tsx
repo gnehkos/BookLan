@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
 import { MapPin } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
 import { TILE_ATTRIBUTION, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
@@ -156,7 +157,10 @@ export default function TrackingMap({
       {distanceKm > 0 && (
         <Marker position={busPosition} icon={vehicleIcon(company)}>
           <Popup>
-            <span className="block text-[14px] font-semibold text-text-primary">{company}</span>
+            <span className="mb-1.5 flex items-center gap-2">
+              <CompanyLogo name={company} size={28} />
+              <span className="text-[14px] font-semibold text-text-primary">{company}</span>
+            </span>
             <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
               <MapPin className="h-3 w-3 text-text-secondary" />
               <span className="font-medium text-text-primary">{distanceKm} km</span>
@@ -169,7 +173,12 @@ export default function TrackingMap({
         </Marker>
       )}
 
-      <RecenterControl target={pickup} zoom={13} label="Recenter to my location" />
+      <RecenterControl
+        target={pickup}
+        zoom={13}
+        label="Recenter to my location"
+        bottomOffset={panelHeight + 16}
+      />
     </MapContainer>
   );
 }

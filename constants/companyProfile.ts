@@ -2,27 +2,17 @@
  * Presentation-only company details for the bus detail screen.
  *
  * The `companies` table only stores a name and vehicle type — there are no
- * rating, amenity, photo or review columns — so this is demo content keyed off
+ * rating, photo or review columns — so this is demo content keyed off
  * the company name and kept stable per company. Replace with real columns
  * before these numbers are shown to actual passengers.
  */
 
-export type Amenity = { label: string; colorClass: string };
-
 export type CompanyProfile = {
   rating: number;
   tripCount: string;
-  amenities: Amenity[];
   reviews: { author: string; stars: number; text: string }[];
   policies: string[];
 };
-
-const AMENITIES: Amenity[] = [
-  { label: "AC", colorClass: "text-secondary" },
-  { label: "WiFi", colorClass: "text-success" },
-  { label: "USB", colorClass: "text-warning" },
-  { label: "Water", colorClass: "text-primary" },
-];
 
 const POLICIES = [
   "Free cancellation up to 1 hour before departure (10% fee after)",
@@ -56,7 +46,6 @@ export function companyProfile(companyName: string): CompanyProfile {
   return {
     rating: Math.round(rating * 10) / 10,
     tripCount,
-    amenities: AMENITIES,
     reviews: [REVIEW_POOL[start], REVIEW_POOL[(start + 1) % REVIEW_POOL.length]],
     policies: POLICIES,
   };

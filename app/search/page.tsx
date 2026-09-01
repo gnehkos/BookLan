@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Building2, ChevronRight, MapPin, Search } from "lucide-react";
+import ActiveBookingModal from "@/components/ActiveBookingModal";
 import BottomNav from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { isInsidePhnomPenh } from "@/lib/geo";
+import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
 
 type VehicleType = "bus" | "van";
 
@@ -36,6 +38,8 @@ export default function SearchPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [originMode, setOriginMode] = useState<OriginMode>("road");
   const [detectedInCity, setDetectedInCity] = useState<boolean | null>(null);
+  const [blockedBy, setBlockedBy] = useState<ActivePickupBooking | null>(null);
+
 
   // Default the boarding mode from the passenger's location: inside the Phnom
   // Penh bounding box, station pickup is the only workable option.
@@ -88,7 +92,17 @@ export default function SearchPage() {
     };
   }, [query, refreshKey]);
 
-  function selectTrip(trip: TripResult) {
+  async function selectTrip(trip: TripResult) {
+    // Only one roadside pickup can be live at a time.
+    const userId = localStorage.getItem("booklan_user_id");
+    if (userId) {
+      const existing = await getActivePickupBooking(userId);
+      if (existing) {
+        setBlockedBy(existing);
+        return;
+      }
+    }
+
     sessionStorage.setItem(
       "booklan_trip",
       JSON.stringify({
@@ -198,6 +212,10 @@ export default function SearchPage() {
             ))}
         </div>
       </div>
+
+      {blockedBy && (
+        <ActiveBookingModal booking={blockedBy} onClose={() => setBlockedBy(null)} />
+      )}
 
       <BottomNav />
     </div>

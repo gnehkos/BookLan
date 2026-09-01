@@ -4,18 +4,20 @@ import { useMap } from "react-leaflet";
 import { LocateFixed } from "lucide-react";
 
 /**
- * Replaces Leaflet's default zoom buttons: a floating circular button that
- * pans back to a target. Rendered inside the map container, so it sits above
- * the tiles but below the app's own floating panels.
+ * Replaces Leaflet's default zoom buttons: a floating circular button that pans
+ * back to a target. `bottomOffset` lifts it clear of whatever floating panel
+ * the screen has, so it never ends up buried underneath one.
  */
 export default function RecenterControl({
   target,
   zoom = 14,
   label = "Recenter map",
+  bottomOffset = 16,
 }: {
   target: [number, number] | null;
   zoom?: number;
   label?: string;
+  bottomOffset?: number;
 }) {
   const map = useMap();
 
@@ -25,11 +27,12 @@ export default function RecenterControl({
     <button
       type="button"
       aria-label={label}
+      style={{ bottom: bottomOffset }}
       onClick={(e) => {
         e.stopPropagation();
-        map.flyTo(target, zoom, { duration: 0.6 });
+        map.flyTo(target, zoom, { duration: 0.8 });
       }}
-      className="absolute bottom-4 right-4 z-[1000] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white shadow-[var(--shadow-float)] transition-colors hover:bg-surface"
+      className="absolute right-4 z-[1000] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white shadow-[var(--shadow-float)] transition-colors hover:bg-surface"
     >
       <LocateFixed className="h-[18px] w-[18px] text-primary" />
     </button>

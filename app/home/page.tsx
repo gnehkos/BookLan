@@ -4,13 +4,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Bell, ChevronRight, ChevronUp, Search } from "lucide-react";
+import ActiveBookingModal from "@/components/ActiveBookingModal";
 import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import CompanyLogo from "@/components/CompanyLogo";
 import DistanceLabel from "@/components/DistanceLabel";
 import ErrorState from "@/components/ErrorState";
 import Price from "@/components/Price";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
+import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
 import type { MapVehicle } from "@/components/BusMap";
 
 const BusMap = dynamic(() => import("@/components/BusMap"), {
@@ -46,6 +49,7 @@ export default function HomePage() {
   const [sortMode, setSortMode] = useState<SortMode>("nearest");
   const [name, setName] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [blockedBy, setBlockedBy] = useState<ActivePickupBooking | null>(null);
   const dragStartY = useRef<number | null>(null);
 
   useEffect(() => {
@@ -101,7 +105,17 @@ export default function HomePage() {
     [sortedTrips]
   );
 
-  function selectTrip(trip: ActiveTrip) {
+  async function selectTrip(trip: ActiveTrip) {
+    // Only one roadside pickup can be live at a time.
+    const userId = localStorage.getItem("booklan_user_id");
+    if (userId) {
+      const existing = await getActivePickupBooking(userId);
+      if (existing) {
+        setBlockedBy(existing);
+        return;
+      }
+    }
+
     sessionStorage.setItem(
       "booklan_trip",
       JSON.stringify({
@@ -262,6 +276,8 @@ export default function HomePage() {
                         onClick={() => selectTrip(trip)}
                         className="flex shrink-0 items-center gap-3 rounded-[12px] bg-white p-4 text-left shadow-[var(--shadow-float)]"
                       >
+                        <CompanyLogo name={trip.companies?.name ?? "Unknown"} size={40} />
+
                         <div className="flex min-w-0 flex-1 flex-col gap-2">
                           <div className="flex items-center gap-2">
                             <span className="truncate text-[16px] font-semibold text-text-primary">
@@ -299,6 +315,10 @@ export default function HomePage() {
           )}
         </div>
       </div>
+
+      {blockedBy && (
+        <ActiveBookingModal booking={blockedBy} onClose={() => setBlockedBy(null)} />
+      )}
 
       <BottomNav />
     </div>

@@ -9,6 +9,15 @@ import { supabase } from "@/lib/supabase";
  * failure here must never surface as a cancellation error.
  */
 
+/** Marks a finished trip complete so it stops counting as an active booking. */
+export async function completeBooking(bookingId: string) {
+  try {
+    await supabase.from("bookings").update({ status: "completed" }).eq("id", bookingId);
+  } catch {
+    // Non-fatal: the passenger has already arrived either way.
+  }
+}
+
 export async function releaseTripSeats(tripId: string, seatCount: number) {
   try {
     const { data } = await supabase

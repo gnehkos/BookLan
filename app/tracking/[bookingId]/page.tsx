@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 import Button from "@/components/Button";
 import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import { releaseTripSeats } from "@/lib/seats";
+import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
@@ -41,8 +43,8 @@ type ChatMessage = { id: number; from: "you" | "driver"; text: string };
  */
 type TripPhase = "approaching" | "verifying" | "approved";
 
-/** Roughly how tall the floating panel is, so the map can frame around it. */
-const PANEL_HEIGHT = 220;
+/** Starting estimate for the panel; the real height is measured on mount. */
+const PANEL_HEIGHT_FALLBACK = 220;
 
 const APPROACH_TICK_MS = 1500;
 const VERIFY_MS = 2600;
@@ -50,6 +52,7 @@ const APPROVED_MS = 1400;
 
 type BookingRow = {
   id: string;
+  user_id: string;
   trip_id: string;
   ticket_id: string;
   seat_numbers: number[];
@@ -82,6 +85,7 @@ export default function TrackingPage() {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [phase, setPhase] = useState<TripPhase>("approaching");
+  const [panelRef, panelHeight] = useMeasuredHeight<HTMLDivElement>(PANEL_HEIGHT_FALLBACK);
   const distanceRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -94,18 +98,23 @@ export default function TrackingPage() {
         supabase
           .from("bookings")
           .select(
-            "id, trip_id, ticket_id, seat_numbers, pickup_lat, pickup_lng, distance_remaining_km, status, active_trips(distance_km, destination, companies(name, vehicle_type))"
+            "id, user_id, trip_id, ticket_id, seat_numbers, pickup_lat, pickup_lng, distance_remaining_km, status, active_trips(distance_km, destination, companies(name, vehicle_type))"
           )
           .eq("id", bookingId)
           .single()
       );
 
       if (!cancelled) {
-        if (fetchError || !data) {
+        const row = data as unknown as BookingRow | null;
+        // The id comes from the URL, so confirm it's actually this passenger's
+        // booking before rendering anyone's ticket and pickup location.
+        if (fetchError || !row) {
           setLoadError("Couldn't load this booking. It may not exist.");
+        } else if (row.user_id !== localStorage.getItem("booklan_user_id")) {
+          setLoadError("This booking belongs to a different account.");
         } else {
-          setBooking(data as unknown as BookingRow);
-          setDistance(data.distance_remaining_km);
+          setBooking(row);
+          setDistance(row.distance_remaining_km);
         }
         setLoading(false);
       }
@@ -120,6 +129,20 @@ export default function TrackingPage() {
   useEffect(() => {
     distanceRef.current = distance;
   }, [distance]);
+
+  /**
+   * This screen is only for the pickup handover. A booking that has already
+   * been boarded (distance closed) or finished belongs on the trip screen —
+   * without this, opening it from My Bookings replays the whole approach.
+   */
+  useEffect(() => {
+    if (!booking || distance === null) return;
+    if (booking.status === "completed" || (booking.status === "confirmed" && distance <= 0)) {
+      router.replace(`/trip/${bookingId}`);
+    }
+    // Only on load: once the live approach reaches 0 the phase machine takes over.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [booking?.id]);
 
   useEffect(() => {
     const channel = supabase
@@ -254,7 +277,7 @@ export default function TrackingPage() {
             company={companyName}
             destination={destination}
             etaMinutes={etaMinutes}
-            panelHeight={PANEL_HEIGHT + NAV_CLEARANCE}
+            panelHeight={panelHeight + NAV_CLEARANCE + 24}
           />
         </div>
 
@@ -280,10 +303,12 @@ export default function TrackingPage() {
 
         {/* Floating panel: detached from the edges and clear of the nav. */}
         <div
+          ref={panelRef}
           className="absolute inset-x-4 z-20 rounded-[16px] bg-white p-4 shadow-[var(--shadow-float)]"
           style={{ bottom: NAV_CLEARANCE + 8 }}
         >
           <div className="flex items-center gap-3">
+            <CompanyLogo name={companyName} size={40} />
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-[16px] font-semibold text-text-primary">
                 {companyName}

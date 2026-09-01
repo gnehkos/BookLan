@@ -7,7 +7,7 @@ import { AlertTriangle, ArrowLeft, Building2, Check, MapPin } from "lucide-react
 import Button from "@/components/Button";
 import BottomNav from "@/components/BottomNav";
 import { PHNOM_PENH_DEPARTURE_STATIONS } from "@/constants/booking";
-import { nearestRoad } from "@/lib/geo";
+import { describePlace } from "@/lib/reverseGeocode";
 
 const PickupMap = dynamic(() => import("@/components/PickupMap"), {
   ssr: false,
@@ -23,6 +23,8 @@ export default function PickupPage() {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [allowed, setAllowed] = useState(false);
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
+  const [placeName, setPlaceName] = useState<string | null>(null);
+  const [roadName, setRoadName] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("booklan_trip");
@@ -36,18 +38,41 @@ export default function PickupPage() {
   }, [router]);
 
   const handlePositionChange = useCallback(
-    (next: [number, number], nextAllowed: boolean) => {
+    (next: [number, number], nextAllowed: boolean, nextRoad: string | null) => {
       setPosition(next);
       setAllowed(nextAllowed);
+      setRoadName(nextRoad);
     },
     []
   );
+
+  // Name the dropped pin so the booking reads "Krong Stueng Saen · National
+  // Road 6" instead of raw coordinates. Debounced, since dragging fires often
+  // and the geocoder is rate-limited.
+  useEffect(() => {
+    if (originMode !== "road" || !position) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      const name = await describePlace(position[0], position[1], controller.signal);
+      setPlaceName(name);
+    }, 600);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [originMode, position]);
 
   function confirmRoadPickup() {
     if (!position || !allowed) return;
     sessionStorage.setItem(
       "booklan_pickup",
-      JSON.stringify({ lat: position[0], lng: position[1] })
+      JSON.stringify({
+        lat: position[0],
+        lng: position[1],
+        placeName: placeName ?? roadName ?? undefined,
+      })
     );
     router.push("/booking/buses");
   }
@@ -63,8 +88,6 @@ export default function PickupPage() {
   }
 
   if (!ready) return null;
-
-  const nearest = position ? nearestRoad(position[0], position[1]) : null;
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white">
@@ -171,12 +194,10 @@ export default function PickupPage() {
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                   <div className="flex flex-col">
                     <span className="text-[13px] font-bold text-text-primary">
-                      {nearest ? nearest.road.name : "On a national road"}
+                      {placeName ?? roadName ?? "Finding this place…"}
                     </span>
                     <span className="text-[12px] text-text-secondary">
-                      {position
-                        ? `${position[0].toFixed(4)}, ${position[1].toFixed(4)}`
-                        : "Locating you…"}
+                      {roadName ? `On ${roadName}` : "Locating you…"}
                     </span>
                   </div>
                 </div>
@@ -187,10 +208,9 @@ export default function PickupPage() {
                     <span className="text-[13px] font-bold text-error">
                       Pickup not allowed here. Move pin to the main road.
                     </span>
-                    {nearest && (
+                    {roadName && (
                       <span className="text-[12px] text-text-secondary">
-                        Nearest is {nearest.road.name}, about{" "}
-                        {nearest.distanceKm.toFixed(1)} km away.
+                        The nearest one is {roadName}.
                       </span>
                     )}
                   </div>
