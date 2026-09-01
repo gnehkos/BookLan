@@ -1,15 +1,14 @@
 /**
- * Geography helpers for pickup rules.
+ * Cambodia's national road network, and the pickup rules built on it.
  *
- * BookLan's on-road pickup only works where a bus can actually pull over on a
- * national road. Two rules fall out of that:
+ * A bus heading to Siem Reap runs up National Road 6 — it will never pass a
+ * passenger waiting on National Road 2. So the pickup pin is only valid on a
+ * road that actually serves the chosen destination, which is what `roadsFor`
+ * resolves and the pickup map draws.
  *
- *  1. Inside Phnom Penh city centre there is no national road to flag a bus
- *     down on, so those passengers board at a station instead of dropping a pin.
- *  2. Outside the city, the pin must sit close to one of the national roads.
- *
- * The road paths below are approximate centre-lines — enough to gate the pin
- * and draw the allowed corridor, not survey data.
+ * The paths below are coarse waypoints; `useNationalRoads` routes through them
+ * to get the real carriageway geometry. Accuracy comes from that routing, not
+ * from the numbers here.
  */
 
 export type LatLng = [number, number];
@@ -27,31 +26,57 @@ export const ROAD_TOLERANCE_KM = 2;
 export type RoadCorridor = {
   id: string;
   name: string;
-  destination: string;
+  /** Provinces this road carries traffic to, in both directions. */
+  serves: string[];
   path: LatLng[];
 };
 
+const PHNOM_PENH_POINT: LatLng = [11.5564, 104.9282];
+
 export const NATIONAL_ROADS: RoadCorridor[] = [
+  {
+    id: "NR1",
+    name: "National Road 1",
+    serves: ["Prey Veng", "Svay Rieng", "Phnom Penh"],
+    path: [
+      PHNOM_PENH_POINT,
+      [11.48, 105.05],
+      [11.265, 105.28],
+      [11.15, 105.55],
+      [11.0879, 105.7993],
+    ],
+  },
+  {
+    id: "NR2",
+    name: "National Road 2",
+    serves: ["Takeo", "Phnom Penh"],
+    path: [
+      PHNOM_PENH_POINT,
+      [11.4, 104.88],
+      [11.2, 104.83],
+      [10.9909, 104.785],
+    ],
+  },
   {
     id: "NR3",
     name: "National Road 3",
-    destination: "Kampot",
+    serves: ["Kampot", "Kep", "Phnom Penh"],
     path: [
-      [11.5564, 104.9282],
+      PHNOM_PENH_POINT,
       [11.45, 104.85],
       [11.3, 104.7],
       [11.1, 104.55],
       [10.9, 104.4],
       [10.75, 104.3],
-      [10.61, 104.18],
+      [10.6104, 104.181],
     ],
   },
   {
     id: "NR4",
     name: "National Road 4",
-    destination: "Sihanoukville",
+    serves: ["Sihanoukville", "Phnom Penh"],
     path: [
-      [11.5564, 104.9282],
+      PHNOM_PENH_POINT,
       [11.5, 104.75],
       [11.42, 104.55],
       [11.3, 104.3],
@@ -64,9 +89,9 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR5",
     name: "National Road 5",
-    destination: "Battambang",
+    serves: ["Battambang", "Phnom Penh"],
     path: [
-      [11.5564, 104.9282],
+      PHNOM_PENH_POINT,
       [11.75, 104.85],
       [12.0, 104.75],
       [12.25, 104.6],
@@ -79,9 +104,9 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR6",
     name: "National Road 6",
-    destination: "Siem Reap",
+    serves: ["Siem Reap", "Phnom Penh"],
     path: [
-      [11.5564, 104.9282],
+      PHNOM_PENH_POINT,
       [11.8, 104.95],
       [12.1, 105.0],
       [12.4, 104.9],
@@ -91,7 +116,33 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
       [13.3671, 103.8448],
     ],
   },
+  {
+    id: "NR7",
+    name: "National Road 7",
+    serves: ["Kampong Cham", "Kratie", "Phnom Penh"],
+    path: [
+      PHNOM_PENH_POINT,
+      [11.8, 104.95],
+      [11.93, 105.05],
+      [11.9934, 105.4635],
+      [12.2, 105.75],
+      [12.4881, 106.0189],
+    ],
+  },
 ];
+
+/**
+ * Roads a bus to `destination` would actually travel. Falls back to the whole
+ * network when the destination is unknown, so an unmapped province doesn't
+ * leave the passenger with nowhere valid to pin.
+ */
+export function roadsFor(destination: string | null | undefined): RoadCorridor[] {
+  if (!destination) return NATIONAL_ROADS;
+  const matches = NATIONAL_ROADS.filter((road) =>
+    road.serves.some((province) => province.toLowerCase() === destination.toLowerCase())
+  );
+  return matches.length > 0 ? matches : NATIONAL_ROADS;
+}
 
 export function isInsidePhnomPenh(lat: number, lng: number): boolean {
   return (
@@ -140,13 +191,7 @@ function distancePointToSegmentKm(
   return Math.hypot(px - closestX, py - closestY);
 }
 
-/**
- * Nearest national road to a point, with the distance to its centre-line.
- *
- * Pass `roads` to measure against real routed geometry (see useNationalRoads);
- * without it this falls back to the coarse hand-plotted corridors above, which
- * are straight between waypoints and therefore only roughly right.
- */
+/** Nearest road to a point, measured against whichever corridors are passed in. */
 export function nearestRoad(
   lat: number,
   lng: number,

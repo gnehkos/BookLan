@@ -2,29 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRightLeft, CalendarDays, Clock, MapPin, Search, Users } from "lucide-react";
+import { ArrowRightLeft, CalendarDays, MapPin, Search } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import CompanyLogo from "@/components/CompanyLogo";
 import BottomNav from "@/components/BottomNav";
-import ErrorState from "@/components/ErrorState";
-import Price from "@/components/Price";
-import VehicleBadge from "@/components/VehicleBadge";
-import { safeQuery, supabase } from "@/lib/supabase";
 import { CITIES } from "@/constants/booking";
 
 type VehicleType = "bus" | "van";
-
-type Schedule = {
-  id: string;
-  origin: string;
-  destination: string;
-  departure_time: string;
-  arrival_time: string;
-  duration_hours: number;
-  price_per_seat: number;
-  seats_available: number;
-  companies: { name: string; vehicle_type: VehicleType } | null;
-};
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -52,10 +35,6 @@ export default function AdvancedBookingPage() {
   const [from, setFrom] = useState<string>(CITIES[0]);
   const [to, setTo] = useState<string>(CITIES[1]);
   const [date, setDate] = useState(todayISO());
-  const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("booklan_user_id");
@@ -68,45 +47,11 @@ export default function AdvancedBookingPage() {
 
   const toOptions = CITIES.filter((city) => city !== from);
 
-  async function handleSearch() {
-    setSearched(true);
-    setLoading(true);
-    setError(null);
-    const { data, error: fetchError } = await safeQuery(
-      supabase
-        .from("schedules")
-        .select(
-          "id, origin, destination, departure_time, arrival_time, duration_hours, price_per_seat, seats_available, companies(name, vehicle_type)"
-        )
-        .eq("origin", from)
-        .eq("destination", to)
-        .gt("seats_available", 0)
-    );
-
-    if (fetchError) {
-      setError("Couldn't search schedules. Check your connection and try again.");
-    } else {
-      setSchedules((data as unknown as Schedule[]) ?? []);
-    }
-    setLoading(false);
-  }
-
-  function selectSchedule(schedule: Schedule) {
-    sessionStorage.setItem(
-      "booklan_schedule",
-      JSON.stringify({
-        id: schedule.id,
-        origin: schedule.origin,
-        destination: schedule.destination,
-        departure_time: schedule.departure_time,
-        arrival_time: schedule.arrival_time,
-        duration_hours: schedule.duration_hours,
-        price_per_seat: schedule.price_per_seat,
-        companies: schedule.companies,
-      })
-    );
+  function handleSearch() {
+    sessionStorage.setItem("booklan_plan_from", from);
+    sessionStorage.setItem("booklan_plan_to", to);
     sessionStorage.setItem("booklan_travel_date", date);
-    router.push(`/advanced/seats/${schedule.id}`);
+    router.push("/advanced/results");
   }
 
   if (!ready) return null;
@@ -234,84 +179,10 @@ export default function AdvancedBookingPage() {
             Search departures
           </button>
         </div>
-
-        {searched && (
-          <div className="flex flex-col gap-3 px-4 pt-4">
-            {loading && (
-              <>
-                <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
-                <div className="h-28 w-full animate-pulse rounded-[12px] bg-white" />
-              </>
-            )}
-
-            {!loading && error && <ErrorState message={error} onRetry={handleSearch} />}
-
-            {!loading && !error && schedules.length === 0 && (
-              <p className="py-8 text-center text-sm text-text-secondary">
-                No schedules found for {from} → {to}.
-              </p>
-            )}
-
-            {!loading &&
-              !error &&
-              schedules.map((schedule) => (
-                <div
-                  key={schedule.id}
-                  className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                      <span className="truncate text-[16px] font-semibold text-text-primary">
-                        {schedule.origin} → {schedule.destination}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-[14px] text-text-secondary">
-                          {schedule.companies?.name ?? "Unknown company"}
-                        </span>
-                        <VehicleBadge type={schedule.companies?.vehicle_type ?? "bus"} />
-                      </div>
-                    </div>
-                    <Price amount={schedule.price_per_seat} />
-                  </div>
-
-                  <div className="flex items-center gap-2 text-[14px] font-medium text-text-primary">
-                    <span>{schedule.departure_time}</span>
-                    <span className="text-text-secondary">→</span>
-                    <span>{schedule.arrival_time}</span>
-                  </div>
-
-                  <div className="flex items-center gap-3 text-[12px] text-text-secondary">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" /> {schedule.duration_hours}h
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> {schedule.seats_available} seats
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => selectSchedule(schedule)}
-                    className="h-11 w-full rounded-[12px] bg-primary text-[14px] font-semibold text-white hover:brightness-110"
-                  >
-                    Select
-                  </button>
-                </div>
-              ))}
-          </div>
-        )}
       </div>
 
       <ActiveTripBanner />
       <BottomNav />
     </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-1 flex-col gap-1">
-      <span className="text-[12px] font-medium text-text-secondary">{label}</span>
-      {children}
-    </label>
   );
 }

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bus, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
+import Ticket from "@/components/Ticket";
 import BottomNav from "@/components/BottomNav";
 
 type VehicleType = "bus" | "van";
@@ -58,29 +59,22 @@ export default function ConfirmedPage() {
           Your seat is reserved. Show your ticket to the driver when boarding.
         </p>
 
-        <div className="mt-6 flex w-full flex-col gap-4 rounded-card bg-primary p-5 text-white">
-          <div className="flex items-center gap-2">
-            <Bus className="h-5 w-5" strokeWidth={2.25} />
-            <span className="text-sm font-bold">BookLan</span>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <span className="text-xs uppercase tracking-wide text-white/70">Ticket ID</span>
-            <span className="font-mono text-3xl font-bold tracking-wide">{ticketId}</span>
-          </div>
-
-          <div className="border-t border-dashed border-white/30" />
-
-          <div className="flex flex-col gap-2 text-[14px]">
-            <TicketRow label="Company" value={trip.companies?.name ?? "Unknown"} />
-            <TicketRow label="Route" value={`${trip.origin} → ${trip.destination}`} />
-            <TicketRow
-              label={seat.seatNumbers.length > 1 ? "Seats" : "Seat"}
-              value={seat.seatNumbers.join(", ")}
-            />
-            <TicketRow label="Drop-off" value={dropoff.name} />
-            <TicketRow label="Total paid" value={`$${seat.totalPrice.toFixed(2)}`} bold />
-          </div>
+        <div className="mt-6 w-full">
+          <Ticket
+            company={trip.companies?.name ?? "BookLan"}
+            route={`${trip.origin} → ${trip.destination}`}
+            ticketId={ticketId}
+            details={[
+              { label: "Vehicle", value: trip.companies?.vehicle_type ?? "bus" },
+              {
+                label: seat.seatNumbers.length > 1 ? "Seats" : "Seat",
+                value: seat.seatNumbers.join(", "),
+              },
+              { label: "Drop-off", value: dropoff.name },
+              { label: "Total paid", value: `$${seat.totalPrice.toFixed(2)}` },
+            ]}
+            footnote="Show this ID to the driver when boarding"
+          />
         </div>
 
         <div className="mt-6 flex w-full flex-col gap-3">
@@ -92,15 +86,6 @@ export default function ConfirmedPage() {
       </div>
 
       <BottomNav />
-    </div>
-  );
-}
-
-function TicketRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="shrink-0 text-white/70">{label}</span>
-      <span className={`text-right ${bold ? "text-lg font-bold" : "font-medium"}`}>{value}</span>
     </div>
   );
 }

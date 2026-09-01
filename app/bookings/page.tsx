@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, Ticket as TicketIcon } from "lucide-react";
+import { CalendarClock, MapPin, Ticket as TicketIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav from "@/components/BottomNav";
 import Button from "@/components/Button";
-import CompanyLogo from "@/components/CompanyLogo";
+import BookingReceipt from "@/components/BookingReceipt";
 import ErrorState from "@/components/ErrorState";
-import Price from "@/components/Price";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { releaseScheduleSeats, releaseTripSeats } from "@/lib/seats";
@@ -27,6 +26,7 @@ type BookingRow = {
   active_trips: {
     origin: string;
     destination: string;
+    distance_km: number;
     companies: { name: string; vehicle_type: VehicleType } | null;
   } | null;
 };
@@ -80,7 +80,7 @@ export default function BookingsPage() {
     const roadQuery = supabase
       .from("bookings")
       .select(
-        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, companies(name, vehicle_type))"
+        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, distance_km, companies(name, vehicle_type))"
       )
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
@@ -250,12 +250,16 @@ export default function BookingsPage() {
   );
 }
 
-function RouteLine({ origin, destination }: { origin?: string; destination?: string }) {
+/** Which booking flow produced this ticket — the two behave differently. */
+function TypeBadge({ kind }: { kind: "pickup" | "scheduled" }) {
+  const pickup = kind === "pickup";
   return (
-    <span className="flex items-center gap-1.5 text-[15px] font-bold text-text-primary">
-      {origin ?? "Unknown"}
-      <span className="text-text-muted">→</span>
-      {destination ?? "Unknown"}
+    <span
+      className={`shrink-0 rounded-pill px-2.5 py-1 text-[11px] font-medium ${
+        pickup ? "bg-[#E8EEF4] text-primary" : "bg-[#EDE9FE] text-[#7C3AED]"
+      }`}
+    >
+      {pickup ? "Roadside pickup" : "Scheduled"}
     </span>
   );
 }
@@ -288,74 +292,46 @@ function ScheduledCard({
   const cancelled = booking.status === "cancelled";
 
   return (
-    <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-      <div className="flex items-start gap-3">
-        <CompanyLogo name={company?.name ?? "Unknown"} size={40} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <RouteLine origin={schedule?.origin} destination={schedule?.destination} />
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-text-secondary">
-              {company?.name ?? "Unknown company"}
-            </span>
-            <VehicleBadge type={company?.vehicle_type ?? "bus"} />
+    <BookingReceipt
+      company={company?.name ?? "Unknown company"}
+      vehicleBadge={<VehicleBadge type={company?.vehicle_type ?? "bus"} />}
+      typeTag={<TypeBadge kind="scheduled" />}
+      origin={schedule?.origin}
+      destination={schedule?.destination}
+      rows={[
+        { label: "Travel date", value: booking.travel_date },
+        {
+          label: "Departure",
+          value: `${schedule?.departure_time ?? "--"} – ${schedule?.arrival_time ?? "--"}`,
+        },
+        {
+          label: booking.seat_numbers.length > 1 ? "Seats" : "Seat",
+          value: booking.seat_numbers.join(", "),
+        },
+      ]}
+      ticketId={booking.ticket_id}
+      total={booking.total_price}
+      statusSlot={<StatusBadge status={booking.status} />}
+      actions={
+        cancelled ? undefined : confirmingCancel ? (
+          <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
+            <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
+            <div className="flex gap-2">
+              <Button variant="outline" loading={cancelling} onClick={onCancel}>
+                Yes, cancel
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
+                Keep
+              </Button>
+            </div>
           </div>
-        </div>
-        <StatusBadge status={booking.status} />
-      </div>
-
-      <div className="flex flex-col gap-1.5 rounded-[12px] bg-surface p-3 text-[13px]">
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Travel date</span>
-          <span className="font-semibold text-text-primary">{booking.travel_date}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Departure</span>
-          <span className="font-semibold text-text-primary">
-            {schedule?.departure_time} – {schedule?.arrival_time}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-text-secondary">
-            {booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
-          </span>
-          <span className="font-semibold text-text-primary">
-            {booking.seat_numbers.join(", ")}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between rounded-[12px] border border-dashed border-border px-3 py-2">
-        <span className="text-[12px] text-text-secondary">Ticket ID</span>
-        <span className="font-mono text-[13px] font-bold text-text-primary">
-          {booking.ticket_id}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-border pt-3">
-        <span className="text-[13px] text-text-secondary">Total paid</span>
-        <Price amount={booking.total_price} />
-      </div>
-
-      {!cancelled && !confirmingCancel && (
-        <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
-          Cancel Booking
-        </Button>
-      )}
-
-      {!cancelled && confirmingCancel && (
-        <div className="flex flex-col gap-2 rounded-card bg-surface p-3">
-          <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
-          <div className="flex gap-2">
-            <Button variant="outline" loading={cancelling} onClick={onCancel}>
-              Yes, cancel
-            </Button>
-            <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
-              Keep
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+        ) : (
+          <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
+            Cancel Booking
+          </Button>
+        )
+      }
+    />
   );
 }
 
@@ -377,29 +353,31 @@ function BookingCard({
   const isCancelled = booking.status === "cancelled";
 
   return (
-    <div className="flex flex-col gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-      <div className="flex items-start gap-3">
-        <CompanyLogo name={company?.name ?? "Unknown"} size={40} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <RouteLine
-            origin={booking.active_trips?.origin}
-            destination={booking.active_trips?.destination}
-          />
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-text-secondary">
-              {company?.name ?? "Unknown company"}
-            </span>
-            <VehicleBadge type={company?.vehicle_type ?? "bus"} />
-          </div>
-          <span className="text-[13px] text-text-secondary">
-            {booking.seat_numbers.length > 1 ? "Seats" : "Seat"}{" "}
-            {booking.seat_numbers.join(", ")}
-          </span>
-        </div>
-
-        {tab === "past" ? (
+    <BookingReceipt
+      company={company?.name ?? "Unknown company"}
+      vehicleBadge={<VehicleBadge type={company?.vehicle_type ?? "bus"} />}
+      typeTag={<TypeBadge kind="pickup" />}
+      origin={booking.active_trips?.origin}
+      destination={booking.active_trips?.destination}
+      rows={[
+        // Roadside fares are distance-based, so the km the price was struck on
+        // matters as much as the total.
+        {
+          label: "Distance",
+          value: `${booking.active_trips?.distance_km ?? 0} km`,
+          icon: <MapPin className="h-3.5 w-3.5 shrink-0 text-text-secondary" />,
+        },
+        {
+          label: booking.seat_numbers.length > 1 ? "Seats" : "Seat",
+          value: booking.seat_numbers.join(", "),
+        },
+      ]}
+      ticketId={booking.ticket_id}
+      total={booking.total_price}
+      statusSlot={
+        tab === "past" ? (
           <span
-            className={`shrink-0 rounded-pill px-2.5 py-1 text-[11px] font-semibold ${
+            className={`rounded-pill px-2.5 py-1 text-[11px] font-semibold ${
               isCancelled ? "bg-error/10 text-error" : "bg-border text-text-secondary"
             }`}
           >
@@ -407,45 +385,32 @@ function BookingCard({
           </span>
         ) : (
           <StatusBadge status="confirmed" />
-        )}
-      </div>
-
-      <div className="flex items-center justify-between rounded-[12px] border border-dashed border-border px-3 py-2">
-        <span className="text-[12px] text-text-secondary">Ticket ID</span>
-        <span className="font-mono text-[13px] font-bold text-text-primary">
-          {booking.ticket_id}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-border pt-3">
-        <span className="text-[13px] text-text-secondary">Total paid</span>
-        <Price amount={booking.total_price} />
-      </div>
-
-      {tab === "current" && !confirmingCancel && (
-        <div className="flex gap-2">
-          <Button onClick={onTrack}>
-            {booking.distance_remaining_km > 0 ? "Track" : "View trip"}
-          </Button>
-          <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
-            Cancel Booking
-          </Button>
-        </div>
-      )}
-
-      {tab === "current" && confirmingCancel && (
-        <div className="flex flex-col gap-2 rounded-card bg-surface p-3">
-          <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
+        )
+      }
+      actions={
+        tab !== "current" ? undefined : confirmingCancel ? (
+          <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
+            <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
+            <div className="flex gap-2">
+              <Button variant="outline" loading={cancelling} onClick={onCancel}>
+                Yes, cancel
+              </Button>
+              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
+                Keep
+              </Button>
+            </div>
+          </div>
+        ) : (
           <div className="flex gap-2">
-            <Button variant="outline" loading={cancelling} onClick={onCancel}>
-              Yes, cancel
+            <Button onClick={onTrack}>
+              {booking.distance_remaining_km > 0 ? "Track" : "View trip"}
             </Button>
-            <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
-              Keep
+            <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
+              Cancel Booking
             </Button>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    />
   );
 }

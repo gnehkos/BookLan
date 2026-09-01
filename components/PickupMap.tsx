@@ -6,7 +6,7 @@ import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Rectangle } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad } from "@/lib/geo";
+import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
 import { TILE_ATTRIBUTION, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
 
@@ -56,9 +56,12 @@ function DraggableMarker({
 }
 
 export default function PickupMap({
+  destination,
   onPositionChange,
   bottomInset = 0,
 }: {
+  /** Only roads serving this destination are drawn and accepted. */
+  destination: string;
   onPositionChange: (
     position: [number, number],
     allowed: boolean,
@@ -70,7 +73,10 @@ export default function PickupMap({
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
   // Real routed geometry; falls back to the coarse waypoints until it lands.
-  const { roads } = useNationalRoads();
+  const { roads: allRoads } = useNationalRoads();
+  // A bus to Siem Reap runs NR6 — it never passes someone waiting on NR2.
+  const serving = roadsFor(destination).map((road) => road.id);
+  const roads = allRoads.filter((road) => serving.includes(road.id));
 
   const report = useCallback(
     (pos: [number, number]) => {

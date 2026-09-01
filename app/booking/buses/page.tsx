@@ -22,7 +22,6 @@ import { companyProfile } from "@/constants/companyProfile";
 
 type VehicleType = "bus" | "van";
 
-type StoredTrip = { origin: string; destination: string };
 type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?: string };
 
 type ActiveTrip = {
@@ -46,27 +45,38 @@ const SORT_ACCENT: Record<
   SortMode,
   { label: string; strip: string; border: string; badgeBg: string; badgeText: string }
 > = {
+  // Amber for soonest, green for cheapest, violet for most seats — three
+  // clearly different signals rather than three shades of blue.
   soonest: {
-    label: "NEAREST",
-    strip: "bg-secondary",
-    border: "border-secondary",
-    badgeBg: "bg-[#EFF6FF]",
-    badgeText: "text-secondary",
+    label: "SOONEST",
+    strip: "bg-warning",
+    border: "border-warning",
+    badgeBg: "bg-[#FEF3C7]",
+    badgeText: "text-warning",
   },
   cheapest: {
     label: "CHEAPEST",
     strip: "bg-success",
-    border: "border-warning",
-    badgeBg: "bg-[#FEF2F2]",
-    badgeText: "text-error",
+    border: "border-success",
+    badgeBg: "bg-[#DCFCE7]",
+    badgeText: "text-success",
   },
   seats: {
     label: "MOST SEATS",
-    strip: "bg-success",
-    border: "border-success",
-    badgeBg: "bg-[#F0FDF4]",
-    badgeText: "text-success",
+    strip: "bg-[#7C3AED]",
+    border: "border-[#7C3AED]",
+    badgeBg: "bg-[#EDE9FE]",
+    badgeText: "text-[#7C3AED]",
   },
+};
+
+/** Everything below the top pick: quiet, on-theme, not competing for attention. */
+const DEFAULT_ACCENT = {
+  label: "",
+  strip: "bg-accent",
+  border: "border-transparent",
+  badgeBg: "bg-accent",
+  badgeText: "text-primary",
 };
 
 const SORT_TABS: { mode: SortMode; label: string }[] = [
@@ -84,7 +94,6 @@ function formatDuration(km: number) {
 
 export default function BusesPage() {
   const router = useRouter();
-  const [origin, setOrigin] = useState<string | null>(null);
   const [destination, setDestination] = useState<string | null>(null);
   const [pickup, setPickup] = useState<StoredPickup | null>(null);
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
@@ -95,9 +104,9 @@ export default function BusesPage() {
   const [destinationSheetOpen, setDestinationSheetOpen] = useState(false);
 
   useEffect(() => {
-    const tripStored = sessionStorage.getItem("booklan_trip");
+    const destinationStored = sessionStorage.getItem("booklan_destination");
     const pickupStored = sessionStorage.getItem("booklan_pickup");
-    if (!tripStored) {
+    if (!destinationStored) {
       router.replace("/search");
       return;
     }
@@ -105,9 +114,7 @@ export default function BusesPage() {
       router.replace("/booking/pickup");
       return;
     }
-    const trip = JSON.parse(tripStored) as StoredTrip;
-    setOrigin(trip.origin);
-    setDestination(trip.destination);
+    setDestination(destinationStored);
     setPickup(JSON.parse(pickupStored) as StoredPickup);
   }, [router]);
 
@@ -159,13 +166,7 @@ export default function BusesPage() {
 
   function changeDestination(next: string) {
     setDestination(next);
-    const stored = sessionStorage.getItem("booklan_trip");
-    if (stored) {
-      sessionStorage.setItem(
-        "booklan_trip",
-        JSON.stringify({ ...JSON.parse(stored), destination: next })
-      );
-    }
+    sessionStorage.setItem("booklan_destination", next);
   }
 
   function selectTrip(trip: ActiveTrip) {
@@ -293,7 +294,7 @@ export default function BusesPage() {
               <BusCard
                 key={trip.id}
                 trip={trip}
-                accent={accent}
+                accent={index === 0 ? accent : DEFAULT_ACCENT}
                 topPick={index === 0}
                 onSelect={() => selectTrip(trip)}
               />
@@ -322,7 +323,7 @@ function BusCard({
   onSelect,
 }: {
   trip: ActiveTrip;
-  accent: (typeof SORT_ACCENT)[SortMode];
+  accent: (typeof SORT_ACCENT)[SortMode] | typeof DEFAULT_ACCENT;
   topPick: boolean;
   onSelect: () => void;
 }) {
@@ -331,7 +332,6 @@ function BusCard({
   const profile = companyProfile(companyName);
 
   const price = trip.distance_km * trip.price_per_km;
-  const etaMinutes = Math.max(1, Math.round((trip.distance_km / AVG_SPEED_KMH) * 60));
   const lowSeats = trip.seats_available <= 3;
 
   return (
@@ -376,32 +376,21 @@ function BusCard({
           </div>
         </div>
 
-        {/* Journey time, centred on a hairline — the from/to lives in the header. */}
-        <div className="mt-3.5 flex items-center gap-3">
-          <span className="h-px flex-1 bg-border" />
-          <span className="shrink-0 text-[11px] font-semibold text-text-secondary">
-            {formatDuration(trip.distance_km)} · direct
-          </span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <div className="mt-3.5 grid grid-cols-3 gap-2.5">
           <InfoChip
             icon={<MapPin className="h-3.5 w-3.5" />}
-            text={`${trip.distance_km} km away`}
-            className="bg-[#EFF6FF] text-secondary"
+            text={`${trip.distance_km} km`}
+            className="bg-surface text-text-secondary"
           />
           <InfoChip
             icon={<Clock className="h-3.5 w-3.5" />}
-            text={`${etaMinutes} min`}
-            className="bg-[#FEF3C7] text-warning"
+            text={formatDuration(trip.distance_km)}
+            className="bg-surface text-text-secondary"
           />
           <InfoChip
             icon={<Users className="h-3.5 w-3.5" />}
-            text={`${trip.seats_available} left`}
-            className={
-              lowSeats ? "bg-[#FEF2F2] text-error" : "bg-[#F0FDF4] text-success"
-            }
+            text={`${trip.seats_available} seats`}
+            className={lowSeats ? "bg-[#FEF2F2] text-error" : "bg-surface text-text-secondary"}
           />
         </div>
 

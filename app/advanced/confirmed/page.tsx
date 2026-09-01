@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bus, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
+import Ticket from "@/components/Ticket";
 import BottomNav from "@/components/BottomNav";
 
 type VehicleType = "bus" | "van";
@@ -56,33 +57,25 @@ export default function AdvancedConfirmedPage() {
           Your seat is reserved for {travelDate}. Show your ticket when boarding.
         </p>
 
-        <div className="mt-6 flex w-full flex-col gap-4 rounded-card bg-primary p-5 text-white">
-          <div className="flex items-center gap-2">
-            <Bus className="h-5 w-5" strokeWidth={2.25} />
-            <span className="text-sm font-bold">BookLan</span>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <span className="text-xs uppercase tracking-wide text-white/70">Ticket ID</span>
-            <span className="font-mono text-3xl font-bold tracking-wide">{ticketId}</span>
-          </div>
-
-          <div className="border-t border-dashed border-white/30" />
-
-          <div className="flex flex-col gap-2 text-[14px]">
-            <TicketRow label="Company" value={schedule.companies?.name ?? "Unknown"} />
-            <TicketRow label="Route" value={`${schedule.origin} → ${schedule.destination}`} />
-            <TicketRow label="Travel date" value={travelDate ?? ""} />
-            <TicketRow
-              label="Departure"
-              value={`${schedule.departure_time} – ${schedule.arrival_time}`}
-            />
-            <TicketRow
-              label={seat.seatNumbers.length > 1 ? "Seats" : "Seat"}
-              value={seat.seatNumbers.join(", ")}
-            />
-            <TicketRow label="Total paid" value={`$${seat.totalPrice.toFixed(2)}`} bold />
-          </div>
+        <div className="mt-6 w-full">
+          <Ticket
+            company={schedule.companies?.name ?? "BookLan"}
+            route={`${schedule.origin} → ${schedule.destination}`}
+            ticketId={ticketId}
+            details={[
+              { label: "Travel date", value: travelDate ?? "" },
+              {
+                label: "Departure",
+                value: `${schedule.departure_time} – ${schedule.arrival_time}`,
+              },
+              {
+                label: seat.seatNumbers.length > 1 ? "Seats" : "Seat",
+                value: seat.seatNumbers.join(", "),
+              },
+              { label: "Total paid", value: `$${seat.totalPrice.toFixed(2)}` },
+            ]}
+            footnote="Show this ID to the driver when boarding"
+          />
         </div>
 
         <div className="mt-6 flex w-full flex-col gap-3">
@@ -94,15 +87,6 @@ export default function AdvancedConfirmedPage() {
       </div>
 
       <BottomNav />
-    </div>
-  );
-}
-
-function TicketRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <span className="shrink-0 text-white/70">{label}</span>
-      <span className={`text-right ${bold ? "text-lg font-bold" : "font-medium"}`}>{value}</span>
     </div>
   );
 }
