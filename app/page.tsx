@@ -3,10 +3,16 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import BooklanLogo from "@/components/BooklanLogo";
+import SplashScreen from "@/components/SplashScreen";
+
+/** How long the launch screen holds before the app takes over. */
+const SPLASH_MS = 1600;
 
 /**
- * Three-step onboarding, shown once. Skipping or finishing records the fact in
- * localStorage so returning users land straight on the sign-in screen.
+ * The app's entry point: launch screen, then three-step onboarding shown once.
+ * Skipping or finishing records the fact in localStorage so returning users go
+ * straight from the splash to the sign-in screen.
  */
 const STEPS = [
   {
@@ -30,13 +36,28 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [ready, setReady] = useState(false);
+  const [splashLeaving, setSplashLeaving] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
+  // The splash always runs its full beat, so the brand does not flash past on a
+  // fast connection. Where it hands off is decided underneath it.
   useEffect(() => {
-    if (localStorage.getItem("booklan_onboarded") === "true") {
-      router.replace("/auth/login");
-      return;
-    }
-    setReady(true);
+    const onboarded = localStorage.getItem("booklan_onboarded") === "true";
+
+    const fade = setTimeout(() => setSplashLeaving(true), SPLASH_MS);
+    const finish = setTimeout(() => {
+      setSplashDone(true);
+      if (onboarded) {
+        router.replace("/auth/login");
+      } else {
+        setReady(true);
+      }
+    }, SPLASH_MS + 450);
+
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(finish);
+    };
   }, [router]);
 
   function finish() {
@@ -52,6 +73,7 @@ export default function OnboardingPage() {
     setStep((current) => current + 1);
   }
 
+  if (!splashDone) return <SplashScreen leaving={splashLeaving} />;
   if (!ready) return null;
 
   const current = STEPS[step];
@@ -60,6 +82,10 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen justify-center bg-white">
       <div className="flex w-full max-w-[393px] flex-col">
+        <div className="flex justify-center pt-10">
+          <BooklanLogo className="h-5 w-auto opacity-90" />
+        </div>
+
         <div className="flex flex-1 flex-col items-center justify-center px-10">
           {/* Keyed so the illustration and copy re-animate on every step. */}
           <div key={step} className="flex animate-[step-in_0.35s_ease-out] flex-col items-center">
@@ -91,7 +117,7 @@ export default function OnboardingPage() {
               aria-label={`Go to step ${index + 1}`}
               aria-current={index === step ? "step" : undefined}
               className={`h-2 rounded-[4px] transition-all duration-300 ${
-                index === step ? "w-7 bg-primary" : "w-2 bg-border"
+                index === step ? "w-7 bg-secondary" : "w-2 bg-border"
               }`}
             />
           ))}
@@ -100,7 +126,7 @@ export default function OnboardingPage() {
         <div className="flex flex-col gap-2.5 px-6 pb-14">
           <button
             onClick={next}
-            className="w-full rounded-[16px] bg-gradient-to-b from-primary to-primary-dark px-6 py-4 text-[15px] font-bold text-white shadow-[0_4px_10px_rgba(26,58,92,0.28)] hover:brightness-110"
+            className="w-full rounded-[16px] bg-gradient-to-b from-secondary to-secondary-dark px-6 py-4 text-[15px] font-bold text-white shadow-[0_8px_20px_rgba(0,167,157,0.35)] transition-transform hover:brightness-105 active:scale-[0.99]"
           >
             {isLast ? "Get Started" : "Continue"}
           </button>

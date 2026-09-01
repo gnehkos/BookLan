@@ -36,12 +36,12 @@ export default function BottomNav() {
             >
               <Icon
                 className={`h-[20px] w-[20px] shrink-0 ${
-                  active ? "text-primary" : "text-text-muted"
+                  active ? "text-secondary-dark" : "text-text-muted"
                 }`}
               />
               <span
                 className={`whitespace-nowrap text-[11px] leading-none ${
-                  active ? "font-semibold text-primary" : "font-medium text-text-muted"
+                  active ? "font-bold text-secondary-dark" : "font-medium text-text-muted"
                 }`}
               >
                 {label}

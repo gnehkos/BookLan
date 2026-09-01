@@ -323,7 +323,7 @@ function TripRating({
         <CheckCircle2 className="h-8 w-8 text-success" />
         <span className="text-[14px] font-semibold text-text-primary">Thanks for the rating</span>
         <div className="mt-1 flex w-full gap-3">
-          <Button onClick={() => router.push("/bookings")}>My Bookings</Button>
+          <Button onClick={() => router.push("/bookings?tab=past")}>My Bookings</Button>
           <Button variant="outline" onClick={() => router.push("/home")}>
             Done
           </Button>

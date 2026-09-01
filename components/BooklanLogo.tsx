@@ -1,0 +1,50 @@
+/**
+ * The BookLan mark, inlined rather than loaded as a file.
+ *
+ * The supplied SVGs sit in a 251.91×326 canvas that the artwork fills only a
+ * corner of, and their colours are baked into an embedded <style> block. Both
+ * are a problem here: the mark has to sit flush in its container and has to be
+ * able to turn white on the navy splash. So the three paths are reproduced
+ * below against a tight viewBox, with the fills driven by props.
+ *
+ * The original files remain in public/logos as the source of truth, alongside
+ * cropped copies (booklan-mark.svg, booklan-wordmark.svg) for anywhere an
+ * <img> is wanted.
+ */
+export default function BooklanLogo({
+  className = "",
+  /** "brand" uses the logo's own navy and teal; "mono" paints it all one tone. */
+  tone = "brand",
+  monoColor = "#ffffff",
+}: {
+  className?: string;
+  tone?: "brand" | "mono";
+  monoColor?: string;
+}) {
+  const navy = tone === "mono" ? monoColor : "#19355F";
+  const teal = tone === "mono" ? monoColor : "#00A79D";
+
+  return (
+    <svg
+      viewBox="65 46 115 42"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      role="img"
+      aria-label="BookLan"
+    >
+      <path
+        fill={navy}
+        d="M69,48.27h69.85a1.89,1.89,0,0,1,1,.31L167.28,66.3a1.89,1.89,0,0,1-1.05,3.48L75.39,68.63a1.9,1.9,0,0,1-1.75-1.21L67.25,50.85A1.89,1.89,0,0,1,69,48.27Z"
+      />
+      <path
+        fill={teal}
+        d="M78.73,72.71h61.91a5.49,5.49,0,0,1,5.11,3.47l1.84,4.61a3.64,3.64,0,0,1-3.38,5H83a2.14,2.14,0,0,1-1.61-.71,24.94,24.94,0,0,1-4.78-9.57A2.18,2.18,0,0,1,78.73,72.71Z"
+      />
+      <path
+        fill={navy}
+        d="M152.93,73.27h17.19A4.61,4.61,0,0,1,174,75.36l3.73,5.7a3,3,0,0,1-2.54,4.71h-17.8A3.58,3.58,0,0,1,154,83.52l-3-7.49A2,2,0,0,1,152.93,73.27Z"
+      />
+    </svg>
+  );
+}

@@ -24,6 +24,7 @@ import { releaseTripSeats } from "@/lib/seats";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { DRIVER_PHONE, driverNameFor } from "@/constants/drivers";
 import { appendMessage, getThread } from "@/lib/chat";
+import CallScreen from "@/components/CallScreen";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
@@ -331,21 +332,26 @@ export default function TrackingPage() {
                 Seat{booking.seat_numbers.length > 1 ? "s" : ""} {booking.seat_numbers.join(", ")} ·
                 to {destination}
               </span>
+              <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-text-secondary">
+                <span className="truncate font-semibold text-text-primary">{driverName}</span>
+                <span className="text-border">|</span>
+                <span className="truncate font-mono text-[11.5px]">{DRIVER_PHONE}</span>
+              </span>
             </div>
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setShowCallModal(true)}
                 aria-label="Call driver"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-white shadow-[0_4px_12px_rgba(0,167,157,0.35)] transition-transform active:scale-95"
               >
-                <Phone className="h-[18px] w-[18px] text-primary" />
+                <Phone className="h-[18px] w-[18px]" />
               </button>
               <button
                 onClick={() => setShowChatModal(true)}
                 aria-label="Message driver"
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-accent transition-transform active:scale-95"
               >
-                <MessageCircle className="h-[18px] w-[18px] text-primary" />
+                <MessageCircle className="h-[18px] w-[18px] text-secondary-dark" />
               </button>
             </div>
           </div>
@@ -396,30 +402,13 @@ export default function TrackingPage() {
       </div>
 
       {showCallModal && (
-        <Modal onClose={() => setShowCallModal(false)}>
-          <div className="flex flex-col items-center gap-3 px-6 pb-6">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
-              <Phone className="h-6 w-6 text-primary" />
-            </div>
-            <span className="text-[16px] font-semibold text-text-primary">{driverName}</span>
-            <span className="text-[13px] text-text-secondary">Driver · {companyName}</span>
-            <span className="font-mono text-2xl font-bold text-text-primary">{DRIVER_PHONE}</span>
-            <div className="mt-2 flex w-full flex-col gap-2">
-              <Button
-                onClick={() => {
-                  // Hands off to the phone dialer rather than opening a tab.
-                  window.location.href = `tel:${DRIVER_PHONE}`;
-                }}
-                icon={<Phone className="h-5 w-5" />}
-              >
-                Call Now
-              </Button>
-              <Button variant="ghost" onClick={() => setShowCallModal(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </Modal>
+        <CallScreen
+          name={driverName}
+          subtitle={`Driver · ${companyName}`}
+          phone={DRIVER_PHONE}
+          companyName={companyName}
+          onClose={() => setShowCallModal(false)}
+        />
       )}
 
       {showChatModal && (
@@ -431,10 +420,24 @@ export default function TrackingPage() {
                   {driverName.charAt(0)}
                 </span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[15px] font-bold text-text-primary">{driverName}</span>
-                <span className="text-[12px] text-text-secondary">Driver · {companyName}</span>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-[15px] font-bold text-text-primary">
+                  {driverName}
+                </span>
+                <span className="truncate text-[12px] text-text-secondary">
+                  Driver · {companyName}
+                </span>
               </div>
+              <button
+                onClick={() => {
+                  setShowChatModal(false);
+                  setShowCallModal(true);
+                }}
+                aria-label="Call driver"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-white transition-transform active:scale-95"
+              >
+                <Phone className="h-[17px] w-[17px]" />
+              </button>
             </div>
 
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-5 py-4">

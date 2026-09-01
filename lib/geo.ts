@@ -21,16 +21,33 @@ export const PHNOM_PENH_BBOX = {
 } as const;
 
 /**
+ * The real width of a Cambodian national road, in metres.
+ *
+ * NR1–NR7 are predominantly two-lane: roughly 7 m of carriageway plus sealed
+ * shoulders, so about 12 m edge to edge. This is what the green corridor is
+ * drawn against, so the band on screen is the size of the actual road.
+ */
+export const ROAD_WIDTH_M = 12;
+
+/**
  * How far from a road centre-line still counts as "on the road", in metres.
  *
- * A national road is roughly 10–20 m wide, so this is the half-width: 20 m
- * either side of the centre-line, giving a band about as wide as the road
- * plus its verge. Anything looser starts swallowing the village lanes that
- * branch off the highway, and a bus will not turn down one of those to
- * collect anyone — the passenger has to be standing at the highway itself.
+ * Half the road width plus a little slack for the gap between the routed
+ * centre-line and where someone is actually standing. Anything looser starts
+ * swallowing the village lanes that branch off the highway, and a bus will not
+ * turn down one of those to collect anyone.
  */
-export const ROAD_TOLERANCE_M = 20;
+export const ROAD_TOLERANCE_M = 12;
 export const ROAD_TOLERANCE_KM = ROAD_TOLERANCE_M / 1000;
+
+/**
+ * Pickups are not offered within this distance of the middle of Phnom Penh.
+ *
+ * Inside the city the national roads are ordinary congested streets — a bus
+ * cannot pull over on them, and a passenger there is better served by the city
+ * network. The corridors only begin once the road is genuinely a highway.
+ */
+export const CITY_EXCLUSION_KM = 20;
 
 export type RoadCorridor = {
   id: string;
@@ -153,6 +170,40 @@ export function roadsFor(destination: string | null | undefined): RoadCorridor[]
   return matches.length > 0 ? matches : NATIONAL_ROADS;
 }
 
+/** Straight-line distance from the middle of Phnom Penh, in km. */
+export function distanceFromCityCenterKm(lat: number, lng: number): number {
+  const [px, py] = toPlanar(lat, lng, PHNOM_PENH_POINT[0]);
+  const [cx, cy] = toPlanar(PHNOM_PENH_POINT[0], PHNOM_PENH_POINT[1], PHNOM_PENH_POINT[0]);
+  return Math.hypot(px - cx, py - cy);
+}
+
+/** True where the corridors are suppressed for being inside the city. */
+export function isInsideCityExclusion(lat: number, lng: number): boolean {
+  return distanceFromCityCenterKm(lat, lng) < CITY_EXCLUSION_KM;
+}
+
+/**
+ * Splits a road into the runs that lie outside the city exclusion, so the
+ * drawn corridor stops at the 20 km ring rather than running into the middle
+ * of Phnom Penh. Returns one array per surviving run.
+ */
+export function clipOutsideCity(path: LatLng[]): LatLng[][] {
+  const runs: LatLng[][] = [];
+  let run: LatLng[] = [];
+
+  for (const point of path) {
+    if (isInsideCityExclusion(point[0], point[1])) {
+      if (run.length > 1) runs.push(run);
+      run = [];
+    } else {
+      run.push(point);
+    }
+  }
+  if (run.length > 1) runs.push(run);
+
+  return runs;
+}
+
 export function isInsidePhnomPenh(lat: number, lng: number): boolean {
   return (
     lat >= PHNOM_PENH_BBOX.minLat &&
@@ -230,6 +281,10 @@ export function isPickupAllowed(
   lng: number,
   roads: RoadCorridor[] = NATIONAL_ROADS
 ): boolean {
+  // Inside the city the corridors are not drawn, so they must not be accepted
+  // either — otherwise the pin would turn green over blank map.
+  if (isInsideCityExclusion(lat, lng)) return false;
+
   const nearest = nearestRoad(lat, lng, roads);
   return nearest !== null && nearest.distanceKm <= ROAD_TOLERANCE_KM;
 }

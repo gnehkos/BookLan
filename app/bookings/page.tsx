@@ -56,6 +56,17 @@ const TABS: { mode: TabMode; label: string }[] = [
 export default function BookingsPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+
+  /**
+   * Landing here from a finished trip should open History, not Current — the
+   * trip that was just completed is no longer a current booking, so the
+   * default tab would look empty. `?tab=past` is read from the URL rather than
+   * via useSearchParams so the page needs no Suspense boundary.
+   */
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    if (requested === "past") setTab("past");
+  }, []);
   const [tab, setTab] = useState<TabMode>("current");
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [scheduled, setScheduled] = useState<AdvancedBookingRow[]>([]);
@@ -162,19 +173,30 @@ export default function BookingsPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-28">
-        <div className="bg-white px-4 pt-6 pb-4">
-          <h1 className="text-[16px] font-semibold text-text-primary">My Bookings</h1>
+        {/* Navy hero with the tab switcher riding its lower edge, so the top of
+            the screen reads as one shape rather than stacked white blocks. */}
+        <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-12 pt-9">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-secondary/30 blur-3xl"
+          />
+          <h1 className="relative text-[27px] font-extrabold tracking-[-0.7px] text-white">
+            My bookings
+          </h1>
+          <p className="relative mt-1.5 text-[13.5px] text-white/65">
+            Your tickets, past and present.
+          </p>
         </div>
 
-        <div className="flex gap-1 px-4 pt-4">
+        <div className="mx-4 -mt-7 flex gap-1 rounded-pill bg-white p-1 shadow-[var(--shadow-float)]">
           {TABS.map(({ mode, label }) => (
             <button
               key={mode}
               onClick={() => setTab(mode)}
-              className={`flex-1 rounded-pill py-2 text-[13px] font-semibold transition-colors ${
+              className={`flex-1 rounded-pill py-2.5 text-[13px] font-bold transition-colors ${
                 tab === mode
-                  ? "bg-primary text-white"
-                  : "bg-white text-text-secondary hover:bg-surface"
+                  ? "bg-secondary text-white shadow-[0_4px_12px_rgba(0,167,157,0.3)]"
+                  : "text-text-secondary hover:bg-surface"
               }`}
             >
               {label}

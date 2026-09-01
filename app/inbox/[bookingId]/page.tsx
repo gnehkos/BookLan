@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Phone, Send } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import CallScreen from "@/components/CallScreen";
 import CompanyLogo from "@/components/CompanyLogo";
 import { appendMessage, getThread, relativeTime, type ChatThread } from "@/lib/chat";
 import { DRIVER_PHONE } from "@/constants/drivers";
@@ -16,6 +17,7 @@ export default function ChatThreadPage() {
   const [thread, setThread] = useState<ChatThread | null>(null);
   const [draft, setDraft] = useState("");
   const [ready, setReady] = useState(false);
+  const [calling, setCalling] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -86,13 +88,13 @@ export default function ChatThreadPage() {
               {thread.company} · to {thread.destination}
             </span>
           </div>
-          <a
-            href={`tel:${DRIVER_PHONE}`}
+          <button
+            onClick={() => setCalling(true)}
             aria-label="Call driver"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-white shadow-[0_4px_12px_rgba(0,167,157,0.35)] transition-transform active:scale-95"
           >
-            <Phone className="h-[18px] w-[18px] text-primary" />
-          </a>
+            <Phone className="h-[18px] w-[18px]" />
+          </button>
         </div>
 
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-5 py-4 pb-32">
@@ -140,6 +142,16 @@ export default function ChatThreadPage() {
           </div>
         </div>
       </div>
+
+      {calling && (
+        <CallScreen
+          name={thread.driver}
+          subtitle={`Driver · ${thread.company}`}
+          phone={DRIVER_PHONE}
+          companyName={thread.company}
+          onClose={() => setCalling(false)}
+        />
+      )}
 
       <BottomNav />
     </div>

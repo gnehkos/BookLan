@@ -2,20 +2,27 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0d1117;
+  --foreground: #0b1729;
 
-  --color-primary: #1a3a5c;
-  --color-primary-dark: #112a46;
-  --color-secondary: #2563eb;
-  --color-surface: #f4f7fb;
-  --color-accent: #ebf4ff;
-  --color-text-primary: #0d1117;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-border: #e2e8f0;
+  /* Brand. Both taken straight from the logo artwork: the navy is the mark's
+     body, the teal is its centre band and the app's signature accent. */
+  --color-primary: #19355f;
+  --color-primary-dark: #102544;
+  --color-primary-tint: #eef2f7;
+
+  --color-secondary: #00a79d;
+  --color-secondary-dark: #00857d;
+  --color-secondary-tint: #e3f7f5;
+
+  --color-surface: #f5f8fa;
+  --color-accent: #e3f7f5;
+  --color-text-primary: #0b1729;
+  --color-text-secondary: #5a6b81;
+  --color-text-muted: #93a1b3;
+  --color-success: #0fa36b;
+  --color-warning: #f5a524;
+  --color-error: #e5484d;
+  --color-border: #e6ecf2;
 }
 
 @theme inline {
@@ -23,7 +30,10 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--color-primary);
   --color-primary-dark: var(--color-primary-dark);
+  --color-primary-tint: var(--color-primary-tint);
   --color-secondary: var(--color-secondary);
+  --color-secondary-dark: var(--color-secondary-dark);
+  --color-secondary-tint: var(--color-secondary-tint);
   --color-surface: var(--color-surface);
   --color-accent: var(--color-accent);
   --color-text-primary: var(--color-text-primary);
@@ -34,10 +44,15 @@
   --color-error: var(--color-error);
   --color-border: var(--color-border);
   --font-sans: var(--font-jakarta);
-  --radius-card: 16px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
   --radius-pill: 100px;
-  /* The one floating-element shadow used across cards, sheets and nav. */
-  --shadow-float: 0 4px 20px rgba(0, 0, 0, 0.08);
+  /* Three shadow depths, all tinted with the brand navy rather than pure
+     black — that is what keeps stacked floating panels looking soft rather
+     than smudged. */
+  --shadow-soft: 0 2px 8px rgba(16, 37, 68, 0.05);
+  --shadow-float: 0 8px 28px rgba(16, 37, 68, 0.1);
+  --shadow-lift: 0 16px 44px rgba(16, 37, 68, 0.14);
 }
 
 html {
@@ -218,8 +233,8 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 9999px;
-  background: rgba(37, 99, 235, 0.2);
-  box-shadow: 0 0 18px 7px rgba(37, 99, 235, 0.25);
+  background: rgba(0, 167, 157, 0.22);
+  box-shadow: 0 0 18px 7px rgba(0, 167, 157, 0.28);
 }
 
 .booklan-current-glow {
@@ -227,7 +242,7 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 9999px;
-  background: rgba(37, 99, 235, 0.35);
+  background: rgba(0, 167, 157, 0.38);
   animation: booklan-glow 2.4s ease-out infinite;
 }
 
@@ -323,5 +338,38 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* --- Splash screen --- */
+@keyframes splash-mark {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes splash-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+/* Ring pulse on the in-app call screen. */
+@keyframes call-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
   }
 }

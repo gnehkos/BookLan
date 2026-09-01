@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Ban, CheckCircle2, MapPin } from "lucide-react";
 import Button from "@/components/Button";
 import { describePlace } from "@/lib/reverseGeocode";
-import { roadsFor } from "@/lib/geo";
+import { CITY_EXCLUSION_KM, roadsFor } from "@/lib/geo";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 
 const PickupMap = dynamic(() => import("@/components/PickupMap"), {
@@ -111,10 +111,10 @@ export default function PickupPage() {
             </button>
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-[14px] font-extrabold text-text-primary">
-                Drag to set your pickup
+                Set your pickup point
               </span>
               <span className="truncate text-[11px] text-text-muted">
-                Buses to {destination} run on {roadLabel}
+                Drag the pin, or long-press anywhere on the map
               </span>
             </div>
           </div>
@@ -144,49 +144,49 @@ export default function PickupPage() {
             </span>
             <span className="flex min-w-0 flex-col">
               <span className="text-[11px] font-bold text-text-primary">No pickup</span>
-              <span className="text-[9px] font-medium text-text-muted">Other roads</span>
+              <span className="text-[9px] font-medium text-text-muted">
+                Other roads, or within {CITY_EXCLUSION_KM} km of the city
+              </span>
             </span>
           </div>
         </div>
 
-        {/* Bottom sheet */}
+        {/* Bottom sheet, kept deliberately short so the map stays readable */}
         <div
           ref={sheetRef}
-          className="absolute inset-x-4 bottom-5 z-20 rounded-[24px] border border-border bg-white px-5 pb-5 pt-4 shadow-[0_10px_20px_rgba(13,17,23,0.2),0_2px_4px_rgba(13,17,23,0.08)]"
+          className="absolute inset-x-4 bottom-4 z-20 rounded-[22px] border border-border bg-white/95 px-4 py-3.5 shadow-[var(--shadow-lift)] backdrop-blur-xl"
         >
-          <span className="mx-auto mb-4 block h-1 w-10 rounded-[2px] bg-border" />
-
-          <span className="block text-[12px] font-bold text-text-muted">PICKUP POINT</span>
-
-          <div
-            className={`mt-2 flex items-center gap-3 rounded-[14px] border px-4 py-3.5 ${
-              allowed ? "border-[#BBF7D0] bg-[#F0FDF4]" : "border-[#FECACA] bg-[#FEF2F2]"
-            }`}
-          >
-            <MapPin className={`h-4 w-4 shrink-0 ${allowed ? "text-success" : "text-error"}`} />
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                allowed ? "bg-accent" : "bg-[#FEF2F2]"
+              }`}
+            >
+              <MapPin className={`h-4 w-4 ${allowed ? "text-secondary" : "text-error"}`} />
+            </span>
             <div className="flex min-w-0 flex-1 flex-col">
               <span
-                className={`truncate text-[14px] font-bold ${
+                className={`truncate text-[13.5px] font-bold leading-tight ${
                   allowed ? "text-text-primary" : "text-error"
                 }`}
               >
-                {allowed ? (placeName ?? roadName ?? "Finding this place…") : "Wrong road"}
+                {allowed ? (placeName ?? roadName ?? "Finding this place…") : "Can't be picked up here"}
               </span>
               <span
-                className={`truncate text-[12px] ${
-                  allowed ? "text-text-secondary" : "text-error"
+                className={`truncate text-[11.5px] leading-tight ${
+                  allowed ? "text-text-secondary" : "text-error/80"
                 }`}
               >
                 {allowed
                   ? roadName
                     ? `On ${roadName}`
                     : "Pickup allowed here"
-                  : `Buses to ${destination} don't pass here`}
+                  : `Buses to ${destination} don't pass this spot`}
               </span>
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             <Button disabled={!position || !allowed} onClick={confirmPickup}>
               {allowed ? "Confirm pickup location" : `Move pin onto ${roadLabel}`}
             </Button>

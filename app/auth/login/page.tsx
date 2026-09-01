@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bus, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import Button from "@/components/Button";
+import BooklanLogo from "@/components/BooklanLogo";
 import GoogleIcon from "@/components/GoogleIcon";
 import { supabase } from "@/lib/supabase";
 
@@ -31,8 +32,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen justify-center bg-white">
       <div className="flex w-full max-w-[393px] flex-col px-6 pb-14 pt-24">
         <div className="flex flex-1 flex-col">
-          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-[20px] bg-accent">
-            <Bus className="h-8 w-8 text-primary" strokeWidth={2} />
+          {/* The mark itself rather than a stock bus glyph. */}
+          <div className="flex h-[64px] w-[64px] items-center justify-center rounded-[20px] bg-primary shadow-[var(--shadow-float)]">
+            <BooklanLogo tone="mono" className="h-6 w-auto" />
           </div>
 
           {/* Deliberately neutral: this screen is the entry point for new

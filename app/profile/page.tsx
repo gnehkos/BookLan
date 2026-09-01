@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bell,
   Camera,
-  Check,
   ChevronRight,
   Globe,
   HelpCircle,
@@ -14,6 +14,7 @@ import {
   Pencil,
   Shield,
   User as UserIcon,
+  X,
 } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import BottomNav from "@/components/BottomNav";
@@ -29,18 +30,19 @@ export default function ProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [nameDraft, setNameDraft] = useState("");
-  const [editingName, setEditingName] = useState(false);
-  const [savingName, setSavingName] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
-  const [nameError, setNameError] = useState<string | null>(null);
+
+  // Name and phone are edited together in one panel rather than as two
+  // separate inline fields, so there is a single explicit Save and a Cancel
+  // that genuinely discards — an inline tick gave no way to back out.
+  const [editing, setEditing] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
   const [phoneDraft, setPhoneDraft] = useState("");
-  const [editingPhone, setEditingPhone] = useState(false);
-  const [savingPhone, setSavingPhone] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("booklan_user_id");
@@ -137,70 +139,58 @@ export default function ProfilePage() {
     setUploadingPhoto(false);
   }
 
-  function startEditingPhone() {
+  function openEditor() {
+    setNameDraft(name);
     setPhoneDraft(phone);
-    setPhoneError(null);
-    setEditingPhone(true);
+    setFormError(null);
+    setEditing(true);
   }
 
-  async function savePhone() {
+  function cancelEditor() {
+    // Drafts are reseeded on open, so discarding is just closing.
+    setEditing(false);
+    setFormError(null);
+  }
+
+  async function saveProfile() {
     if (!userId) return;
-    const trimmed = phoneDraft.trim();
-    if (trimmed.replace(/\D/g, "").length < 8) {
-      setPhoneError("Enter a valid phone number.");
+
+    const trimmedName = nameDraft.trim();
+    const trimmedPhone = phoneDraft.trim();
+
+    if (!trimmedName) {
+      setFormError("Please enter your name.");
+      return;
+    }
+    if (trimmedPhone.replace(/\D/g, "").length < 8) {
+      setFormError("Enter a valid phone number.");
       return;
     }
 
-    setSavingPhone(true);
-    setPhoneError(null);
+    setSaving(true);
+    setFormError(null);
 
     const { error } = await safeQuery(
-      supabase.from("users").update({ phone: trimmed }).eq("id", userId)
+      supabase.from("users").update({ name: trimmedName, phone: trimmedPhone }).eq("id", userId)
     );
 
     if (error) {
       // `users.phone` is unique, so a clash is the likely cause.
-      setPhoneError(
+      setFormError(
         /duplicate|unique/i.test(error.message)
           ? "That number is already used by another account."
-          : "Couldn't save your number. Please try again."
+          : "Couldn't save your changes. Please try again."
       );
-      setSavingPhone(false);
+      setSaving(false);
       return;
     }
 
-    setPhone(trimmed);
-    localStorage.setItem("booklan_phone", trimmed);
-    setSavingPhone(false);
-    setEditingPhone(false);
-  }
-
-  function startEditingName() {
-    setNameDraft(name);
-    setNameError(null);
-    setEditingName(true);
-  }
-
-  async function saveName() {
-    if (!userId) return;
-    const trimmed = nameDraft.trim();
-    setSavingName(true);
-    setNameError(null);
-
-    const { error } = await safeQuery(
-      supabase.from("users").update({ name: trimmed }).eq("id", userId)
-    );
-
-    if (error) {
-      setNameError("Couldn't save your name. Please try again.");
-      setSavingName(false);
-      return;
-    }
-
-    setName(trimmed);
-    localStorage.setItem("booklan_user_name", trimmed);
-    setSavingName(false);
-    setEditingName(false);
+    setName(trimmedName);
+    setPhone(trimmedPhone);
+    localStorage.setItem("booklan_user_name", trimmedName);
+    localStorage.setItem("booklan_phone", trimmedPhone);
+    setSaving(false);
+    setEditing(false);
   }
 
   async function handleLogout() {
@@ -260,67 +250,22 @@ export default function ProfilePage() {
 
           {photoError && <p className="text-center text-[12px] text-error">{photoError}</p>}
 
-          {editingName ? (
-            <div className="flex flex-col items-center gap-2">
-              <div className="flex items-center gap-2">
-                <input
-                  autoFocus
-                  value={nameDraft}
-                  onChange={(e) => setNameDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && saveName()}
-                  className="h-10 rounded-[12px] border border-border px-3 text-[14px] text-text-primary outline-none focus:border-primary"
-                />
-                <button
-                  onClick={saveName}
-                  disabled={savingName}
-                  aria-label="Save name"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white disabled:opacity-50"
-                >
-                  <Check className="h-4 w-4" />
-                </button>
-              </div>
-              {nameError && <p className="text-[12px] text-error">{nameError}</p>}
-            </div>
-          ) : (
-            <button onClick={startEditingName} className="flex items-center gap-2">
-              <span className="text-[16px] font-semibold text-text-primary">
-                {name || "Add your name"}
-              </span>
-              <Pencil className="h-4 w-4 text-text-muted" />
-            </button>
-          )}
+          <div className="flex flex-col items-center">
+            <span className="text-[17px] font-bold text-text-primary">
+              {name || "Add your name"}
+            </span>
+            <span className="mt-0.5 text-[13px] text-text-secondary">
+              {phone || "Add your phone number"}
+            </span>
+          </div>
 
-          {editingPhone ? (
-            <div className="flex w-full flex-col items-center gap-2">
-              <div className="flex items-center gap-2">
-                <input
-                  autoFocus
-                  type="tel"
-                  inputMode="tel"
-                  value={phoneDraft}
-                  onChange={(e) => setPhoneDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && savePhone()}
-                  className="h-10 rounded-[12px] border border-border px-3 text-[14px] text-text-primary outline-none focus:border-primary"
-                />
-                <button
-                  onClick={savePhone}
-                  disabled={savingPhone}
-                  aria-label="Save phone number"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white disabled:opacity-50"
-                >
-                  <Check className="h-4 w-4" />
-                </button>
-              </div>
-              {phoneError && <p className="text-center text-[12px] text-error">{phoneError}</p>}
-            </div>
-          ) : (
-            <button onClick={startEditingPhone} className="flex items-center gap-2">
-              <span className="text-[12px] text-text-secondary">
-                {phone || "Add your phone number"}
-              </span>
-              <Pencil className="h-3.5 w-3.5 text-text-muted" />
-            </button>
-          )}
+          <button
+            onClick={openEditor}
+            className="mt-1 flex items-center gap-1.5 rounded-pill border border-border bg-white px-4 py-2 text-[13px] font-semibold text-primary transition-colors hover:bg-surface"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit profile
+          </button>
         </div>
 
         <SectionLabel>Preferences</SectionLabel>
@@ -344,9 +289,13 @@ export default function ProfilePage() {
           <SettingsRow
             icon={<HelpCircle className="h-5 w-5" />}
             label="Help and Support"
-            href="mailto:support@booklan.app"
+            href="/support"
           />
-          <SettingsRow icon={<Shield className="h-5 w-5" />} label="Terms and Privacy" />
+          <SettingsRow
+            icon={<Shield className="h-5 w-5" />}
+            label="Terms and Privacy"
+            href="/legal"
+          />
         </div>
 
         <div className="mt-6 px-4">
@@ -359,6 +308,86 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <button
+            aria-label="Cancel editing"
+            onClick={cancelEditor}
+            className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
+          />
+
+          <div className="relative w-full max-w-[393px] animate-[slide-up_0.28s_cubic-bezier(0.22,1,0.36,1)] rounded-t-[28px] bg-white px-5 pb-8 pt-4 shadow-[var(--shadow-lift)]">
+            <span className="mx-auto mb-4 block h-1 w-10 rounded-full bg-border" />
+
+            <div className="flex items-center justify-between">
+              <h2 className="text-[19px] font-extrabold tracking-[-0.3px] text-text-primary">
+                Edit profile
+              </h2>
+              <button
+                onClick={cancelEditor}
+                aria-label="Close"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-text-secondary"
+              >
+                <X className="h-[18px] w-[18px]" />
+              </button>
+            </div>
+            <p className="mt-1 text-[13px] text-text-secondary">
+              Drivers see your name and call this number when they arrive.
+            </p>
+
+            <label
+              htmlFor="edit-name"
+              className="mb-2 mt-6 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
+            >
+              FULL NAME
+            </label>
+            <input
+              id="edit-name"
+              autoFocus
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              placeholder="e.g. Dara Sok"
+              className="h-[52px] w-full rounded-2xl border border-border bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-secondary"
+            />
+
+            <label
+              htmlFor="edit-phone"
+              className="mb-2 mt-4 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
+            >
+              PHONE NUMBER
+            </label>
+            <input
+              id="edit-phone"
+              type="tel"
+              inputMode="tel"
+              value={phoneDraft}
+              onChange={(e) => setPhoneDraft(e.target.value)}
+              placeholder="e.g. 012 345 678"
+              className="h-[52px] w-full rounded-2xl border border-border bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-secondary"
+            />
+
+            {formError && <p className="mt-3 text-[13px] text-error">{formError}</p>}
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={cancelEditor}
+                disabled={saving}
+                className="h-[52px] flex-1 rounded-2xl border border-border bg-white text-[15px] font-bold text-text-secondary transition-colors hover:bg-surface disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveProfile}
+                disabled={saving}
+                className="flex h-[52px] flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-secondary text-[15px] font-bold text-white shadow-[0_6px_18px_rgba(0,167,157,0.35)] transition-transform active:scale-[0.99] disabled:opacity-60"
+              >
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ActiveTripBanner />
       <BottomNav />
@@ -393,6 +422,12 @@ function SettingsRow({
       {trailing ?? <ChevronRight className="h-5 w-5 text-text-muted" />}
     </div>
   );
+
+  // Internal routes go through Link: a plain anchor would hard-reload the app
+  // and throw away the client state, which is what made the nav feel broken.
+  if (href?.startsWith("/")) {
+    return <Link href={href}>{content}</Link>;
+  }
 
   if (href) {
     return <a href={href}>{content}</a>;

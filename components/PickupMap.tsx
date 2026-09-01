@@ -3,18 +3,27 @@
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Polyline, Rectangle, useMap } from "react-leaflet";
+import { Circle, MapContainer, Marker, Polyline, Rectangle, TileLayer, useMap } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
+import {
+  CITY_EXCLUSION_KM,
+  ROAD_TOLERANCE_KM,
+  clipOutsideCity,
+  isPickupAllowed,
+  nearestRoad,
+  roadsFor,
+} from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
-import { TILE_ATTRIBUTION, TILE_LABEL_URL,
-  TILE_URL, dropPinIcon } from "@/lib/mapTheme";
+import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
 
 /** Zone colours are deliberately deeper than the UI status colours so the
- *  overlays stay readable at 15% fill over pale map tiles. */
+ *  overlays stay readable at low fill over pale map tiles. */
 const NO_PICKUP_RED = "#DC2626";
-const PICKUP_GREEN = "#16A34A";
+const PICKUP_GREEN = "#0FA36B";
+
+/** Below this many pixels the true-width band is too thin to mean anything. */
+const MIN_BAND_PX = 6;
 
 /** Covers all of Cambodia — everything here is no-pickup unless a road is drawn over it. */
 const NO_PICKUP_BOUNDS: L.LatLngBoundsExpression = [
@@ -26,9 +35,10 @@ const NO_PICKUP_BOUNDS: L.LatLngBoundsExpression = [
  * Pixel width of the allowed corridor at the current zoom.
  *
  * Leaflet strokes are measured in pixels but the pickup rule is measured in
- * kilometres, so a fixed weight drew a band far narrower than what was
- * actually accepted — a pin could sit well outside the green line and still
- * pass. Recomputing on zoom keeps the drawing honest.
+ * metres, so this converts one to the other on every zoom. There is
+ * deliberately no minimum: padding the band out is what previously made it
+ * look several times wider than the road and invited pins onto side lanes.
+ * Staying visible when zoomed out is the centre-line's job instead.
  */
 function useCorridorWeight(toleranceKm: number) {
   const map = useMap();
@@ -52,39 +62,57 @@ function corridorPixels(map: L.Map, toleranceKm: number) {
   // Metres per pixel at this latitude and zoom.
   const metresPerPixel =
     (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** map.getZoom();
-  // The band spans the tolerance either side of the centre-line. No minimum:
-  // padding it out at low zoom is what made the corridor look several times
-  // wider than the road and invited pins onto neighbouring lanes.
+  // The band spans the tolerance either side of the centre-line.
   return (2 * toleranceKm * 1000) / metresPerPixel;
 }
 
-/** Roads drawn at their true allowed width, plus a crisp centre-line. */
+/**
+ * The pickup corridors, drawn in two layers that do different jobs.
+ *
+ * The centre-line is a constant 3px at every zoom, so the network stays
+ * traceable when the whole country is on screen. The translucent band is the
+ * true accepted width in metres, so once you are zoomed in far enough for it
+ * to be meaningful it matches the size of the actual road — and below that it
+ * is simply not drawn, rather than being inflated into a lie.
+ */
 function RoadCorridors({ roads }: { roads: { id: string; path: [number, number][] }[] }) {
-  const weight = useCorridorWeight(ROAD_TOLERANCE_KM);
+  const bandWidth = useCorridorWeight(ROAD_TOLERANCE_KM);
+  const showBand = bandWidth >= MIN_BAND_PX;
+
+  // Corridors stop at the city ring, so each road can become several runs.
+  const runs = useMemo(
+    () =>
+      roads.flatMap((road) =>
+        clipOutsideCity(road.path).map((path, index) => ({ key: road.id + "-" + index, path }))
+      ),
+    [roads]
+  );
 
   return (
     <>
-      {roads.map((road) => (
+      {showBand &&
+        runs.map((run) => (
+          <Polyline
+            key={run.key + "-band"}
+            positions={run.path}
+            pathOptions={{
+              color: PICKUP_GREEN,
+              weight: bandWidth,
+              opacity: 0.2,
+              lineCap: "butt",
+              lineJoin: "round",
+            }}
+          />
+        ))}
+
+      {runs.map((run) => (
         <Polyline
-          key={`${road.id}-corridor`}
-          positions={road.path}
+          key={run.key}
+          positions={run.path}
           pathOptions={{
             color: PICKUP_GREEN,
-            weight,
-            opacity: 0.18,
-            lineCap: "round",
-            lineJoin: "round",
-          }}
-        />
-      ))}
-      {roads.map((road) => (
-        <Polyline
-          key={road.id}
-          positions={road.path}
-          pathOptions={{
-            color: PICKUP_GREEN,
-            weight: Math.min(2, weight),
-            opacity: 0.9,
+            weight: 3,
+            opacity: 0.95,
             lineCap: "round",
             lineJoin: "round",
           }}
@@ -92,6 +120,67 @@ function RoadCorridors({ roads }: { roads: { id: string; path: [number, number][
       ))}
     </>
   );
+}
+
+/**
+ * Long-press anywhere to drop the pin there, the way a map app does.
+ *
+ * `contextmenu` covers a right-click on desktop and a long-press on most touch
+ * browsers; the manual timer covers the rest. A press that turns into a pan is
+ * cancelled on the first few pixels of movement, so dragging the map never
+ * moves the pin by accident.
+ */
+function PinOnLongPress({ onPin }: { onPin: (position: [number, number]) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let origin: L.Point | null = null;
+
+    function cancel() {
+      if (timer) clearTimeout(timer);
+      timer = null;
+      origin = null;
+    }
+
+    function onDown(e: L.LeafletMouseEvent) {
+      origin = e.containerPoint;
+      timer = setTimeout(() => {
+        timer = null;
+        onPin([e.latlng.lat, e.latlng.lng]);
+      }, 450);
+    }
+
+    function onMove(e: L.LeafletMouseEvent) {
+      if (!timer || !origin) return;
+      if (origin.distanceTo(e.containerPoint) > 12) cancel();
+    }
+
+    function onContext(e: L.LeafletMouseEvent) {
+      L.DomEvent.preventDefault(e.originalEvent);
+      cancel();
+      onPin([e.latlng.lat, e.latlng.lng]);
+    }
+
+    map.on("mousedown", onDown);
+    map.on("mousemove", onMove);
+    map.on("mouseup", cancel);
+    map.on("dragstart", cancel);
+    map.on("zoomstart", cancel);
+    map.on("contextmenu", onContext);
+
+    return () => {
+      cancel();
+      map.off("mousedown", onDown);
+      map.off("mousemove", onMove);
+      map.off("mouseup", cancel);
+      map.off("dragstart", cancel);
+      map.off("zoomstart", cancel);
+      map.off("contextmenu", onContext);
+    };
+  }, [map, onPin]);
+
+  return null;
 }
 
 function DraggableMarker({
@@ -148,8 +237,13 @@ export default function PickupMap({
   // Real routed geometry; falls back to the coarse waypoints until it lands.
   const { roads: allRoads } = useNationalRoads();
   // A bus to Siem Reap runs NR6 — it never passes someone waiting on NR2.
-  const serving = roadsFor(destination).map((road) => road.id);
-  const roads = allRoads.filter((road) => serving.includes(road.id));
+  const servingKey = roadsFor(destination)
+    .map((road) => road.id)
+    .join(",");
+  const roads = useMemo(
+    () => allRoads.filter((road) => servingKey.split(",").includes(road.id)),
+    [allRoads, servingKey]
+  );
 
   const report = useCallback(
     (pos: [number, number]) => {
@@ -182,10 +276,11 @@ export default function PickupMap({
     );
   }, [onPositionChange]);
 
-  function handleChange(pos: [number, number]) {
+  // The effect above reports whenever the position changes, so this only has
+  // to record it.
+  const handleChange = useCallback((pos: [number, number]) => {
     setPosition(pos);
-    report(pos);
-  }
+  }, []);
 
   if (!center || !position) {
     return <div className="h-full w-full animate-pulse bg-surface" />;
@@ -193,7 +288,7 @@ export default function PickupMap({
 
   const allowed = isPickupAllowed(position[0], position[1], roads);
 
-  // Zoomed right in: at a 20 m tolerance the roadside is only targetable up
+  // Zoomed right in: at a 12 m tolerance the roadside is only targetable up
   // close, so the map opens tight enough to actually hit it.
   return (
     <MapContainer center={center} zoom={17} zoomControl={false} className="h-full w-full">
@@ -213,17 +308,31 @@ export default function PickupMap({
         }}
       />
 
-      {/* …with the allowed national-road corridors punched back in green, at
-          their true width so the drawing matches what's accepted. */}
+      {/* …the city ring, inside which the highways are just congested streets… */}
+      <Circle
+        center={[PHNOM_PENH[0], PHNOM_PENH[1]]}
+        radius={CITY_EXCLUSION_KM * 1000}
+        pathOptions={{
+          color: NO_PICKUP_RED,
+          weight: 1.5,
+          dashArray: "6 6",
+          opacity: 0.5,
+          fillColor: NO_PICKUP_RED,
+          fillOpacity: 0.08,
+        }}
+      />
+
+      {/* …and the corridors punched back in green beyond it. */}
       <RoadCorridors roads={roads} />
 
+      <PinOnLongPress onPin={handleChange} />
       <DraggableMarker position={position} allowed={allowed} onChange={handleChange} />
 
       <RecenterControl
         target={position}
-        zoom={14}
+        zoom={17}
         label="Recenter to my pin"
-        bottomOffset={bottomInset + 100}
+        bottomOffset={bottomInset + 84}
       />
     </MapContainer>
   );
