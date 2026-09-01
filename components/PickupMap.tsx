@@ -52,8 +52,10 @@ function corridorPixels(map: L.Map, toleranceKm: number) {
   // Metres per pixel at this latitude and zoom.
   const metresPerPixel =
     (156543.03392 * Math.cos((center.lat * Math.PI) / 180)) / 2 ** map.getZoom();
-  // The band spans the tolerance either side of the centre-line.
-  return Math.max(3, (2 * toleranceKm * 1000) / metresPerPixel);
+  // The band spans the tolerance either side of the centre-line. No minimum:
+  // padding it out at low zoom is what made the corridor look several times
+  // wider than the road and invited pins onto neighbouring lanes.
+  return (2 * toleranceKm * 1000) / metresPerPixel;
 }
 
 /** Roads drawn at their true allowed width, plus a crisp centre-line. */
@@ -81,7 +83,7 @@ function RoadCorridors({ roads }: { roads: { id: string; path: [number, number][
           positions={road.path}
           pathOptions={{
             color: PICKUP_GREEN,
-            weight: 3,
+            weight: Math.min(2, weight),
             opacity: 0.9,
             lineCap: "round",
             lineJoin: "round",
@@ -191,9 +193,10 @@ export default function PickupMap({
 
   const allowed = isPickupAllowed(position[0], position[1], roads);
 
-  // Zoomed in: at a 50 m tolerance the roadside is only targetable up close.
+  // Zoomed right in: at a 20 m tolerance the roadside is only targetable up
+  // close, so the map opens tight enough to actually hit it.
   return (
-    <MapContainer center={center} zoom={16} zoomControl={false} className="h-full w-full">
+    <MapContainer center={center} zoom={17} zoomControl={false} className="h-full w-full">
       <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
       {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 

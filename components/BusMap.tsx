@@ -1,7 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
@@ -17,21 +17,27 @@ export default function BusMap() {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
-  useEffect(() => {
+  const locate = useCallback((setInitialCenter: boolean) => {
     if (!("geolocation" in navigator)) {
-      setCenter(PHNOM_PENH);
+      if (setInitialCenter) setCenter(PHNOM_PENH);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const pos: [number, number] = [position.coords.latitude, position.coords.longitude];
         setUserPos(pos);
-        setCenter(pos);
+        if (setInitialCenter) setCenter(pos);
       },
-      () => setCenter(PHNOM_PENH),
+      () => {
+        if (setInitialCenter) setCenter(PHNOM_PENH);
+      },
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, []);
+
+  useEffect(() => {
+    locate(true);
+  }, [locate]);
 
   if (!center) {
     return <div className="h-full w-full animate-pulse bg-surface" />;
@@ -40,7 +46,7 @@ export default function BusMap() {
   return (
     <MapContainer
       center={center}
-      zoom={10}
+      zoom={15}
       // Pinch and wheel zoom stay on — this is the passenger's main map.
       scrollWheelZoom
       zoomControl={false}
@@ -51,7 +57,16 @@ export default function BusMap() {
 
       {userPos && <Marker position={userPos} icon={userIcon} />}
 
-      <RecenterControl target={userPos ?? center} zoom={11} label="Recenter to my location" />
+      {/* Sits above the bottom nav so it never ends up underneath it. Pressing
+          it re-reads the device location before flying, so it follows the user
+          rather than returning to wherever they were when the page loaded. */}
+      <RecenterControl
+        target={userPos ?? center}
+        zoom={16}
+        label="Zoom to my location"
+        bottomOffset={100}
+        onPress={() => locate(false)}
+      />
     </MapContainer>
   );
 }

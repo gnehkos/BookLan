@@ -13,11 +13,14 @@ export default function RecenterControl({
   zoom = 14,
   label = "Recenter map",
   bottomOffset = 16,
+  onPress,
 }: {
   target: [number, number] | null;
   zoom?: number;
   label?: string;
   bottomOffset?: number;
+  /** Fires alongside the fly — used to re-read the device's location first. */
+  onPress?: () => void;
 }) {
   const map = useMap();
 
@@ -30,6 +33,7 @@ export default function RecenterControl({
       style={{ bottom: bottomOffset }}
       onClick={(e) => {
         e.stopPropagation();
+        onPress?.();
         map.flyTo(target, zoom, { duration: 0.8 });
       }}
       className="absolute right-4 z-[1000] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white shadow-[var(--shadow-float)] transition-colors hover:bg-surface"

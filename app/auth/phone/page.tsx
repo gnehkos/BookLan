@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import Button from "@/components/Button";
 import { safeQuery, supabase } from "@/lib/supabase";
 
@@ -20,6 +20,34 @@ export default function PhoneEntryPage() {
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleAccount, setGoogleAccount] = useState<string | null>(null);
+
+  /**
+   * Google hands back here after OAuth. Read the session so the sign-in is
+   * visibly acknowledged, and stash the profile details to prefill the
+   * create-account step — otherwise "Continue with Google" is indistinguishable
+   * from the plain phone flow.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      if (cancelled || !user) return;
+
+      setGoogleAccount(user.email ?? null);
+
+      const meta = user.user_metadata ?? {};
+      const fullName = (meta.full_name ?? meta.name) as string | undefined;
+      const avatar = (meta.avatar_url ?? meta.picture) as string | undefined;
+      if (fullName) localStorage.setItem("booklan_google_name", fullName);
+      if (avatar) localStorage.setItem("booklan_google_avatar", avatar);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const digits = value.replace(/\D/g, "");
   const isValid = digits.length === 8 || digits.length === 9;
@@ -67,6 +95,15 @@ export default function PhoneEntryPage() {
         >
           <ArrowLeft className="h-6 w-6 text-text-primary" />
         </button>
+
+        {googleAccount && (
+          <div className="mt-6 flex items-center gap-2 rounded-[12px] border border-[#BBF7D0] bg-[#F0FDF4] px-3.5 py-3">
+            <Check className="h-4 w-4 shrink-0 text-success" strokeWidth={3} />
+            <span className="min-w-0 flex-1 text-[13px] text-text-primary">
+              Signed in as <span className="font-semibold">{googleAccount}</span>
+            </span>
+          </div>
+        )}
 
         <div className="mt-6 flex flex-col gap-2">
           <h1 className="text-[30px] font-extrabold tracking-[-0.8px] text-text-primary">

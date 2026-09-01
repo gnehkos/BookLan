@@ -18,7 +18,9 @@ export default function CreateProfilePage() {
   // we have an id to file it under.
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [saving, setSaving] = useState<"continue" | "skip" | null>(null);
+  // Google's hosted picture, used as-is when no file is chosen.
+  const [googleAvatar, setGoogleAvatar] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,6 +30,16 @@ export default function CreateProfilePage() {
       return;
     }
     setPhone(stored);
+
+    // Signing in with Google should save typing: carry over the name and
+    // picture it gave us rather than asking for them again.
+    const googleName = localStorage.getItem("booklan_google_name");
+    const googleAvatar = localStorage.getItem("booklan_google_avatar");
+    if (googleName) setName(googleName);
+    if (googleAvatar) {
+      setPhotoPreview(googleAvatar);
+      setGoogleAvatar(googleAvatar);
+    }
   }, [router]);
 
   function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -42,6 +54,7 @@ export default function CreateProfilePage() {
 
     setError(null);
     setPhotoFile(file);
+    setGoogleAvatar(null);
     setPhotoPreview((current) => {
       if (current) URL.revokeObjectURL(current);
       return URL.createObjectURL(file);
@@ -54,7 +67,14 @@ export default function CreateProfilePage() {
    * failure must not block getting into the app.
    */
   async function uploadPhoto(userId: string) {
-    if (!photoFile) return;
+    if (!photoFile) {
+      if (googleAvatar) {
+        await safeQuery(
+          supabase.from("users").update({ profile_photo_url: googleAvatar }).eq("id", userId)
+        );
+      }
+      return;
+    }
 
     const extension = photoFile.name.split(".").pop()?.toLowerCase() || "jpg";
     const path = `${userId}/${Date.now()}.${extension}`;
@@ -71,7 +91,7 @@ export default function CreateProfilePage() {
     );
   }
 
-  async function saveUser(finalName: string | null) {
+  async function saveUser(finalName: string) {
     if (!phone) return;
     setError(null);
 
@@ -85,26 +105,30 @@ export default function CreateProfilePage() {
 
     if (upsertError || !data) {
       setError(upsertError?.message ?? "Couldn't save your profile. Please try again.");
-      setSaving(null);
+      setSaving(false);
       return;
     }
 
     await uploadPhoto(data.id);
 
+    localStorage.removeItem("booklan_google_name");
+    localStorage.removeItem("booklan_google_avatar");
     localStorage.setItem("booklan_user_id", data.id);
-    localStorage.setItem("booklan_user_name", finalName ?? "");
+    localStorage.setItem("booklan_user_name", finalName);
     document.cookie = `booklan_session=${data.id}; path=/; max-age=2592000; samesite=lax`;
     router.push("/home");
   }
 
   async function handleContinue() {
-    setSaving("continue");
-    await saveUser(name.trim() || null);
-  }
-
-  async function handleSkip() {
-    setSaving("skip");
-    await saveUser(null);
+    // The name is what a driver sees when they come to collect someone, so it
+    // is required — there is no skipping past it.
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError("Please enter your name so drivers know who to look for.");
+      return;
+    }
+    setSaving(true);
+    await saveUser(trimmed);
   }
 
   return (
@@ -157,7 +181,7 @@ export default function CreateProfilePage() {
             htmlFor="name"
             className="mb-2.5 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
           >
-            FULL NAME
+            FULL NAME <span className="text-error">*</span>
           </label>
           <input
             id="name"
@@ -183,21 +207,9 @@ export default function CreateProfilePage() {
 
         {error && <p className="mt-3 text-sm text-error">{error}</p>}
 
-        <div className="mt-auto flex flex-col gap-3 pt-10">
-          <Button
-            loading={saving === "continue"}
-            disabled={saving !== null && saving !== "continue"}
-            onClick={handleContinue}
-          >
-            {saving === "continue" ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create account"}
-          </Button>
-          <Button
-            variant="ghost"
-            loading={saving === "skip"}
-            disabled={saving !== null && saving !== "skip"}
-            onClick={handleSkip}
-          >
-            Skip for now
+        <div className="mt-auto pt-10">
+          <Button loading={saving} disabled={saving || name.trim().length === 0} onClick={handleContinue}>
+            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create account"}
           </Button>
         </div>
       </div>
