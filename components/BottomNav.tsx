@@ -17,12 +17,28 @@ export const NAV_CLEARANCE = 88;
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const activeIndex = TABS.findIndex(
+    (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+  );
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
-      <div className="pointer-events-auto flex w-full max-w-[358px] items-stretch rounded-pill border border-border bg-white p-1.5 shadow-[var(--shadow-float)]">
-        {TABS.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+      <div className="pointer-events-auto relative flex w-full max-w-[358px] items-stretch rounded-pill border border-border bg-white/90 p-1.5 shadow-[var(--shadow-float)] backdrop-blur-xl">
+        {/* One pill that slides between tabs, rather than four that pop in and
+            out. The overshooting easing gives it the small settle that makes
+            the movement feel physical. */}
+        <span
+          aria-hidden
+          className="absolute inset-y-1.5 rounded-pill bg-primary transition-[left,opacity] duration-[420ms] ease-[cubic-bezier(0.34,1.32,0.5,1)]"
+          style={{
+            width: `calc((100% - 12px) / ${TABS.length})`,
+            left: `calc(6px + ${activeIndex < 0 ? 0 : activeIndex} * (100% - 12px) / ${TABS.length})`,
+            opacity: activeIndex < 0 ? 0 : 1,
+          }}
+        />
+
+        {TABS.map(({ label, href, icon: Icon }, index) => {
+          const active = index === activeIndex;
           return (
             <Link
               key={href}
@@ -30,18 +46,16 @@ export default function BottomNav() {
               aria-current={active ? "page" : undefined}
               // Icon over label keeps all four labels fully readable, so
               // nothing truncates to "Plan T…" at narrow widths.
-              className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-pill py-2 transition-colors ${
-                active ? "bg-accent" : ""
-              }`}
+              className="relative z-10 flex flex-1 flex-col items-center justify-center gap-1 rounded-pill py-2"
             >
               <Icon
-                className={`h-[20px] w-[20px] shrink-0 ${
-                  active ? "text-secondary-dark" : "text-text-muted"
+                className={`h-[20px] w-[20px] shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.4,0.5,1)] ${
+                  active ? "-translate-y-0.5 scale-110 text-white" : "text-text-muted"
                 }`}
               />
               <span
-                className={`whitespace-nowrap text-[11px] leading-none ${
-                  active ? "font-bold text-secondary-dark" : "font-medium text-text-muted"
+                className={`whitespace-nowrap text-[11px] leading-none transition-colors duration-200 ${
+                  active ? "font-bold text-white" : "font-medium text-text-muted"
                 }`}
               >
                 {label}

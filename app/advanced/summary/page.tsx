@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
+import CompanyLogo from "@/components/CompanyLogo";
 import BottomNav from "@/components/BottomNav";
 import PaymentCard from "@/components/PaymentCard";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -21,12 +22,14 @@ type StoredSchedule = {
 };
 
 type StoredSeat = { seatNumbers: number[]; totalPrice: number };
+type StoredDropoff = { id: string; name: string; address: string };
 
 export default function AdvancedSummaryPage() {
   const router = useRouter();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
   const [seat, setSeat] = useState<StoredSeat | null>(null);
   const [travelDate, setTravelDate] = useState<string | null>(null);
+  const [dropoff, setDropoff] = useState<StoredDropoff | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -44,8 +47,15 @@ export default function AdvancedSummaryPage() {
       return;
     }
 
+    const dropoffStored = sessionStorage.getItem("booklan_advanced_dropoff");
+    if (!dropoffStored) {
+      router.replace("/advanced/dropoff");
+      return;
+    }
+
     setSchedule(parsedSchedule);
     setSeat(JSON.parse(seatStored));
+    setDropoff(JSON.parse(dropoffStored));
     setTravelDate(dateStored);
     setReady(true);
   }, [router]);
@@ -77,6 +87,20 @@ export default function AdvancedSummaryPage() {
       throw new Error(insertError?.message ?? "Could not create booking.");
     }
 
+    // Best-effort, for the same reason as the seat count below: the drop-off
+    // columns were added after the live table, so writing them separately means
+    // a database that has not run the migration still takes the booking.
+    if (dropoff) {
+      try {
+        await supabase
+          .from("advanced_bookings")
+          .update({ dropoff_station_id: dropoff.id })
+          .eq("id", booking.id);
+      } catch {
+        // Column missing on an un-migrated database; the booking still stands.
+      }
+    }
+
     // Best-effort: the booking above already succeeded, so a failure here must never
     // surface as a payment error and risk the user paying twice.
     try {
@@ -103,39 +127,109 @@ export default function AdvancedSummaryPage() {
     }
 
     sessionStorage.setItem("booklan_advanced_ticket_id", ticketId);
+    // Cleared so the next booking cannot inherit this one's drop-off.
+    sessionStorage.removeItem("booklan_advanced_dropoff");
     router.push("/advanced/confirmed");
   }
 
   if (!ready || !schedule || !seat) return null;
 
+  const company = schedule.companies?.name ?? "Unknown operator";
+  const seatLabel = seat.seatNumbers.length > 1 ? "Seats" : "Seat";
+  const dropoffLabel = dropoff?.name ?? "Selected station";
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-24">
-        <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-4">
+      <div className="flex w-full max-w-[393px] flex-1 flex-col pb-28">
+        <div className="flex items-center gap-3 px-4 pb-4 pt-6">
           <button
             onClick={() => router.back()}
             aria-label="Back"
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[var(--shadow-soft)]"
           >
-            <ArrowLeft className="h-6 w-6 text-text-primary" />
+            <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
-          <h1 className="text-[16px] font-semibold text-text-primary">Confirm Booking</h1>
+          <h1 className="text-[20px] font-extrabold tracking-[-0.4px] text-text-primary">
+            Confirm booking
+          </h1>
         </div>
 
-        <div className="mx-4 mt-4 flex flex-col gap-2 rounded-card bg-white p-4 shadow-sm">
-          <Row label="Company" value={schedule.companies?.name ?? "Unknown"} />
-          <Row label="Vehicle type" value={schedule.companies?.vehicle_type ?? "bus"} capitalize />
-          <Row label="Route" value={`${schedule.origin} → ${schedule.destination}`} />
-          <Row label="Travel date" value={travelDate ?? ""} />
-          <Row label="Departure" value={`${schedule.departure_time} – ${schedule.arrival_time}`} />
-          <Row
-            label={seat.seatNumbers.length > 1 ? "Seat numbers" : "Seat number"}
-            value={seat.seatNumbers.join(", ")}
-          />
+        {/* Operator, then the journey drawn as a route rather than as rows of
+            label/value pairs — the start and end are what people check. */}
+        <div className="mx-4 rounded-card bg-white p-4 shadow-[var(--shadow-float)]">
+          <div className="flex items-center gap-3">
+            <CompanyLogo name={company} size={44} />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-[15px] font-bold text-text-primary">{company}</span>
+              <span className="text-[12px] capitalize text-text-secondary">
+                {schedule.companies?.vehicle_type ?? "bus"} · {travelDate}
+              </span>
+            </div>
+          </div>
 
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
-            <span className="text-[15px] font-bold text-text-primary">Total</span>
-            <span className="text-2xl font-bold text-text-primary">
+          <div className="my-4 h-px bg-border" />
+
+          <div className="flex gap-3">
+            {/* The route spine: filled dot, run, hollow dot. */}
+            <div className="flex flex-col items-center pt-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+              <span className="my-1 w-px flex-1 bg-border" />
+              <span className="h-2.5 w-2.5 rounded-full border-[2.5px] border-primary bg-white" />
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-4">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">
+                    DEPARTS
+                  </span>
+                  <span className="truncate text-[15px] font-bold text-text-primary">
+                    {schedule.origin}
+                  </span>
+                </div>
+                <span className="shrink-0 font-mono text-[14px] font-semibold text-text-primary">
+                  {schedule.departure_time}
+                </span>
+              </div>
+
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">
+                    ARRIVES
+                  </span>
+                  <span className="truncate text-[15px] font-bold text-text-primary">
+                    {schedule.destination}
+                  </span>
+                  <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{dropoffLabel}</span>
+                  </span>
+                  {dropoff?.address && (
+                    <span className="truncate text-[11.5px] text-text-muted">
+                      {dropoff.address}
+                    </span>
+                  )}
+                </div>
+                <span className="shrink-0 font-mono text-[14px] font-semibold text-text-primary">
+                  {schedule.arrival_time}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 mt-3 flex gap-3">
+          <div className="flex flex-1 flex-col gap-1 rounded-card bg-white p-4 shadow-[var(--shadow-soft)]">
+            <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">
+              {seatLabel.toUpperCase()}
+            </span>
+            <span className="text-[16px] font-bold text-text-primary">
+              {seat.seatNumbers.join(", ")}
+            </span>
+          </div>
+          <div className="flex flex-1 flex-col gap-1 rounded-card bg-white p-4 shadow-[var(--shadow-soft)]">
+            <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">TOTAL</span>
+            <span className="text-[16px] font-bold text-text-primary">
               ${seat.totalPrice.toFixed(2)}
             </span>
           </div>
@@ -143,25 +237,12 @@ export default function AdvancedSummaryPage() {
 
         <PaymentCard
           amount={seat.totalPrice}
-          itemName={`${schedule.companies?.name ?? "BookLan"} scheduled ticket to ${schedule.destination}`}
+          itemName={`${company} scheduled ticket to ${schedule.destination}`}
           onSuccess={handlePaymentSuccess}
         />
       </div>
 
       <BottomNav />
-    </div>
-  );
-}
-
-function Row({ label, value, capitalize }: { label: string; value: string; capitalize?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-[14px]">
-      <span className="shrink-0 text-text-secondary">{label}</span>
-      <span
-        className={`text-right font-medium text-text-primary ${capitalize ? "capitalize" : ""}`}
-      >
-        {value}
-      </span>
     </div>
   );
 }

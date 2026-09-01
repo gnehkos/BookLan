@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BooklanLogo from "@/components/BooklanLogo";
 import BottomNav from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
 
@@ -60,7 +59,12 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-white/95 via-white/80 to-transparent pb-10">
           <div className="pointer-events-auto w-full px-5 pt-4">
             <div className="flex items-center justify-between">
-              <BooklanLogo className="h-[22px] w-auto shrink-0" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logos/booklan-wordmark.svg"
+                alt="BookLan"
+                className="h-[42px] w-auto shrink-0"
+              />
 
               <div className="flex shrink-0 items-center gap-2">
                 <button

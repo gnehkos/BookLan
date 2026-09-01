@@ -113,6 +113,9 @@ create table advanced_bookings (
     check (status in ('confirmed', 'completed', 'cancelled')),
   total_price double precision not null,
   payment_status text not null default 'unpaid' check (payment_status in ('paid', 'unpaid')),
+  -- Which of the operator's stations the passenger chose to be set down at.
+  -- Nullable: bookings made before the drop-off step existed have none.
+  dropoff_station_id uuid references stations (id) on delete set null,
   created_at timestamptz not null default now()
 );
 
@@ -247,23 +250,30 @@ values
 -- Stations (drop-off points for on-road bookings and advance bookings)
 -- ----------------------------------------------------------------------------
 insert into stations (company_id, name, province, address, lat, lng) values
-  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Siem Reap Main',   'Siem Reap',     'NR6, Siem Reap',          13.3671, 103.8448),
-  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Siem Reap Branch', 'Siem Reap',     'Sivatha Blvd, Siem Reap', 13.3625, 103.8560),
-  ('22222222-2222-2222-2222-222222222222', 'Larryta Siem Reap Station',       'Siem Reap',     'Charles de Gaulle',       13.3700, 103.8500),
-  ('33333333-3333-3333-3333-333333333333', 'Capitol Tour Kampot Station',     'Kampot',        'NR3, Kampot',             10.6100, 104.1800),
-  ('44444444-4444-4444-4444-444444444444', 'Mekong Express Sihanoukville',    'Sihanoukville', 'Ekareach St',             10.6277, 103.5230),
-  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Siem Reap',            'Siem Reap',     'Sivatha Blvd, Siem Reap', 13.3596, 103.8556),
-  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Kampot',               'Kampot',        'NR3, Kampot town',        10.6104, 104.1810),
-  ('66666666-6666-6666-6666-666666666666', 'Sorya Battambang Terminal',       'Battambang',    'NR5, Battambang',         13.0957, 103.2022),
-  ('66666666-6666-6666-6666-666666666666', 'Sorya Kampong Cham',              'Kampong Cham',  'Preah Monivong, K. Cham', 11.9934, 105.4635),
-  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Sihanoukville',         'Sihanoukville', 'Ekareach St',             10.6277, 103.5230),
-  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Svay Rieng',            'Svay Rieng',    'NR1, Svay Rieng',         11.0879, 105.7993),
-  ('88888888-8888-8888-8888-888888888888', 'Bayon Kep Station',               'Kep',           'Kep Beach Rd',            10.4831, 104.3167),
-  ('88888888-8888-8888-8888-888888888888', 'Bayon Takeo Station',             'Takeo',         'NR2, Takeo',              10.9909, 104.7850),
-  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Siem Reap',          'Siem Reap',     'NR6, Siem Reap',          13.3671, 103.8448),
-  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Kratie',             'Kratie',        'Riverside, Kratie',       12.4881, 106.0189),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Kumho Samco Prey Veng',           'Prey Veng',     'NR1, Prey Veng',          11.4869, 105.3251),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'iBus Sihanoukville',              'Sihanoukville', 'Ou Five, Sihanoukville',  10.6100, 103.5300);
+  -- Every (company, destination) pair in `schedules` needs at least one station,
+  -- otherwise the drop-off step is a dead end for that departure. Several
+  -- operators run more than one branch in a province, which is the whole point
+  -- of asking the passenger to choose.
+  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Siem Reap Main',    'Siem Reap',     'NR6, Chreav, Siem Reap',        13.3671, 103.8448),
+  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Sivatha Branch',    'Siem Reap',     'Sivatha Blvd, Siem Reap',       13.3625, 103.8560),
+  ('22222222-2222-2222-2222-222222222222', 'Larryta Siem Reap Station',        'Siem Reap',     'Charles de Gaulle, Siem Reap',  13.3700, 103.8500),
+  ('33333333-3333-3333-3333-333333333333', 'Capitol Tour Kampot Station',      'Kampot',        'NR3, Kampot',                   10.6100, 104.1800),
+  ('33333333-3333-3333-3333-333333333333', 'Capitol Tour Riverside Branch',    'Kampot',        'Riverside Rd, Kampot',          10.6180, 104.1750),
+  ('44444444-4444-4444-4444-444444444444', 'Mekong Express Sihanoukville',     'Sihanoukville', 'Ekareach St, Sihanoukville',    10.6277, 103.5230),
+  ('44444444-4444-4444-4444-444444444444', 'Mekong Express Port Branch',       'Sihanoukville', 'Port Rd, Sihanoukville',        10.6100, 103.5300),
+  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Siem Reap',             'Siem Reap',     'Sivatha Blvd, Siem Reap',       13.3596, 103.8556),
+  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Kampot',                'Kampot',        'Old Market, Kampot',            10.6060, 104.1830),
+  ('66666666-6666-6666-6666-666666666666', 'Sorya Battambang Terminal',        'Battambang',    'NR5, Battambang',               13.0957, 103.2022),
+  ('66666666-6666-6666-6666-666666666666', 'Sorya Battambang Central',         'Battambang',    'Street 3, Battambang',          13.1020, 103.1980),
+  ('66666666-6666-6666-6666-666666666666', 'Sorya Kampong Cham Terminal',      'Kampong Cham',  'NR7, Kampong Cham',             11.9934, 105.4635),
+  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Sihanoukville',          'Sihanoukville', 'NR4, Sihanoukville',            10.6350, 103.5150),
+  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Svay Rieng',             'Svay Rieng',    'NR1, Svay Rieng',               11.0879, 105.7993),
+  ('88888888-8888-8888-8888-888888888888', 'Bayon Kep Station',                'Kep',           'Kep Beach Rd, Kep',             10.4831, 104.3167),
+  ('88888888-8888-8888-8888-888888888888', 'Bayon Takeo Station',              'Takeo',         'NR2, Takeo',                    10.9909, 104.7850),
+  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Siem Reap',           'Siem Reap',     'NR6, Siem Reap',                13.3550, 103.8600),
+  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Kratie',              'Kratie',        'NR7, Kratie',                   12.4881, 106.0189),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Kumho Samco Prey Veng',            'Prey Veng',     'NR1, Prey Veng',                11.4869, 105.3253),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'iBus Sihanoukville Station',       'Sihanoukville', 'Ekareach St, Sihanoukville',    10.6200, 103.5260);
 
 -- ----------------------------------------------------------------------------
 -- Schedules (advance booking / Plan Trip — one row per departure time)

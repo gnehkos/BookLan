@@ -23,7 +23,7 @@ export function useMeasuredHeight<T extends HTMLElement>(fallback: number) {
     if (typeof ResizeObserver === "undefined") return;
     observerRef.current = new ResizeObserver(([entry]) => {
       const next = entry.target as HTMLElement;
-      setHeight(next.offsetHeight);
+      setHeight(next.offsetHeight); 
     });
     observerRef.current.observe(node);
   }, []);
