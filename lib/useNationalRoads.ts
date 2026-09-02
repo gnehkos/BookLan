@@ -18,7 +18,7 @@ import { NATIONAL_ROADS, type RoadCorridor } from "@/lib/geo";
  * waypoints if routing is unavailable.
  */
 const OSRM_ROUTE_URL = "https://router.project-osrm.org/route/v1/driving";
-const CACHE_KEY = "booklan_national_roads_v2";
+const CACHE_KEY = "booklan_national_roads_v3";
 
 /**
  * A returning point closer than this to an earlier one closes an excursion.
@@ -31,6 +31,15 @@ const SPUR_LOOKAHEAD = 400;
 
 /** Excursions shallower than this are real road bends, not routing artefacts. */
 const SPUR_MIN_DEPTH_KM = 0.05;
+
+/**
+ * A national road reference, as OSM tags it: "5", or occasionally "NR5".
+ * Provincial roads carry three-digit refs and city streets carry none.
+ */
+const NATIONAL_REF = /^(?:NR)?([1-7])$/;
+
+/** A run shorter than this is a slip road or a roundabout, not the highway. */
+const MIN_HIGHWAY_RUN_M = 1000;
 
 const KM_PER_DEG_LAT = 110.57;
 const KM_PER_DEG_LNG_AT_EQUATOR = 111.32;
@@ -111,6 +120,57 @@ function stripSpursOnce(path: [number, number][]): [number, number][] {
   return kept;
 }
 
+type Step = {
+  ref?: string;
+  distance: number;
+  geometry?: { coordinates: [number, number][] };
+};
+
+function isNationalRef(ref: string | undefined) {
+  return (ref ?? "")
+    .replace(/,/g, ";")
+    .split(";")
+    .some((token) => NATIONAL_REF.test(token.trim()));
+}
+
+/**
+ * Index of the step where the route first joins a national road for a real
+ * distance.
+ *
+ * Routing out of Phnom Penh begins on city boulevards — Preah Sihanouk,
+ * Sisowath Quay — which connect to the highway but are not part of it and carry
+ * different names entirely. Including them made those streets pinnable. Steps
+ * before this index are dropped, so a corridor starts where its road does.
+ *
+ * The test is "any national road", not "this one": a bus to Kampot runs NR2
+ * before it runs NR3, and a bus to Kratie runs NR6 for 96 km before NR7.
+ * Demanding the corridor's own ref from the first metre would cut off those
+ * shared legs, which the bus genuinely travels.
+ */
+function firstHighwayStep(steps: Step[]): number {
+  let i = 0;
+
+  while (i < steps.length) {
+    const ref = (steps[i].ref ?? "").trim();
+    if (!isNationalRef(ref)) {
+      i++;
+      continue;
+    }
+
+    // Measure the contiguous run carrying this same ref.
+    let run = 0;
+    let j = i;
+    while (j < steps.length && (steps[j].ref ?? "").trim() === ref) {
+      run += steps[j].distance;
+      j++;
+    }
+    if (run >= MIN_HIGHWAY_RUN_M) return i;
+    i = j;
+  }
+
+  return 0;
+}
+
 let cached: RoadCorridor[] | null = null;
 let inFlight: Promise<RoadCorridor[]> | null = null;
 
@@ -136,17 +196,36 @@ function writeCache(roads: RoadCorridor[]) {
 async function routeRoad(road: RoadCorridor): Promise<RoadCorridor> {
   try {
     const coords = road.path.map(([lat, lng]) => `${lng},${lat}`).join(";");
+    // `steps` carries the per-street road refs used to drop the city approach.
     const response = await fetch(
-      `${OSRM_ROUTE_URL}/${coords}?overview=full&geometries=geojson`
+      `${OSRM_ROUTE_URL}/${coords}?overview=full&geometries=geojson&steps=true`
     );
     if (!response.ok) return road;
 
     const data = await response.json();
-    const geometry: [number, number][] | undefined = data?.routes?.[0]?.geometry?.coordinates;
-    if (!geometry || geometry.length < 2) return road;
+    const route = data?.routes?.[0];
 
-    // GeoJSON is [lng, lat]; our corridors are [lat, lng].
-    const path = geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
+    const steps: Step[] = (route?.legs ?? []).flatMap((leg: { steps?: Step[] }) => leg.steps ?? []);
+    let path: [number, number][] = [];
+
+    if (steps.length > 0) {
+      for (const step of steps.slice(firstHighwayStep(steps))) {
+        for (const [lng, lat] of step.geometry?.coordinates ?? []) {
+          const last = path[path.length - 1];
+          // Steps share an endpoint with the next; keep one copy.
+          if (!last || last[0] !== lat || last[1] !== lng) path.push([lat, lng]);
+        }
+      }
+    }
+
+    // Fall back to the whole-route geometry if steps were unavailable.
+    if (path.length < 2) {
+      const geometry: [number, number][] | undefined = route?.geometry?.coordinates;
+      if (!geometry || geometry.length < 2) return road;
+      // GeoJSON is [lng, lat]; our corridors are [lat, lng].
+      path = geometry.map(([lng, lat]) => [lat, lng] as [number, number]);
+    }
+
     return { ...road, path: stripSpurs(path) };
   } catch {
     return road;
