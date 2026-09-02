@@ -9,6 +9,7 @@ import BottomNav from "@/components/BottomNav";
 import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
 import { POPULAR_DESTINATIONS } from "@/constants/booking";
 import { roadsFor } from "@/lib/geo";
+import { DEFAULT_ROAD_BADGE, roadBadge } from "@/constants/theme";
 
 /**
  * Pick where you're going — nothing more. Choosing a destination goes straight
@@ -92,26 +93,37 @@ export default function SearchPage() {
 
             {matches.map((place) => {
               const roads = roadsFor(place.name);
-              const roadLabel = roads.map((road) => road.id).join(" / ");
               return (
                 <button
                   key={place.name}
                   onClick={() => selectDestination(place.name)}
                   className="group flex items-center gap-3 rounded-[18px] border border-border bg-white px-4 py-3.5 text-left shadow-[var(--shadow-soft)] transition-all hover:border-primary/30 hover:shadow-[var(--shadow-float)] active:scale-[0.995]"
                 >
-                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <span className="truncate text-[16px] font-bold tracking-[-0.2px] text-text-primary">
                       {place.name}
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      {/* The road is the practical detail — it is where the
-                          passenger will have to stand — so it leads. */}
-                      <span className="shrink-0 rounded-md bg-primary-tint px-1.5 py-0.5 text-[10.5px] font-bold tracking-[0.2px] text-primary">
-                        {roadLabel}
-                      </span>
-                      <span className="truncate text-[12.5px] text-text-secondary">
-                        {place.note}
-                      </span>
+
+                    {/* The road is the practical detail — it is where the
+                        passenger will have to stand — so it sits directly
+                        under the name, colour-coded per corridor. */}
+                    <span className="flex flex-wrap items-center gap-1">
+                      {roads.map((road) => {
+                        const tone = roadBadge[road.id] ?? DEFAULT_ROAD_BADGE;
+                        return (
+                          <span
+                            key={road.id}
+                            style={{ backgroundColor: tone.bg, color: tone.text }}
+                            className="shrink-0 rounded-md px-2 py-[3px] text-[11px] font-bold tracking-[0.1px]"
+                          >
+                            {road.name}
+                          </span>
+                        );
+                      })}
+                    </span>
+
+                    <span className="truncate text-[12.5px] text-text-secondary">
+                      {place.note}
                     </span>
                   </span>
                   <ChevronRight className="h-[18px] w-[18px] shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" />

@@ -33,3 +33,22 @@ export const radius = {
   sheet: "28px",
   pill: "100px",
 } as const;
+
+/**
+ * A muted colour per national road, so the corridor a destination sits on is
+ * recognisable at a glance. Deliberately low-saturation: the list carries ten
+ * of these at once, and saturated chips would fight the province names for
+ * attention rather than supporting them.
+ */
+export const roadBadge: Record<string, { bg: string; text: string }> = {
+  NR1: { bg: "#FEF3E2", text: "#92610F" },
+  NR2: { bg: "#F3EEFB", text: "#6B4C9A" },
+  NR3: { bg: "#E8F6EC", text: "#2F7D4F" },
+  NR4: { bg: "#E8F1FB", text: "#2C5F98" },
+  NR5: { bg: "#FCEDF0", text: "#9C4658" },
+  NR6: { bg: "#ECEEFB", text: "#4B54A3" },
+  NR7: { bg: "#E4F4F3", text: "#1F7A72" },
+};
+
+/** Falls back to the neutral navy tint for a road with no colour assigned. */
+export const DEFAULT_ROAD_BADGE = { bg: "#EEF2F7", text: "#19355F" } as const;
