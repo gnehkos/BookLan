@@ -12,7 +12,6 @@ import {
   Phone,
   Ticket,
 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
 
 /** Support line and hours, shown on the contact card. */
 const SUPPORT_PHONE = "+855 23 900 100";
@@ -186,7 +185,6 @@ export default function SupportPage() {
         </p>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

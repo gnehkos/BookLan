@@ -5,9 +5,12 @@
  * corner of, so the mark would float tiny in any container it was dropped in.
  * The three paths are reproduced below against a tight viewBox instead.
  *
- * The colours are the logo's own and are never overridden — anywhere the mark
- * appears, the background is chosen to suit it rather than the artwork being
- * repainted to suit the background.
+ * The accent was changed from the original teal to the app's own blue, at the
+ * user's request: the teal sat outside the navy palette and read as foreign
+ * wherever the logo appeared. Beyond that the colours are fixed — the mark is
+ * never repainted to suit whatever background it lands on. `booklan-mark.svg`
+ * and `booklan-wordmark.svg` carry the same change; the two originals in
+ * public/logos are left untouched as the source artwork.
  *
  * The original files remain in public/logos as the source of truth, alongside
  * cropped copies (booklan-mark.svg, booklan-wordmark.svg) for anywhere an
@@ -28,7 +31,7 @@ export default function BooklanLogo({
     assemble ? `booklan-mark-part booklan-mark-part-${index}` : undefined;
 
   const navy = "#19355F";
-  const teal = "#00A79D";
+  const accent = "#2E6FB8";
 
   return (
     <svg
@@ -46,7 +49,7 @@ export default function BooklanLogo({
       />
       <path
         className={part(2)}
-        fill={teal}
+        fill={accent}
         d="M78.73,72.71h61.91a5.49,5.49,0,0,1,5.11,3.47l1.84,4.61a3.64,3.64,0,0,1-3.38,5H83a2.14,2.14,0,0,1-1.61-.71,24.94,24.94,0,0,1-4.78-9.57A2.18,2.18,0,0,1,78.73,72.71Z"
       />
       <path

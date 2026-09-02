@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ChevronRight, Search, X } from "lucide-react";
 import ActiveBookingModal from "@/components/ActiveBookingModal";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
 import { POPULAR_DESTINATIONS } from "@/constants/booking";
 import { roadsFor } from "@/lib/geo";
@@ -139,7 +138,6 @@ export default function SearchPage() {
       )}
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

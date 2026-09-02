@@ -81,13 +81,18 @@
   background: rgba(255, 255, 255, 0.85);
 }
 
-/* For the nav, which sits over the map and should let it through. Leans on a
-   heavier blur to stay legible at this transparency. */
+/* For the nav, which sits over the map and should let it through.
+   The white ground is kept low and the bright inset highlight dropped — at the
+   base .glass values the bar read as a solid white slab over pale pages rather
+   than as glass. Legibility comes from the heavier blur instead. */
 .glass-clear {
-  border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.38);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
-  backdrop-filter: blur(28px) saturate(1.8);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 6px 24px rgba(16, 37, 68, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(30px) saturate(1.9);
+  backdrop-filter: blur(30px) saturate(1.9);
 }
 
 html {

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRightLeft, CalendarDays, Clock, MapPin, Users } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import VehicleBadge from "@/components/VehicleBadge";
@@ -371,7 +370,6 @@ export default function AdvancedResultsPage() {
       </div>
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

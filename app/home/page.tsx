@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
 
 const BusMap = dynamic(() => import("@/components/BusMap"), {
@@ -103,7 +102,6 @@ export default function HomePage() {
       </div>
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

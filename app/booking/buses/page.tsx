@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import DestinationSheet from "@/components/DestinationSheet";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
@@ -311,7 +310,6 @@ export default function BusesPage() {
       )}
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

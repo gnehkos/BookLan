@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRightLeft, CalendarDays, MapPin, Search } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import { CITIES } from "@/constants/booking";
 
 type VehicleType = "bus" | "van";
@@ -186,7 +185,6 @@ export default function AdvancedBookingPage() {
       </div>
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

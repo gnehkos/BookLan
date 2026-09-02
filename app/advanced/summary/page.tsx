@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
-import BottomNav from "@/components/BottomNav";
 import PaymentCard from "@/components/PaymentCard";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
@@ -229,7 +228,6 @@ export default function AdvancedSummaryPage() {
         />
       </div>
 
-      <BottomNav />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Bus, Check, ChevronRight, MapPin, Star, X } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import CompanyPhotos from "@/components/CompanyPhotos";
 import ErrorState from "@/components/ErrorState";
@@ -139,7 +139,6 @@ export default function BusDetailPage() {
         <div className="w-full max-w-[390px] flex-1 px-4 pt-6">
           <div className="h-6 w-40 animate-pulse rounded bg-white" />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -162,7 +161,6 @@ export default function BusDetailPage() {
             onRetry={() => setRefreshKey((k) => k + 1)}
           />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -395,7 +393,6 @@ export default function BusDetailPage() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }

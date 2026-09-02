@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, FileText, Lock, MapPin, Share2, Trash2 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
 
 /** Shown in both documents so it is obvious which version was agreed to. */
 const LAST_UPDATED = "1 September 2026";
@@ -217,7 +216,6 @@ export default function LegalPage() {
         </p>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

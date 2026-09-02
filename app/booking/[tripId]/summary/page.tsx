@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, MapPin } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import VehicleBadge from "@/components/VehicleBadge";
 import PaymentCard from "@/components/PaymentCard";
@@ -239,7 +238,6 @@ export default function SummaryPage() {
         />
       </div>
 
-      <BottomNav />
     </div>
   );
 }

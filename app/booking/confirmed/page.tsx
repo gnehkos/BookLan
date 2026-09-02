@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
 import Ticket from "@/components/Ticket";
-import BottomNav from "@/components/BottomNav";
 
 type VehicleType = "bus" | "van";
 
@@ -85,7 +84,6 @@ export default function ConfirmedPage() {
         </div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import BottomNav from "@/components/BottomNav";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -31,7 +32,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${jakarta.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-surface">{children}</body>
+      <body className="min-h-full flex flex-col bg-surface">
+        {children}
+        {/*
+          Mounted once, above the router, so it survives navigation. Rendered
+          per page it was torn down and rebuilt on every route change, and a
+          CSS transition cannot animate across a remount — which is why
+          switching tabs jumped instead of moving.
+        */}
+        <BottomNav />
+      </body>
     </html>
   );
 }

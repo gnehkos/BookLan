@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Phone, Send } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
 import CallScreen from "@/components/CallScreen";
 import CompanyLogo from "@/components/CompanyLogo";
 import { appendMessage, getThread, relativeTime, type ChatThread } from "@/lib/chat";
@@ -63,7 +62,6 @@ export default function ChatThreadPage() {
             This conversation is no longer available.
           </p>
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -153,7 +151,6 @@ export default function ChatThreadPage() {
         />
       )}
 
-      <BottomNav />
     </div>
   );
 }

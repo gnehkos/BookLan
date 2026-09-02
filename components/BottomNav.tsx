@@ -18,11 +18,26 @@ export const NAV_CLEARANCE = 80;
 /** One shared curve, with a little overshoot so movement settles rather than stops. */
 const EASE = "ease-[cubic-bezier(0.32,1.28,0.5,1)]";
 
+/**
+ * Focused steps inside a flow, and everything before sign-in, show no nav.
+ * Listed here rather than by each page opting in, because the nav is mounted
+ * once in the root layout.
+ */
+const HIDDEN_EXACT = ["/"];
+const HIDDEN_PREFIXES = ["/auth", "/booking/pickup", "/advanced/dropoff"];
+
 export default function BottomNav() {
   const pathname = usePathname();
+
+  const hidden =
+    HIDDEN_EXACT.includes(pathname) ||
+    HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
   const activeIndex = TABS.findIndex(
     (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
   );
+
+  if (hidden) return null;
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">

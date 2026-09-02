@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -98,7 +97,6 @@ export default function AdvancedSeatsPage() {
         <div className="w-full max-w-[390px] flex-1 px-4 pt-6 pb-24">
           <div className="h-6 w-40 animate-pulse rounded bg-surface" />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -121,7 +119,6 @@ export default function AdvancedSeatsPage() {
             onRetry={() => setRefreshKey((k) => k + 1)}
           />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -192,7 +189,6 @@ export default function AdvancedSeatsPage() {
         </div>
       </div>
 
-      <BottomNav />
     </div>
   );
 }

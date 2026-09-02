@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, Flag, Loader2, Star, Ticket } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import { NAV_CLEARANCE } from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
@@ -149,7 +149,6 @@ export default function TripPage() {
         <div className="w-full max-w-[390px] flex-1 px-4 pt-6">
           <div className="h-6 w-40 animate-pulse rounded bg-white" />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -160,7 +159,6 @@ export default function TripPage() {
         <div className="flex w-full max-w-[390px] flex-1 flex-col pt-6">
           <ErrorState message={loadError ?? "Couldn't load your trip."} onRetry={handleRetry} />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -262,7 +260,6 @@ export default function TripPage() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

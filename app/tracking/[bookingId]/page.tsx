@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav, { NAV_CLEARANCE } from "@/components/BottomNav";
+import { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -245,7 +245,6 @@ export default function TrackingPage() {
         <div className="w-full max-w-[390px] flex-1 px-4 pt-6 pb-24">
           <div className="h-6 w-40 animate-pulse rounded bg-surface" />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -268,7 +267,6 @@ export default function TrackingPage() {
             onRetry={() => setRefreshKey((k) => k + 1)}
           />
         </div>
-        <BottomNav />
       </div>
     );
   }
@@ -502,7 +500,6 @@ export default function TrackingPage() {
         </Modal>
       )}
 
-      <BottomNav />
     </div>
   );
 }

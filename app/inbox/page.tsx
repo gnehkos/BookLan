@@ -12,7 +12,6 @@ import {
   XCircle,
 } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { driverNameFor } from "@/constants/drivers";
@@ -285,7 +284,6 @@ export default function InboxPage() {
       </div>
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }

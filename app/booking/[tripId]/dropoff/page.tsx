@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Button from "@/components/Button";
-import BottomNav from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 
@@ -164,7 +163,6 @@ export default function DropoffPage() {
         )}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

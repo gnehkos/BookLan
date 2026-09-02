@@ -17,7 +17,6 @@ import {
   X,
 } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
-import BottomNav from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
 
 /** Public Supabase Storage bucket holding profile photos. */
@@ -390,7 +389,6 @@ export default function ProfilePage() {
       )}
 
       <ActiveTripBanner />
-      <BottomNav />
     </div>
   );
 }
