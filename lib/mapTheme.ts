@@ -89,9 +89,16 @@ export function vehicleIcon(companyName: string) {
   });
 }
 
-/** Teardrop pin for a draggable pickup point; green when the spot is valid. */
+/**
+ * Teardrop pin for a draggable pickup point.
+ *
+ * The pin is the brand navy in both states rather than red when invalid — a red
+ * pin read as an error before the passenger had done anything wrong, since it
+ * starts wherever they happen to be standing. Validity is carried by the hint
+ * beside the pin and by the sheet below, which can say what is actually wrong.
+ */
 export function dropPinIcon(allowed: boolean) {
-  const fill = allowed ? colors.success : colors.error;
+  const fill = allowed ? colors.primary : colors.textMuted;
   return L.divIcon({
     className: "",
     html: `<div class="booklan-pin-drop" style="background:${fill}"></div>`,

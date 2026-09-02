@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Bus, Check, ChevronRight, MapPin, Star, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronUp, MapPin, Star, X } from "lucide-react";
 import Button from "@/components/Button";
 import { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
@@ -32,8 +32,8 @@ type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?
 
 type Review = { id: string; rating: number; comment: string | null; users: { name: string | null } | null };
 
-/** Height of the sticky action bar, so scrolled content never hides under it. */
-const ACTION_BAR_HEIGHT = 92;
+/** Height of the sticky bottom panel, so scrolled content never hides under it. */
+const ACTION_BAR_HEIGHT = 148;
 
 export default function BusDetailPage() {
   const router = useRouter();
@@ -45,7 +45,7 @@ export default function BusDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
-  const [seatSheetOpen, setSeatSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -165,10 +165,19 @@ export default function BusDetailPage() {
     );
   }
 
+  const reviewList =
+    reviews && reviews.length > 0
+      ? reviews.map((r) => ({
+          author: r.users?.name || "Passenger",
+          stars: r.rating,
+          text: r.comment || "Rated this trip.",
+        }))
+      : profile.reviews;
+
   return (
     <div className="flex min-h-screen justify-center bg-surface">
       <div className="relative flex w-full max-w-[390px] flex-col">
-        <div className="flex items-center gap-3 px-4 pt-6 pb-4">
+        <div className="flex items-center gap-3 px-4 pb-4 pt-6">
           <button
             onClick={() => router.back()}
             aria-label="Back"
@@ -177,72 +186,26 @@ export default function BusDetailPage() {
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-[16px] font-semibold text-text-primary">
-              {companyName}
-            </h1>
-            <span className="text-[12px] text-text-secondary">
-              {trip.origin} → {trip.destination}
+            <h1 className="truncate text-[16px] font-semibold text-text-primary">Select seats</h1>
+            <span className="truncate text-[12px] text-text-secondary">
+              {companyName} · {trip.origin} → {trip.destination}
             </span>
           </div>
           <span className="shrink-0 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-semibold text-primary">
-            {trip.seats_available} seats
+            {trip.seats_available} left
           </span>
         </div>
 
-        {/* Content scrolls on its own and stops short of the sticky bar. */}
+        {/*
+          Seat selection is the page now. It used to be a sheet behind a button
+          while the company profile filled the screen, and testers did not find
+          it — the profile is the secondary thing here, so it moved into the
+          panel at the bottom instead.
+        */}
         <div
           className="flex flex-col gap-4 overflow-y-auto px-4"
           style={{ paddingBottom: ACTION_BAR_HEIGHT + NAV_CLEARANCE }}
         >
-          <Card>
-            <div className="flex items-center gap-3">
-              <CompanyLogo name={companyName} size={44} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <span className="truncate text-[16px] font-semibold text-text-primary">
-                  {companyName}
-                </span>
-                <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
-                  <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                  <span className="font-medium text-text-primary">{profile.rating}</span>
-                  <span>· {profile.tripCount} trips</span>
-                </span>
-              </div>
-              <VehicleBadge type={vehicleType} />
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface">
-                <MapPin className="h-4 w-4 text-text-secondary" />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[12px] text-text-secondary">Pickup point</span>
-                <span className="truncate text-[14px] font-medium text-text-primary">
-                  {pickup?.stationName ??
-                    pickup?.placeName ??
-                    (pickup
-                      ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`
-                      : "Not set yet")}
-                </span>
-              </div>
-            </div>
-
-            <div className="my-3 h-px bg-border" />
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent">
-                <MapPin className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[12px] text-text-secondary">Destination</span>
-                <span className="truncate text-[14px] font-medium text-text-primary">
-                  {trip.destination}
-                </span>
-              </div>
-            </div>
-          </Card>
-
           <div className="grid grid-cols-3 gap-3">
             <InfoBox label="ETA" value={`${etaMinutes} min`} />
             <InfoBox label="Distance" value={`${trip.distance_km} km`} />
@@ -250,149 +213,179 @@ export default function BusDetailPage() {
           </div>
 
           <Card>
-            <span className="text-[16px] font-semibold text-text-primary">Photos</span>
-            <CompanyPhotos name={companyName} />
-          </Card>
-
-          <Card>
-            <span className="text-[16px] font-semibold text-text-primary">Ratings &amp; Reviews</span>
-            <div className="mt-3 flex flex-col gap-3">
-              {(reviews && reviews.length > 0
-                ? reviews.map((r) => ({
-                    author: r.users?.name || "Passenger",
-                    stars: r.rating,
-                    text: r.comment || "Rated this trip.",
-                  }))
-                : profile.reviews
-              ).map((review, i) => (
-                <div key={`${review.author}-${i}`} className="rounded-[12px] bg-surface p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="flex-1 text-[14px] font-medium text-text-primary">
-                      {review.author}
-                    </span>
-                    <span className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3.5 w-3.5 ${
-                            i < review.stars ? "fill-warning text-warning" : "text-border"
-                          }`}
-                        />
-                      ))}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[12px] text-text-secondary">{review.text}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <span className="text-[16px] font-semibold text-text-primary">Policies</span>
-            <ul className="mt-3 flex flex-col gap-3">
-              {profile.policies.map((policy) => (
-                <li key={policy} className="flex items-start gap-3">
-                  <Check
-                    className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary"
-                    strokeWidth={2.5}
-                  />
-                  <span className="text-[12px] text-text-secondary">{policy}</span>
-                </li>
-              ))}
-            </ul>
+            <SeatMap
+              seatsTotal={trip.seats_total}
+              seatsAvailable={trip.seats_available}
+              selectedSeats={selectedSeats}
+              onToggle={toggleSeat}
+              seedKey={tripId}
+            />
           </Card>
         </div>
 
-        {/* Sticky action bar: always visible, content never renders beneath it. */}
+        {/* Sticky bar: the company panel opens the profile, the row below it
+            carries the selection and the confirm. */}
         <div
           className="fixed inset-x-0 z-20 mx-auto w-full max-w-[390px] px-4"
           style={{ bottom: NAV_CLEARANCE }}
         >
-          <button
-            onClick={() => setSeatSheetOpen(true)}
-            className="flex w-full items-center gap-3 rounded-[12px] bg-primary p-4 text-left shadow-[var(--shadow-float)]"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white/15">
-              <Bus className="h-5 w-5 text-white" />
-            </span>
-            <span className="flex flex-1 flex-col">
-              <span className="text-[14px] font-semibold text-white">Select Your Seats</span>
-              <span className="text-[12px] text-white/70">
-                {selectedSeats.length > 0
-                  ? `${selectedSeats.length} selected · $${totalPrice.toFixed(2)}`
-                  : "Pick from the vehicle layout"}
+          <div className="overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-lift)]">
+            <button
+              onClick={() => setDetailsOpen(true)}
+              className="flex w-full items-center gap-3 border-b border-border p-3 text-left transition-colors hover:bg-surface"
+            >
+              <CompanyLogo name={companyName} size={34} />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-[13.5px] font-bold text-text-primary">
+                  {companyName}
+                </span>
+                <span className="flex items-center gap-1 text-[11.5px] text-text-secondary">
+                  <Star className="h-3 w-3 fill-warning text-warning" />
+                  {profile.rating} · Photos, reviews and policies
+                </span>
               </span>
-            </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-white" />
-          </button>
+              <ChevronUp className="h-[18px] w-[18px] shrink-0 text-text-muted" />
+            </button>
+
+            <div className="flex items-center gap-3 p-3">
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[11.5px] text-text-secondary">
+                  {selectedSeats.length ? "Selected" : "No seats yet"}
+                </span>
+                <span className="truncate text-[14px] font-bold text-text-primary">
+                  {selectedSeats.length
+                    ? `${selectedSeats.join(", ")} · $${totalPrice.toFixed(2)}`
+                    : "Tap the layout above"}
+                </span>
+              </span>
+              <span className="w-[140px] shrink-0">
+                <Button disabled={selectedSeats.length === 0} onClick={handleConfirmSeats}>
+                  {selectedSeats.length === 0 ? "Pick a seat" : "Continue"}
+                </Button>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {seatSheetOpen && (
+      {detailsOpen && (
         <div
-          // Above the nav, or the nav paints over the confirm button.
+          // Above the nav, or the nav paints over the sheet.
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-          onClick={() => setSeatSheetOpen(false)}
+          onClick={() => setDetailsOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex h-[88vh] max-h-[88vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[24px] bg-white"
+            className="flex h-[88vh] max-h-[88vh] w-full max-w-[390px] animate-[slide-up_0.25s_ease-out] flex-col rounded-t-[24px] bg-surface"
           >
-            <div className="flex items-start justify-between px-4 pt-4">
-              <div className="flex flex-col">
-                <h2 className="text-[16px] font-semibold text-text-primary">Select Seats</h2>
-                <span className="text-[12px] text-text-secondary">
-                  {companyName} · {trip.seats_total} seats total
-                </span>
-              </div>
-              <button
-                onClick={() => setSeatSheetOpen(false)}
-                aria-label="Close seat selection"
-                className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface"
-              >
-                <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-4 pt-4">
-              <SeatMap
-                seatsTotal={trip.seats_total}
-                seatsAvailable={trip.seats_available}
-                selectedSeats={selectedSeats}
-                onToggle={toggleSeat}
-                seedKey={tripId}
-              />
-            </div>
-
-            <div className="border-t border-border p-4 pb-6">
-              <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-start justify-between rounded-t-[24px] bg-white px-4 pb-3 pt-4">
+              <div className="flex items-center gap-3">
+                <CompanyLogo name={companyName} size={40} />
                 <div className="flex flex-col">
-                  <span className="text-[12px] text-text-secondary">Selected seats</span>
-                  <span
-                    className={`text-[14px] font-medium ${
-                      selectedSeats.length ? "text-text-primary" : "text-text-muted"
-                    }`}
-                  >
-                    {selectedSeats.length ? selectedSeats.join(", ") : "None selected"}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className="text-[12px] text-text-secondary">Subtotal</span>
-                  <span className="text-[20px] font-bold text-primary">
-                    ${selectedSeats.length ? totalPrice.toFixed(2) : "0.00"}
+                  <h2 className="text-[16px] font-bold text-text-primary">{companyName}</h2>
+                  <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+                    <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                    <span className="font-medium text-text-primary">{profile.rating}</span>
+                    <span>· {profile.tripCount} trips</span>
                   </span>
                 </div>
               </div>
-              <Button disabled={selectedSeats.length === 0} onClick={handleConfirmSeats}>
-                {selectedSeats.length === 0
-                  ? "Select at least 1 seat"
-                  : `Confirm ${selectedSeats.length} seat${selectedSeats.length > 1 ? "s" : ""}`}
-              </Button>
+              <div className="flex items-center gap-2">
+                <VehicleBadge type={vehicleType} />
+                <button
+                  onClick={() => setDetailsOpen(false)}
+                  aria-label="Close company details"
+                  className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface"
+                >
+                  <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+              <Card>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface">
+                    <MapPin className="h-4 w-4 text-text-secondary" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-[12px] text-text-secondary">Pickup point</span>
+                    <span className="truncate text-[14px] font-medium text-text-primary">
+                      {pickup?.stationName ??
+                        pickup?.placeName ??
+                        (pickup
+                          ? `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`
+                          : "Not set yet")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="my-3 h-px bg-border" />
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-accent">
+                    <MapPin className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-[12px] text-text-secondary">Destination</span>
+                    <span className="truncate text-[14px] font-medium text-text-primary">
+                      {trip.destination}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+
+              <Card>
+                <span className="text-[16px] font-semibold text-text-primary">Photos</span>
+                <CompanyPhotos name={companyName} />
+              </Card>
+
+              <Card>
+                <span className="text-[16px] font-semibold text-text-primary">
+                  Ratings &amp; Reviews
+                </span>
+                <div className="mt-3 flex flex-col gap-3">
+                  {reviewList.map((review, i) => (
+                    <div key={`${review.author}-${i}`} className="rounded-[12px] bg-surface p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="flex-1 text-[14px] font-medium text-text-primary">
+                          {review.author}
+                        </span>
+                        <span className="flex gap-0.5">
+                          {Array.from({ length: 5 }).map((_, star) => (
+                            <Star
+                              key={star}
+                              className={`h-3.5 w-3.5 ${
+                                star < review.stars ? "fill-warning text-warning" : "text-border"
+                              }`}
+                            />
+                          ))}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[12px] text-text-secondary">{review.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card>
+                <span className="text-[16px] font-semibold text-text-primary">Policies</span>
+                <ul className="mt-3 flex flex-col gap-3">
+                  {profile.policies.map((policy) => (
+                    <li key={policy} className="flex items-start gap-3">
+                      <Check
+                        className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary"
+                        strokeWidth={2.5}
+                      />
+                      <span className="text-[12px] text-text-secondary">{policy}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

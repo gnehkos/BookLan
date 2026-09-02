@@ -492,3 +492,63 @@ body {
     opacity: 0;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Pickup pin hint.
+
+   A permanent Leaflet tooltip riding beside the pin. Testers did not realise
+   the pin could be moved at all, so it says so, and stays until they move it.
+   -------------------------------------------------------------------------- */
+.booklan-pin-hint.leaflet-tooltip {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  box-shadow: 0 4px 14px rgba(16, 37, 68, 0.28);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: pin-hint-in 0.4s ease-out both;
+  transition: opacity 0.4s ease;
+}
+
+.booklan-pin-hint.leaflet-tooltip-left::before {
+  border-left-color: var(--color-primary);
+}
+
+.booklan-pin-hint.leaflet-tooltip-right::before {
+  border-right-color: var(--color-primary);
+}
+
+/* Warning variant, for a pin sitting off the road. */
+.booklan-pin-hint--warn.leaflet-tooltip {
+  background: var(--color-error);
+  box-shadow: 0 4px 14px rgba(229, 72, 77, 0.3);
+}
+
+.booklan-pin-hint--warn.leaflet-tooltip-left::before {
+  border-left-color: var(--color-error);
+}
+
+.booklan-pin-hint--warn.leaflet-tooltip-right::before {
+  border-right-color: var(--color-error);
+}
+
+@keyframes pin-hint-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booklan-pin-hint.leaflet-tooltip {
+    animation: none;
+  }
+}

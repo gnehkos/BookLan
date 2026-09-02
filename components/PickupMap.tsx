@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, Marker, Polyline, Rectangle, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Rectangle, TileLayer, Tooltip, useMap } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
 import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
@@ -177,10 +177,13 @@ function PinOnLongPress({ onPin }: { onPin: (position: [number, number]) => void
 function DraggableMarker({
   position,
   allowed,
+  hint,
   onChange,
 }: {
   position: [number, number];
   allowed: boolean;
+  /** Instruction riding beside the pin, or null once it is no longer needed. */
+  hint: { text: string; warn: boolean } | null;
   onChange: (position: [number, number]) => void;
 }) {
   const markerRef = useRef<L.Marker>(null);
@@ -204,7 +207,18 @@ function DraggableMarker({
       icon={dropPinIcon(allowed)}
       eventHandlers={eventHandlers}
       ref={markerRef}
-    />
+    >
+      {hint && (
+        <Tooltip
+          permanent
+          direction="right"
+          offset={[14, -12]}
+          className={`booklan-pin-hint${hint.warn ? " booklan-pin-hint--warn" : ""}`}
+        >
+          {hint.text}
+        </Tooltip>
+      )}
+    </Marker>
   );
 }
 
@@ -225,6 +239,9 @@ export default function PickupMap({
 }) {
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
+  // Testers did not realise the pin could be moved, so the instruction stays
+  // beside it until they actually move it once.
+  const [moved, setMoved] = useState(false);
   // Real routed geometry; falls back to the coarse waypoints until it lands.
   const { roads: allRoads } = useNationalRoads();
   // A bus to Siem Reap runs NR6 — it never passes someone waiting on NR2.
@@ -271,6 +288,7 @@ export default function PickupMap({
   // to record it.
   const handleChange = useCallback((pos: [number, number]) => {
     setPosition(pos);
+    setMoved(true);
   }, []);
 
   if (!center || !position) {
@@ -278,6 +296,14 @@ export default function PickupMap({
   }
 
   const allowed = isPickupAllowed(position[0], position[1], roads);
+
+  // Instruction first, then the reason a pin is refused; nothing once the pin
+  // sits somewhere valid and the sheet below can speak for itself.
+  const hint = !moved
+    ? { text: "Hold the map or drag me to set your pickup", warn: false }
+    : allowed
+      ? null
+      : { text: "Not on the road your bus takes", warn: true };
 
   // Zoomed right in: at a 12 m tolerance the roadside is only targetable up
   // close, so the map opens tight enough to actually hit it.
@@ -303,7 +329,12 @@ export default function PickupMap({
       <RoadCorridors roads={roads} />
 
       <PinOnLongPress onPin={handleChange} />
-      <DraggableMarker position={position} allowed={allowed} onChange={handleChange} />
+      <DraggableMarker
+        position={position}
+        allowed={allowed}
+        hint={hint}
+        onChange={handleChange}
+      />
 
       <RecenterControl
         target={position}
