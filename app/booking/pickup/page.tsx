@@ -31,7 +31,7 @@ export default function PickupPage() {
   const [allowed, setAllowed] = useState(false);
   const [placeName, setPlaceName] = useState<string | null>(null);
   const [roadName, setRoadName] = useState<string | null>(null);
-  const [sheetRef, sheetHeight] = useMeasuredHeight<HTMLDivElement>(240);
+  const [sheetRef, sheetHeight] = useMeasuredHeight<HTMLDivElement>(140);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("booklan_destination");

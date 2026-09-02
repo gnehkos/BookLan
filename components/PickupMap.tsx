@@ -249,7 +249,7 @@ export default function PickupMap({
     allowed: boolean,
     roadName: string | null
   ) => void;
-  /** Height of the floating sheet, so controls sit clear of it. */
+  /** Height of the floating sheet, so the recenter button sits just above it. */
   bottomInset?: number;
 }) {
   const [center, setCenter] = useState<[number, number] | null>(null);
@@ -355,7 +355,10 @@ export default function PickupMap({
         target={position}
         zoom={17}
         label="Recenter to my pin"
-        bottomOffset={bottomInset + 84}
+        // The sheet is inset 16px from the bottom, so clearing its top edge
+        // takes that plus its height, plus a small gap. Anything more and the
+        // button drifts into the middle of the map with nothing to sit against.
+        bottomOffset={bottomInset + 26}
       />
     </MapContainer>
   );
