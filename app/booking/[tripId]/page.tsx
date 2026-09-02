@@ -11,7 +11,7 @@ import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
-import { AVG_SPEED_KMH, SERVICE_FEE_USD } from "@/constants/booking";
+import { SERVICE_FEE_USD } from "@/constants/booking";
 import { companyProfile } from "@/constants/companyProfile";
 
 type VehicleType = "bus" | "van";
@@ -33,7 +33,7 @@ type StoredPickup = { lat: number; lng: number; stationName?: string; placeName?
 type Review = { id: string; rating: number; comment: string | null; users: { name: string | null } | null };
 
 /** Height of the sticky bottom panel, so scrolled content never hides under it. */
-const ACTION_BAR_HEIGHT = 148;
+const ACTION_BAR_HEIGHT = 150;
 
 export default function BusDetailPage() {
   const router = useRouter();
@@ -114,7 +114,6 @@ export default function BusDetailPage() {
 
   const pricePerSeat = trip ? trip.distance_km * trip.price_per_km : 0;
   const totalPrice = pricePerSeat * selectedSeats.length + SERVICE_FEE_USD;
-  const etaMinutes = trip ? Math.round((trip.distance_km / AVG_SPEED_KMH) * 60) : 0;
 
   function toggleSeat(seat: number) {
     setSelectedSeats((current) => {
@@ -206,12 +205,6 @@ export default function BusDetailPage() {
           className="flex flex-col gap-4 overflow-y-auto px-4"
           style={{ paddingBottom: ACTION_BAR_HEIGHT + NAV_CLEARANCE }}
         >
-          <div className="grid grid-cols-3 gap-3">
-            <InfoBox label="ETA" value={`${etaMinutes} min`} />
-            <InfoBox label="Distance" value={`${trip.distance_km} km`} />
-            <InfoBox label="Price" value={`$${pricePerSeat.toFixed(2)}`} emphasis />
-          </div>
-
           <Card>
             <SeatMap
               seatsTotal={trip.seats_total}
@@ -223,44 +216,50 @@ export default function BusDetailPage() {
           </Card>
         </div>
 
-        {/* Sticky bar: the company panel opens the profile, the row below it
-            carries the selection and the confirm. */}
+        {/* Sticky panel: the operator row opens the full profile, the row
+            below it carries the fare and the confirm. Lifted clear of the nav
+            rather than sitting flush against it. */}
         <div
           className="fixed inset-x-0 z-20 mx-auto w-full max-w-[390px] px-4"
-          style={{ bottom: NAV_CLEARANCE }}
+          style={{ bottom: NAV_CLEARANCE + 10 }}
         >
-          <div className="overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-lift)]">
+          <div className="overflow-hidden rounded-[20px] border border-border bg-white shadow-[var(--shadow-lift)]">
             <button
               onClick={() => setDetailsOpen(true)}
-              className="flex w-full items-center gap-3 border-b border-border p-3 text-left transition-colors hover:bg-surface"
+              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface"
             >
-              <CompanyLogo name={companyName} size={34} />
+              <CompanyLogo name={companyName} size={36} />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[13.5px] font-bold text-text-primary">
+                <span className="truncate text-[14px] font-bold leading-tight text-text-primary">
                   {companyName}
                 </span>
-                <span className="flex items-center gap-1 text-[11.5px] text-text-secondary">
-                  <Star className="h-3 w-3 fill-warning text-warning" />
-                  {profile.rating} · Photos, reviews and policies
+                <span className="mt-0.5 flex items-center gap-1 text-[11.5px] leading-tight text-text-secondary">
+                  <Star className="h-3 w-3 shrink-0 fill-warning text-warning" />
+                  {profile.rating} · {profile.tripCount} trips
                 </span>
               </span>
-              <ChevronUp className="h-[18px] w-[18px] shrink-0 text-text-muted" />
+              <span className="flex shrink-0 items-center gap-1 rounded-pill bg-surface px-2.5 py-1.5 text-[11px] font-bold text-primary">
+                Details
+                <ChevronUp className="h-3 w-3" strokeWidth={3} />
+              </span>
             </button>
 
-            <div className="flex items-center gap-3 p-3">
+            <div className="h-px bg-border" />
+
+            <div className="flex items-center gap-3 px-4 py-3">
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[11.5px] text-text-secondary">
-                  {selectedSeats.length ? "Selected" : "No seats yet"}
+                <span className="text-[11.5px] leading-tight text-text-secondary">
+                  {selectedSeats.length > 0
+                    ? `Seat${selectedSeats.length > 1 ? "s" : ""} ${selectedSeats.join(", ")}`
+                    : `$${pricePerSeat.toFixed(2)} per seat`}
                 </span>
-                <span className="truncate text-[14px] font-bold text-text-primary">
-                  {selectedSeats.length
-                    ? `${selectedSeats.join(", ")} · $${totalPrice.toFixed(2)}`
-                    : "Tap the layout above"}
+                <span className="truncate text-[19px] font-extrabold leading-tight text-text-primary">
+                  {selectedSeats.length > 0 ? `$${totalPrice.toFixed(2)}` : "Choose a seat"}
                 </span>
               </span>
-              <span className="w-[140px] shrink-0">
+              <span className="w-[132px] shrink-0">
                 <Button disabled={selectedSeats.length === 0} onClick={handleConfirmSeats}>
-                  {selectedSeats.length === 0 ? "Pick a seat" : "Continue"}
+                  Continue
                 </Button>
               </span>
             </div>
@@ -393,30 +392,5 @@ export default function BusDetailPage() {
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">{children}</div>
-  );
-}
-
-function InfoBox({
-  label,
-  value,
-  emphasis,
-}: {
-  label: string;
-  value: string;
-  emphasis?: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-      <span className="text-[12px] text-text-secondary">{label}</span>
-      <span
-        className={
-          emphasis
-            ? "text-[16px] font-bold text-primary"
-            : "text-[14px] font-medium text-text-primary"
-        }
-      >
-        {value}
-      </span>
-    </div>
   );
 }
