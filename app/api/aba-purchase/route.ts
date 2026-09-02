@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   if (!merchantId || !apiKey) {
     return Response.json(
-      { success: false, error: "ABA PayWay is not configured." },
+      { success: false, error: "ABA Bank payments are not configured." },
       { status: 500 }
     );
   }
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     if (response.status !== 200) {
       return Response.json(
-        { success: false, error: `ABA PayWay declined the request (status ${response.status}).` },
+        { success: false, error: `ABA Bank declined the request (status ${response.status}).` },
         { status: 502 }
       );
     }
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     return Response.json({ success: true, tranId });
   } catch {
     return Response.json(
-      { success: false, error: "Could not reach ABA PayWay. Please try again." },
+      { success: false, error: "Could not reach ABA Bank. Please try again." },
       { status: 502 }
     );
   }

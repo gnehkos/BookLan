@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard } from "lucide-react";
 import Button from "@/components/Button";
 
 export default function PaymentCard({
@@ -54,14 +53,15 @@ export default function PaymentCard({
   return (
     <div className="mx-4 mt-4 flex flex-col gap-3 rounded-card bg-white p-4 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-          <CreditCard className="h-5 w-5 text-white" />
+        {/* The bank's own logo, not a generic card glyph — people recognise
+            the brand they are about to pay from. */}
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-border bg-white">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logos/aba.jpg" alt="ABA Bank" className="h-full w-full object-contain" />
         </div>
-        <div className="flex flex-col">
-          <span className="text-[15px] font-bold text-text-primary">ABA PayWay</span>
-          <span className="text-[13px] text-text-secondary">
-            Pay securely with your ABA account or card
-          </span>
+        <div className="flex min-w-0 flex-col">
+          <span className="text-[15px] font-bold text-text-primary">ABA Bank</span>
+          <span className="text-[13px] text-text-secondary">Pay with your ABA Account</span>
         </div>
       </div>
 
