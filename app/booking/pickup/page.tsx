@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Ban, CheckCircle2, MapPin } from "lucide-react";
 import Button from "@/components/Button";
 import { describePlace } from "@/lib/reverseGeocode";
-import { CITY_EXCLUSION_KM, roadsFor } from "@/lib/geo";
+import { roadsFor } from "@/lib/geo";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 
 const PickupMap = dynamic(() => import("@/components/PickupMap"), {
@@ -145,7 +145,7 @@ export default function PickupPage() {
             <span className="flex min-w-0 flex-col">
               <span className="text-[11px] font-bold text-text-primary">No pickup</span>
               <span className="text-[9px] font-medium text-text-muted">
-                Other roads, or within {CITY_EXCLUSION_KM} km of the city
+                Any other road
               </span>
             </span>
           </div>

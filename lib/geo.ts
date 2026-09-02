@@ -40,14 +40,6 @@ export const ROAD_WIDTH_M = 12;
 export const ROAD_TOLERANCE_M = 12;
 export const ROAD_TOLERANCE_KM = ROAD_TOLERANCE_M / 1000;
 
-/**
- * Pickups are not offered within this distance of the middle of Phnom Penh.
- *
- * Inside the city the national roads are ordinary congested streets — a bus
- * cannot pull over on them, and a passenger there is better served by the city
- * network. The corridors only begin once the road is genuinely a highway.
- */
-export const CITY_EXCLUSION_KM = 20;
 
 export type RoadCorridor = {
   id: string;
@@ -170,40 +162,6 @@ export function roadsFor(destination: string | null | undefined): RoadCorridor[]
   return matches.length > 0 ? matches : NATIONAL_ROADS;
 }
 
-/** Straight-line distance from the middle of Phnom Penh, in km. */
-export function distanceFromCityCenterKm(lat: number, lng: number): number {
-  const [px, py] = toPlanar(lat, lng, PHNOM_PENH_POINT[0]);
-  const [cx, cy] = toPlanar(PHNOM_PENH_POINT[0], PHNOM_PENH_POINT[1], PHNOM_PENH_POINT[0]);
-  return Math.hypot(px - cx, py - cy);
-}
-
-/** True where the corridors are suppressed for being inside the city. */
-export function isInsideCityExclusion(lat: number, lng: number): boolean {
-  return distanceFromCityCenterKm(lat, lng) < CITY_EXCLUSION_KM;
-}
-
-/**
- * Splits a road into the runs that lie outside the city exclusion, so the
- * drawn corridor stops at the 20 km ring rather than running into the middle
- * of Phnom Penh. Returns one array per surviving run.
- */
-export function clipOutsideCity(path: LatLng[]): LatLng[][] {
-  const runs: LatLng[][] = [];
-  let run: LatLng[] = [];
-
-  for (const point of path) {
-    if (isInsideCityExclusion(point[0], point[1])) {
-      if (run.length > 1) runs.push(run);
-      run = [];
-    } else {
-      run.push(point);
-    }
-  }
-  if (run.length > 1) runs.push(run);
-
-  return runs;
-}
-
 export function isInsidePhnomPenh(lat: number, lng: number): boolean {
   return (
     lat >= PHNOM_PENH_BBOX.minLat &&
@@ -276,15 +234,21 @@ export function nearestRoad(
   return best;
 }
 
+/**
+ * A pickup is valid anywhere along a national road that serves the chosen
+ * destination, including where that road begins inside Phnom Penh.
+ *
+ * There is deliberately no exclusion around the city. Restricting pins to the
+ * corridors already rules out ordinary city streets, which was the actual
+ * concern — an operator leaving Phnom Penh is still on the national road as it
+ * runs out through the city, and a passenger waiting at that end of it is on
+ * the bus's route like any other.
+ */
 export function isPickupAllowed(
   lat: number,
   lng: number,
   roads: RoadCorridor[] = NATIONAL_ROADS
 ): boolean {
-  // Inside the city the corridors are not drawn, so they must not be accepted
-  // either — otherwise the pin would turn green over blank map.
-  if (isInsideCityExclusion(lat, lng)) return false;
-
   const nearest = nearestRoad(lat, lng, roads);
   return nearest !== null && nearest.distanceKm <= ROAD_TOLERANCE_KM;
 }

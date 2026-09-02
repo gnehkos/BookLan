@@ -3,17 +3,10 @@
 import "leaflet/dist/leaflet.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
-import { Circle, MapContainer, Marker, Polyline, Rectangle, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Polyline, Rectangle, TileLayer, useMap } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import {
-  CITY_EXCLUSION_KM,
-  ROAD_TOLERANCE_KM,
-  clipOutsideCity,
-  isPickupAllowed,
-  nearestRoad,
-  roadsFor,
-} from "@/lib/geo";
+import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
 import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
 
@@ -79,12 +72,10 @@ function RoadCorridors({ roads }: { roads: { id: string; path: [number, number][
   const bandWidth = useCorridorWeight(ROAD_TOLERANCE_KM);
   const showBand = bandWidth >= MIN_BAND_PX;
 
-  // Corridors stop at the city ring, so each road can become several runs.
+  // Each corridor is drawn end to end, from where the road begins in Phnom
+  // Penh out to the province it serves.
   const runs = useMemo(
-    () =>
-      roads.flatMap((road) =>
-        clipOutsideCity(road.path).map((path, index) => ({ key: road.id + "-" + index, path }))
-      ),
+    () => roads.map((road) => ({ key: road.id, path: road.path })),
     [roads]
   );
 
@@ -308,21 +299,7 @@ export default function PickupMap({
         }}
       />
 
-      {/* …the city ring, inside which the highways are just congested streets… */}
-      <Circle
-        center={[PHNOM_PENH[0], PHNOM_PENH[1]]}
-        radius={CITY_EXCLUSION_KM * 1000}
-        pathOptions={{
-          color: NO_PICKUP_RED,
-          weight: 1.5,
-          dashArray: "6 6",
-          opacity: 0.5,
-          fillColor: NO_PICKUP_RED,
-          fillOpacity: 0.08,
-        }}
-      />
-
-      {/* …and the corridors punched back in green beyond it. */}
+      {/* …and the corridors punched back in green. */}
       <RoadCorridors roads={roads} />
 
       <PinOnLongPress onPin={handleChange} />

@@ -27,7 +27,7 @@ const TERMS: Section[] = [
   {
     heading: "3. Bookings and pickup points",
     body: [
-      "A pickup point must sit on a national road that serves your destination, and outside the 20 km city zone around Phnom Penh. These limits exist because a coach cannot leave its route or stop on a congested city street.",
+      "A pickup point must sit on a national road that serves your destination, and outside the 5 km city zone around the middle of Phnom Penh. These limits exist because a coach cannot leave its route or stop on a congested city street.",
       "You may hold one active roadside pickup at a time. Advance bookings for future dates are not limited in this way.",
       "Be at your pin before the arrival time shown. Drivers wait briefly but are carrying other passengers and cannot hold the coach. A driver who cannot find you at the pin may mark the pickup as missed.",
     ],

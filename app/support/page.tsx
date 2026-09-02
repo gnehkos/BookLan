@@ -26,7 +26,7 @@ const FAQS: { question: string; answer: string }[] = [
   {
     question: "Why can't I pin my pickup where I want?",
     answer:
-      "Two rules limit it. The pin has to sit on a national road that actually serves your destination — a bus to Siem Reap runs National Road 6 and will never pass someone waiting on National Road 2. And pickups do not run within 20 km of the middle of Phnom Penh, because inside the city those roads are ordinary congested streets a coach cannot pull over on.",
+      "Two rules limit it. The pin has to sit on a national road that actually serves your destination — a bus to Siem Reap runs National Road 6 and will never pass someone waiting on National Road 2. And pickups do not run within 5 km of the middle of Phnom Penh, because inside the city those roads are ordinary congested streets a coach cannot pull over on.",
   },
   {
     question: "How early should I be at my pickup point?",
