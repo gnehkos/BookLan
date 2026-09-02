@@ -164,6 +164,18 @@ export default function BusDetailPage() {
     );
   }
 
+  // With real reviews in the database, the headline star has to be their
+  // average — showing a stable made-up 4.7 above a list averaging 4.1 reads as
+  // broken. Falls back to the generated profile when a company has none yet.
+  const ratingValue =
+    reviews && reviews.length > 0
+      ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length) * 10) / 10
+      : profile.rating;
+  const ratingNote =
+    reviews && reviews.length > 0
+      ? `${reviews.length} review${reviews.length > 1 ? "s" : ""}`
+      : `${profile.tripCount} trips`;
+
   const reviewList =
     reviews && reviews.length > 0
       ? reviews.map((r) => ({
@@ -235,7 +247,7 @@ export default function BusDetailPage() {
                 </span>
                 <span className="mt-0.5 flex items-center gap-1 text-[11.5px] leading-tight text-text-secondary">
                   <Star className="h-3 w-3 shrink-0 fill-warning text-warning" />
-                  {profile.rating} · {profile.tripCount} trips
+                  {ratingValue} · {ratingNote}
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-1 rounded-pill bg-surface px-2.5 py-1.5 text-[11px] font-bold text-primary">
@@ -284,8 +296,8 @@ export default function BusDetailPage() {
                   <h2 className="text-[16px] font-bold text-text-primary">{companyName}</h2>
                   <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
                     <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-                    <span className="font-medium text-text-primary">{profile.rating}</span>
-                    <span>· {profile.tripCount} trips</span>
+                    <span className="font-medium text-text-primary">{ratingValue}</span>
+                    <span>· {ratingNote}</span>
                   </span>
                 </div>
               </div>
