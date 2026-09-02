@@ -7,7 +7,7 @@ import BooklanLogo from "@/components/BooklanLogo";
 import SplashScreen from "@/components/SplashScreen";
 
 /** How long the launch screen holds before the app takes over. */
-const SPLASH_MS = 1600;
+const SPLASH_MS = 2100;
 
 /**
  * The app's entry point: launch screen, then three-step onboarding shown once.

@@ -81,6 +81,15 @@
   background: rgba(255, 255, 255, 0.85);
 }
 
+/* For the nav, which sits over the map and should let it through. Leans on a
+   heavier blur to stay legible at this transparency. */
+.glass-clear {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.38);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  backdrop-filter: blur(28px) saturate(1.8);
+}
+
 html {
   /* Reserve the scrollbar track on every page. Without this, a tall page like
      Profile gains a scrollbar, the viewport narrows, and the centred phone
@@ -367,15 +376,86 @@ body {
   }
 }
 
-/* --- Splash screen --- */
-@keyframes splash-mark {
+/* --------------------------------------------------------------------------
+   Splash screen.
+
+   The mark is three separate shapes, so it can assemble rather than simply
+   fade in: each piece rides in from the left, overshoots slightly and settles,
+   staggered so the logo builds itself. `transform-box: fill-box` is what makes
+   transforms on an SVG path measure against its own bounds instead of the
+   whole canvas.
+   -------------------------------------------------------------------------- */
+.booklan-mark-part {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mark-ride-in 0.85s cubic-bezier(0.22, 1.1, 0.36, 1) forwards;
+}
+
+.booklan-mark-part-1 {
+  animation-delay: 0.1s;
+}
+.booklan-mark-part-2 {
+  animation-delay: 0.24s;
+}
+.booklan-mark-part-3 {
+  animation-delay: 0.38s;
+}
+
+@keyframes mark-ride-in {
   0% {
     opacity: 0;
-    transform: translateY(14px) scale(0.94);
+    transform: translateX(-46px) scaleX(0.86);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(5px) scaleX(1.03);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scaleX(1);
+  }
+}
+
+/* Speed lines that flick past as the mark arrives. */
+@keyframes speed-line {
+  0% {
+    opacity: 0;
+    transform: translateX(0) scaleX(0.3);
+  }
+  35% {
+    opacity: 0.9;
+    transform: translateX(26px) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(72px) scaleX(0.3);
+  }
+}
+
+/* The road the mark rides in on, drawn left to right. */
+@keyframes road-draw {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes splash-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -388,6 +468,14 @@ body {
   }
 }
 
+/* Respect a reduced-motion preference: show the finished state, no travel. */
+@media (prefers-reduced-motion: reduce) {
+  .booklan-mark-part {
+    opacity: 1;
+    animation: none;
+  }
+}
+
 /* Ring pulse on the in-app call screen. */
 @keyframes call-ring {
   0% {
@@ -397,5 +485,47 @@ body {
   100% {
     transform: scale(1.35);
     opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Bottom nav switching.
+   -------------------------------------------------------------------------- */
+
+/* The icon of a newly selected tab lands rather than simply appearing. */
+@keyframes nav-icon-land {
+  0% {
+    transform: translateY(-7px) scale(0.72);
+    opacity: 0.4;
+  }
+  55% {
+    transform: translateY(1px) scale(1.14);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* A single highlight sweeping across the pill once, as it takes over. */
+@keyframes nav-shine {
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booklan-nav-icon,
+  .booklan-nav-shine {
+    animation: none;
   }
 }

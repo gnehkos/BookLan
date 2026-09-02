@@ -26,8 +26,10 @@ export default function BottomNav() {
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
-      {/* `.glass` lives in globals.css so every frosted panel is tuned in one place. */}
-      <div className="glass pointer-events-auto flex w-full max-w-[358px] gap-1 rounded-pill p-1.5">
+      {/* `.glass` and `.glass-clear` live in globals.css so every frosted panel
+          is tuned in one place. The nav is the most transparent of them: it
+          sits over the map, and the map should read through it. */}
+      <div className="glass glass-clear pointer-events-auto flex w-full max-w-[358px] gap-1 rounded-pill p-1.5">
         {TABS.map(({ label, href, icon: Icon }, index) => {
           const active = index === activeIndex;
           return (
@@ -38,23 +40,37 @@ export default function BottomNav() {
               /*
                * The selected tab grows to make room for its own label and the
                * others shrink to icons, so the highlight expands into place
-               * rather than jumping between four fixed slots. It also removes
-               * the truncation the four-label layout used to suffer at narrow
-               * widths.
+               * rather than a pill jumping between four fixed slots. It also
+               * removes the truncation the four-label layout used to suffer at
+               * narrow widths.
                */
-              className={`group relative flex items-center justify-center gap-2 overflow-hidden rounded-pill py-2.5 transition-[flex-grow,background-color,color] duration-[420ms] ${EASE} ${
+              className={`group relative flex items-center justify-center gap-2 overflow-hidden rounded-pill py-2.5 transition-[flex-grow,background-color,color,box-shadow] duration-[420ms] ${EASE} ${
                 active
-                  ? "flex-[2.2] bg-primary text-white shadow-[0_4px_12px_rgba(16,37,68,0.25)]"
-                  : "flex-1 text-text-secondary hover:bg-white/60"
+                  ? "flex-[2.2] bg-gradient-to-b from-primary to-primary-dark text-white shadow-[0_6px_16px_rgba(16,37,68,0.3)]"
+                  : "flex-1 text-text-secondary hover:bg-white/50"
               }`}
             >
+              {active && (
+                <span
+                  aria-hidden
+                  /* Keyed on the route so the sweep replays on every switch
+                     rather than only on first mount. */
+                  key={pathname}
+                  className="booklan-nav-shine pointer-events-none absolute inset-y-0 w-1/3 -skew-x-12 bg-white/25 animate-[nav-shine_0.7s_ease-out_forwards]"
+                />
+              )}
+
               <Icon
-                className={`h-[19px] w-[19px] shrink-0 transition-transform duration-[420ms] ${EASE} ${
-                  active ? "scale-105" : "group-active:scale-90"
+                key={active ? "on" : "off"}
+                className={`booklan-nav-icon relative h-[19px] w-[19px] shrink-0 ${
+                  active
+                    ? "animate-[nav-icon-land_0.5s_cubic-bezier(0.32,1.28,0.5,1)_forwards]"
+                    : `transition-transform duration-[420ms] ${EASE} group-active:scale-90`
                 }`}
               />
+
               <span
-                className={`overflow-hidden whitespace-nowrap text-[12.5px] font-bold transition-[max-width,opacity] duration-[420ms] ${EASE} ${
+                className={`relative overflow-hidden whitespace-nowrap text-[12.5px] font-bold transition-[max-width,opacity] duration-[420ms] ${EASE} ${
                   active ? "max-w-[90px] opacity-100" : "max-w-0 opacity-0"
                 }`}
               >
