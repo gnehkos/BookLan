@@ -25,6 +25,7 @@ import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { DRIVER_PHONE, driverNameFor } from "@/constants/drivers";
 import { appendMessage, getThread } from "@/lib/chat";
 import CallScreen from "@/components/CallScreen";
+import Portal from "@/components/Portal";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
@@ -400,17 +401,20 @@ export default function TrackingPage() {
       </div>
 
       {showCallModal && (
-        <CallScreen
+        <Portal>
+          <CallScreen
           name={driverName}
           subtitle={`Driver · ${companyName}`}
           phone={DRIVER_PHONE}
           companyName={companyName}
-          onClose={() => setShowCallModal(false)}
-        />
+            onClose={() => setShowCallModal(false)}
+          />
+        </Portal>
       )}
 
       {showChatModal && (
-        <Modal onClose={() => setShowChatModal(false)}>
+        <Portal>
+          <Modal onClose={() => setShowChatModal(false)}>
           <div className="flex h-[60vh] flex-col">
             <div className="flex items-center gap-3 border-b border-border px-5 pb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent">
@@ -476,11 +480,13 @@ export default function TrackingPage() {
               </button>
             </div>
           </div>
-        </Modal>
+          </Modal>
+        </Portal>
       )}
 
       {showCancelConfirm && (
-        <Modal onClose={() => setShowCancelConfirm(false)}>
+        <Portal>
+          <Modal onClose={() => setShowCancelConfirm(false)}>
           <div className="flex flex-col items-center gap-3 px-6 pb-6">
             <AlertTriangle className="h-8 w-8 text-error" />
             <h2 className="text-[16px] font-semibold text-text-primary">Cancel this booking?</h2>
@@ -497,7 +503,8 @@ export default function TrackingPage() {
               </Button>
             </div>
           </div>
-        </Modal>
+          </Modal>
+        </Portal>
       )}
 
     </div>

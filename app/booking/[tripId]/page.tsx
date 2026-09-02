@@ -187,7 +187,7 @@ export default function BusDetailPage() {
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-[16px] font-semibold text-text-primary">Select seats</h1>
             <span className="truncate text-[12px] text-text-secondary">
-              {companyName} · {trip.origin} → {trip.destination}
+              {trip.origin} → {trip.destination}
             </span>
           </div>
           <span className="shrink-0 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-semibold text-primary">
