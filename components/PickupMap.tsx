@@ -183,7 +183,7 @@ function DraggableMarker({
   position: [number, number];
   allowed: boolean;
   /** Instruction riding beside the pin, or null once it is no longer needed. */
-  hint: { text: string; warn: boolean } | null;
+  hint: { title: string; sub: string; warn: boolean } | null;
   onChange: (position: [number, number]) => void;
 }) {
   const markerRef = useRef<L.Marker>(null);
@@ -215,7 +215,22 @@ function DraggableMarker({
           offset={[14, -12]}
           className={`booklan-pin-hint${hint.warn ? " booklan-pin-hint--warn" : ""}`}
         >
-          {hint.text}
+          {/* Two short lines rather than one long one: the instruction reads at
+              a glance, the qualifier sits under it. */}
+          <span
+            className={`block text-[11.5px] font-bold leading-[15px] ${
+              hint.warn ? "text-error" : "text-primary"
+            }`}
+          >
+            {hint.title}
+          </span>
+          <span
+            className={`block text-[10.5px] leading-[14px] ${
+              hint.warn ? "text-error/70" : "text-text-secondary"
+            }`}
+          >
+            {hint.sub}
+          </span>
         </Tooltip>
       )}
     </Marker>
@@ -300,10 +315,10 @@ export default function PickupMap({
   // Instruction first, then the reason a pin is refused; nothing once the pin
   // sits somewhere valid and the sheet below can speak for itself.
   const hint = !moved
-    ? { text: "Hold the map or drag me to set your pickup", warn: false }
+    ? { title: "Hold to set pickup", sub: "or drag this pin", warn: false }
     : allowed
       ? null
-      : { text: "Not on the road your bus takes", warn: true };
+      : { title: "Wrong road", sub: "Your bus won't pass here", warn: true };
 
   // Zoomed right in: at a 12 m tolerance the roadside is only targetable up
   // close, so the map opens tight enough to actually hit it.

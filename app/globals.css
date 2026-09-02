@@ -498,42 +498,39 @@ body {
 
    A permanent Leaflet tooltip riding beside the pin. Testers did not realise
    the pin could be moved at all, so it says so, and stays until they move it.
+   Only the default tooltip chrome is reset here — the contents are ordinary
+   React, so they carry their own utility classes.
    -------------------------------------------------------------------------- */
 .booklan-pin-hint.leaflet-tooltip {
-  padding: 6px 10px;
-  border: none;
-  border-radius: 9999px;
-  background: var(--color-primary);
-  box-shadow: 0 4px 14px rgba(16, 37, 68, 0.28);
-  color: #ffffff;
+  padding: 7px 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: #ffffff;
+  box-shadow: var(--shadow-float);
   font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
   animation: pin-hint-in 0.4s ease-out both;
-  transition: opacity 0.4s ease;
-}
-
-.booklan-pin-hint.leaflet-tooltip-left::before {
-  border-left-color: var(--color-primary);
 }
 
 .booklan-pin-hint.leaflet-tooltip-right::before {
-  border-right-color: var(--color-primary);
+  border-right-color: #ffffff;
+}
+
+.booklan-pin-hint.leaflet-tooltip-left::before {
+  border-left-color: #ffffff;
 }
 
 /* Warning variant, for a pin sitting off the road. */
 .booklan-pin-hint--warn.leaflet-tooltip {
-  background: var(--color-error);
-  box-shadow: 0 4px 14px rgba(229, 72, 77, 0.3);
-}
-
-.booklan-pin-hint--warn.leaflet-tooltip-left::before {
-  border-left-color: var(--color-error);
+  border-color: #fecaca;
+  background: #fef2f2;
 }
 
 .booklan-pin-hint--warn.leaflet-tooltip-right::before {
-  border-right-color: var(--color-error);
+  border-right-color: #fef2f2;
+}
+
+.booklan-pin-hint--warn.leaflet-tooltip-left::before {
+  border-left-color: #fef2f2;
 }
 
 @keyframes pin-hint-in {
