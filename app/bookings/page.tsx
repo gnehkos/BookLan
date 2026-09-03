@@ -402,7 +402,7 @@ function ScheduledCard({
           </Button>
         )
       }
-      extras={
+      topActions={
         tab === "past" && !cancelled ? (
           <BookingExtras
             bookingId={booking.id}
@@ -511,7 +511,7 @@ function BookingCard({
           </div>
         )
       }
-      extras={
+      topActions={
         tab === "past" && !isCancelled ? (
           <BookingExtras
             bookingId={booking.id}

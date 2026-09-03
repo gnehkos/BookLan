@@ -22,7 +22,7 @@ export default function BookingReceipt({
   total,
   statusSlot,
   actions,
-  extras,
+  topActions,
   notchColorClass = "bg-surface",
 }: {
   company: string;
@@ -37,8 +37,8 @@ export default function BookingReceipt({
   total: number;
   statusSlot?: React.ReactNode;
   actions?: React.ReactNode;
-  /** Controls shown under the stub, used by booking history. */
-  extras?: React.ReactNode;
+  /** Small controls in the top-right corner, used by booking history. */
+  topActions?: React.ReactNode;
   /** Must match the surface behind the card for the notches to look punched. */
   notchColorClass?: string;
 }) {
@@ -49,6 +49,7 @@ export default function BookingReceipt({
         <div className="flex items-center gap-2">
           {typeTag}
           {vehicleBadge}
+          {topActions && <span className="ml-auto flex shrink-0 gap-1.5">{topActions}</span>}
         </div>
 
         <div className="mt-3 flex items-center gap-3">
@@ -109,7 +110,6 @@ export default function BookingReceipt({
       </div>
 
       {actions && <div className="px-4 pb-4">{actions}</div>}
-      {extras && <div className="px-4 pb-4">{extras}</div>}
     </div>
   );
 }

@@ -8,7 +8,6 @@ import VehicleBadge from "@/components/VehicleBadge";
 import PaymentCard from "@/components/PaymentCard";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
-import { SERVICE_FEE_USD } from "@/constants/booking";
 import { getActivePickupBooking } from "@/lib/activeBooking";
 
 type VehicleType = "bus" | "van";
@@ -225,31 +224,6 @@ export default function SummaryPage() {
           </div>
         </div>
 
-        {/* Fare breakdown — roadside pricing is per km, so show the maths. */}
-        <div className="mx-4 mt-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-            FARE BREAKDOWN
-          </span>
-
-          <div className="mt-3 flex flex-col gap-2.5">
-            <Row
-              label={`${trip.distance_km} km × $${trip.price_per_km.toFixed(2)}/km`}
-              value={`$${(trip.distance_km * trip.price_per_km).toFixed(2)}`}
-            />
-            {seat.seatNumbers.length > 1 && (
-              <Row label={`× ${seat.seatNumbers.length} seats`} value="" />
-            )}
-            <Row label="Service fee" value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
-          </div>
-
-          <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-            <span className="text-[14px] font-semibold text-text-primary">Total</span>
-            <span className="text-[24px] font-bold leading-none text-primary">
-              ${seat.totalPrice.toFixed(2)}
-            </span>
-          </div>
-        </div>
-
         <PaymentCard
           amount={seat.totalPrice}
           itemName={`${trip.companies?.name ?? "BookLan"} ticket to ${trip.destination}`}
@@ -257,15 +231,6 @@ export default function SummaryPage() {
         />
       </div>
 
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3 text-[13px]">
-      <span className="min-w-0 text-text-secondary">{label}</span>
-      <span className="shrink-0 text-right font-medium text-text-primary">{value}</span>
     </div>
   );
 }

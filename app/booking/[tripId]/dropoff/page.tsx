@@ -157,8 +157,10 @@ export default function DropoffPage() {
         </div>
 
         {selectedStationId && (
-          <div className="mt-auto px-4 pt-8">
-            <Button onClick={handleConfirm}>Confirm</Button>
+          // Fixed, not pushed down with mt-auto: with a short list the column
+          // does not fill the screen, so the button settled mid-page.
+          <div className="fixed inset-x-0 bottom-4 z-20 mx-auto w-full max-w-[390px] px-4">
+            <Button onClick={handleConfirm}>Confirm drop-off</Button>
           </div>
         )}
       </div>

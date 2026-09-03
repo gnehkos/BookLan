@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { CheckCircle2, ChevronDown, Flag, Loader2, Star, Ticket } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, Flag, Loader2, Star, Ticket } from "lucide-react";
 import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -170,7 +170,7 @@ export default function TripPage() {
   const vehicleType = booking.active_trips?.companies?.vehicle_type ?? "bus";
   const dropoffName = booking.stations?.name ?? null;
   const companyId = booking.active_trips?.company_id ?? null;
-  const destinationName = booking.stations?.name ?? booking.active_trips?.destination ?? "your stop";
+  const destinationName = booking.active_trips?.destination ?? "your stop";
   const totalKm = booking.active_trips?.distance_km ?? 0;
 
   const pickup: [number, number] = [booking.pickup_lat, booking.pickup_lng];
@@ -201,7 +201,15 @@ export default function TripPage() {
         {/* The ticket pill doubles as a toggle: the ID is what a driver asks
             for, and everything else about the trip sits one tap behind it
             rather than crowding the map. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-start px-4 pt-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-start gap-2 px-4 pt-5">
+          <button
+            onClick={() => router.push("/bookings")}
+            aria-label="Back to bookings"
+            className="glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
+          >
+            <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
+          </button>
+
           <button
             onClick={() => setShowDetails((open) => !open)}
             aria-expanded={showDetails}

@@ -132,7 +132,6 @@ export default function AdvancedSummaryPage() {
   if (!ready || !schedule || !seat) return null;
 
   const company = schedule.companies?.name ?? "Unknown operator";
-  const perSeat = schedule.price_per_seat;
   const seats = seat.seatNumbers.length;
 
   return (
@@ -213,31 +212,6 @@ export default function AdvancedSummaryPage() {
           <div className="flex flex-1 flex-col gap-1 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
             <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TOTAL</span>
             <span className="truncate text-[17px] font-extrabold text-primary">
-              ${seat.totalPrice.toFixed(2)}
-            </span>
-          </div>
-        </div>
-
-        {/* Fare breakdown — scheduled seats are a flat price each. */}
-        <div className="mx-4 mt-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-            FARE BREAKDOWN
-          </span>
-
-          <div className="mt-3 flex flex-col gap-2.5">
-            <div className="flex items-center justify-between gap-3 text-[13px]">
-              <span className="text-text-secondary">
-                ${perSeat.toFixed(2)} per seat × {seats} seat{seats > 1 ? "s" : ""}
-              </span>
-              <span className="font-medium text-text-primary">
-                ${(perSeat * seats).toFixed(2)}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-            <span className="text-[14px] font-semibold text-text-primary">Total</span>
-            <span className="text-[24px] font-bold leading-none text-primary">
               ${seat.totalPrice.toFixed(2)}
             </span>
           </div>
