@@ -201,45 +201,52 @@ export default function TripPage() {
         {/* The ticket pill doubles as a toggle: the ID is what a driver asks
             for, and everything else about the trip sits one tap behind it
             rather than crowding the map. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-start gap-2 px-4 pt-5">
-          <button
-            onClick={() => router.push("/bookings")}
-            aria-label="Back to bookings"
-            className="glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
-          >
-            <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
-          </button>
+        {/* Back on the left, the ticket on the right: the ID is what a driver
+            asks for, and everything else about the trip sits one tap behind it
+            rather than crowding the map. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-5">
+          <div className="flex items-start justify-between gap-3">
+            <button
+              onClick={() => router.push("/bookings")}
+              aria-label="Back to bookings"
+              className="glass pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
+            </button>
 
-          <button
-            onClick={() => setShowDetails((open) => !open)}
-            aria-expanded={showDetails}
-            className="glass pointer-events-auto inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5"
-          >
-            <Ticket className="h-3.5 w-3.5 text-primary" />
-            <span className="font-mono text-[12px] font-medium text-text-primary">
-              {booking.ticket_id}
-            </span>
-            <ChevronDown
-              className={`h-3.5 w-3.5 text-text-muted transition-transform duration-200 ${
-                showDetails ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+            <div className="flex min-w-0 flex-col items-end gap-2">
+              <button
+                onClick={() => setShowDetails((open) => !open)}
+                aria-expanded={showDetails}
+                className="glass pointer-events-auto inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5"
+              >
+                <Ticket className="h-3.5 w-3.5 text-primary" />
+                <span className="font-mono text-[12px] font-medium text-text-primary">
+                  {booking.ticket_id}
+                </span>
+                <ChevronDown
+                  className={`h-3.5 w-3.5 text-text-muted transition-transform duration-200 ${
+                    showDetails ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-          {showDetails && (
-            <div className="glass glass-solid pointer-events-auto mt-2 grid w-full grid-cols-2 gap-x-3 gap-y-2.5 rounded-[16px] p-3.5">
-              <Detail label="Ticket ID" value={booking.ticket_id} mono />
-              <Detail label="Operator" value={company} />
-              <Detail label="Vehicle" value={vehicleType} capitalize />
-              <Detail
-                label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
-                value={booking.seat_numbers.join(", ")}
-              />
-              <Detail label="Destination" value={destinationName} />
-              <Detail label="Distance left" value={`${remainingKm} km`} />
-              {dropoffName && <Detail label="Drop-off" value={dropoffName} />}
+              {showDetails && (
+                <div className="glass glass-solid pointer-events-auto grid w-[262px] grid-cols-2 gap-x-3 gap-y-2.5 rounded-[16px] p-3.5">
+                  <Detail label="Ticket ID" value={booking.ticket_id} mono />
+                  <Detail label="Operator" value={company} />
+                  <Detail label="Vehicle" value={vehicleType} capitalize />
+                  <Detail
+                    label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
+                    value={booking.seat_numbers.join(", ")}
+                  />
+                  <Detail label="Destination" value={destinationName} />
+                  <Detail label="Distance left" value={`${remainingKm} km`} />
+                  {dropoffName && <Detail label="Drop-off" value={dropoffName} />}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Floating trip panel, detached from the edges and clear of the nav. */}
