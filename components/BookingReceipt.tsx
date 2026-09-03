@@ -17,6 +17,7 @@ export default function BookingReceipt({
   origin,
   destination,
   rows,
+  fare,
   ticketId,
   total,
   statusSlot,
@@ -29,6 +30,8 @@ export default function BookingReceipt({
   origin?: string;
   destination?: string;
   rows: ReceiptRow[];
+  /** Optional fare breakdown, rendered under the rows. */
+  fare?: React.ReactNode;
   ticketId: string;
   total: number;
   statusSlot?: React.ReactNode;
@@ -70,6 +73,8 @@ export default function BookingReceipt({
             </div>
           ))}
         </div>
+
+        {fare && <div className="mt-3 rounded-[12px] bg-surface p-3">{fare}</div>}
       </div>
 
       {/* Tear line */}

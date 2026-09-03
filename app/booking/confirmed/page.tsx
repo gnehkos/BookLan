@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
+import FareBreakdown from "@/components/FareBreakdown";
 import Ticket from "@/components/Ticket";
 
 type VehicleType = "bus" | "van";
@@ -11,6 +12,8 @@ type VehicleType = "bus" | "van";
 type StoredTrip = {
   origin: string;
   destination: string;
+  distance_km: number;
+  price_per_km: number;
   companies: { name: string; vehicle_type: VehicleType } | null;
 };
 
@@ -70,8 +73,15 @@ export default function ConfirmedPage() {
                 value: seat.seatNumbers.join(", "),
               },
               { label: "Drop-off", value: dropoff.name },
-              { label: "Total paid", value: `$${seat.totalPrice.toFixed(2)}` },
             ]}
+            fare={
+              <FareBreakdown
+                distanceKm={trip.distance_km}
+                pricePerKm={trip.price_per_km}
+                seats={seat.seatNumbers.length}
+                total={seat.totalPrice}
+              />
+            }
             footnote="Show this ID to the driver when boarding"
           />
         </div>

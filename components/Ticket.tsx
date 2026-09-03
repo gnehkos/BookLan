@@ -13,6 +13,7 @@ export default function Ticket({
   route,
   ticketId,
   details,
+  fare,
   footnote,
   notchColorClass = "bg-surface",
 }: {
@@ -20,6 +21,8 @@ export default function Ticket({
   route: string;
   ticketId: string;
   details: TicketDetail[];
+  /** Optional fare breakdown, rendered under the details. */
+  fare?: React.ReactNode;
   footnote?: string;
   /** Must match the surface behind the ticket for the notches to look punched. */
   notchColorClass?: string;
@@ -46,6 +49,10 @@ export default function Ticket({
           </div>
         ))}
       </div>
+
+      {fare && (
+        <div className="mx-4 mb-4 rounded-[12px] bg-surface p-3.5">{fare}</div>
+      )}
 
       {/* Tear line: punched notches with a dashed perforation between them. */}
       <div className="relative flex items-center">

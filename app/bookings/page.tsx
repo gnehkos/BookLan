@@ -6,6 +6,7 @@ import { CalendarClock, MapPin, Ticket as TicketIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import Button from "@/components/Button";
 import BookingReceipt from "@/components/BookingReceipt";
+import FareBreakdown from "@/components/FareBreakdown";
 import ErrorState from "@/components/ErrorState";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -26,6 +27,7 @@ type BookingRow = {
     origin: string;
     destination: string;
     distance_km: number;
+    price_per_km: number;
     companies: { name: string; vehicle_type: VehicleType } | null;
   } | null;
 };
@@ -90,7 +92,7 @@ export default function BookingsPage() {
     const roadQuery = supabase
       .from("bookings")
       .select(
-        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, distance_km, companies(name, vehicle_type))"
+        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, distance_km, price_per_km, companies(name, vehicle_type))"
       )
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
@@ -378,8 +380,6 @@ function BookingCard({
       origin={booking.active_trips?.origin}
       destination={booking.active_trips?.destination}
       rows={[
-        // Roadside fares are distance-based, so the km the price was struck on
-        // matters as much as the total.
         {
           label: "Distance",
           value: `${booking.active_trips?.distance_km ?? 0} km`,
@@ -390,6 +390,17 @@ function BookingCard({
           value: booking.seat_numbers.join(", "),
         },
       ]}
+      fare={
+        // Roadside fares are distance-based, so the receipt shows the sum
+        // rather than only the amount that came out of it.
+        <FareBreakdown
+          distanceKm={booking.active_trips?.distance_km ?? 0}
+          pricePerKm={booking.active_trips?.price_per_km ?? 0}
+          seats={booking.seat_numbers.length}
+          total={booking.total_price}
+          compact
+        />
+      }
       ticketId={booking.ticket_id}
       total={booking.total_price}
       statusSlot={
