@@ -45,7 +45,7 @@ export default function SearchPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[393px] flex-1 flex-col pb-28">
+      <div className="flex w-full max-w-[393px] flex-1 flex-col pb-[188px]">
         <div className="bg-white px-4 pt-6 pb-4">
           <div className="flex items-center gap-2">
             <button

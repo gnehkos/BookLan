@@ -19,7 +19,6 @@ export default function BookingReceipt({
   rows,
   fare,
   ticketId,
-  total,
   statusSlot,
   actions,
   topActions,
@@ -34,7 +33,6 @@ export default function BookingReceipt({
   /** Optional fare breakdown, rendered under the rows. */
   fare?: React.ReactNode;
   ticketId: string;
-  total: number;
   statusSlot?: React.ReactNode;
   actions?: React.ReactNode;
   /** Small controls in the top-right corner, used by booking history. */
@@ -101,12 +99,9 @@ export default function BookingReceipt({
             {ticketId}
           </span>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-[20px] font-bold leading-tight text-primary">
-            ${total.toFixed(2)}
-          </span>
-          {statusSlot}
-        </div>
+        {/* No fare here: the breakdown above already ends on the total, and
+            repeating it made the stub read as a second, different charge. */}
+        <div className="flex shrink-0 items-center">{statusSlot}</div>
       </div>
 
       {actions && <div className="px-4 pb-4">{actions}</div>}

@@ -213,7 +213,7 @@ export default function BookingsPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-28">
+      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-[188px]">
         {/* The tabs sit inside the header rather than being pulled up over it
             with a negative margin, which was overlapping the title. */}
         <div className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-5 pt-9">
@@ -379,9 +379,9 @@ function ScheduledCard({
           label: booking.seat_numbers.length > 1 ? "Seats" : "Seat",
           value: booking.seat_numbers.join(", "),
         },
+        { label: "Total paid", value: `$${booking.total_price.toFixed(2)}` },
       ]}
       ticketId={booking.ticket_id}
-      total={booking.total_price}
       statusSlot={<StatusBadge status={booking.status} />}
       actions={
         cancelled ? undefined : confirmingCancel ? (
@@ -473,7 +473,6 @@ function BookingCard({
         />
       }
       ticketId={booking.ticket_id}
-      total={booking.total_price}
       statusSlot={
         tab === "past" ? (
           <span

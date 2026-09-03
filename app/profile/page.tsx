@@ -206,7 +206,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-32">
+      <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-[188px]">
         <div className="px-4 pt-6 pb-4">
           <h1 className="text-[16px] font-semibold text-text-primary">Profile</h1>
         </div>

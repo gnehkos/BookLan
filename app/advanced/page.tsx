@@ -57,7 +57,7 @@ export default function AdvancedBookingPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-surface">
-      <div className="flex w-full max-w-[393px] flex-1 flex-col pb-28">
+      <div className="flex w-full max-w-[393px] flex-1 flex-col pb-[188px]">
         {/* Navy hero with the search card floating over its lower edge — the
             flat white header block read as a rectangle stacked on a rectangle. */}
         <div className="relative overflow-hidden rounded-b-[32px] bg-gradient-to-br from-primary to-primary-dark px-5 pb-16 pt-9">

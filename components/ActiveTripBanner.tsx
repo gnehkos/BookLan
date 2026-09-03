@@ -24,6 +24,15 @@ type ActiveTrip = {
  */
 const HIDDEN_ON = ["/tracking", "/trip"];
 
+/**
+ * Height of the banner plus its gap, so a scrolling page can pad past it.
+ *
+ * The banner is a fixed overlay: without this it covers whatever sits at the
+ * bottom of the list underneath — on My Bookings that was the Track and Cancel
+ * buttons of the last receipt.
+ */
+export const BANNER_CLEARANCE = 76;
+
 export default function ActiveTripBanner() {
   const router = useRouter();
   const pathname = usePathname();
