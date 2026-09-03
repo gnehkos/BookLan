@@ -88,7 +88,7 @@ export default function AdvancedSeatsPage() {
       "booklan_advanced_seat",
       JSON.stringify({ seatNumbers: selectedSeats, totalPrice })
     );
-    router.push("/advanced/dropoff");
+    router.push("/advanced/departure");
   }
 
   if (loading) {

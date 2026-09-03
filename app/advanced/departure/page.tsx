@@ -31,17 +31,14 @@ type StoredSchedule = {
 };
 
 /**
- * Choose which of the operator's stations to be set down at.
+ * Choose which of the operator's depots to board at.
  *
- * Operators run several branches in a province, so arriving at "Siem Reap" is
- * not specific enough to meet anyone. Stations are filtered to this schedule's
- * company and destination province — another operator's terminal is no use to
- * a passenger on this bus.
- *
- * `company_id` is not in the stored schedule, so it is read back here rather
- * than widening what the results screen has to remember.
+ * The mirror of the drop-off step, and deliberately the same screen: operators
+ * run several depots in Phnom Penh, and booking a seat days ahead is no use if
+ * the passenger turns up at the wrong one. Stations are filtered to this
+ * schedule's company and *origin* province.
  */
-export default function AdvancedDropoffPage() {
+export default function AdvancedDeparturePage() {
   const router = useRouter();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
   const [stations, setStations] = useState<Station[]>([]);
@@ -58,15 +55,9 @@ export default function AdvancedDropoffPage() {
     }
 
     const parsed = JSON.parse(scheduleStored) as StoredSchedule;
-    // Seats come first: without them there is nothing to drop off.
+    // Seats come first: without them there is nothing to board.
     if (!sessionStorage.getItem("booklan_advanced_seat")) {
       router.replace(`/advanced/seats/${parsed.id}`);
-      return;
-    }
-
-    // And boarding is chosen before arriving.
-    if (!sessionStorage.getItem("booklan_advanced_departure")) {
-      router.replace("/advanced/departure");
       return;
     }
 
@@ -82,13 +73,13 @@ export default function AdvancedDropoffPage() {
       setError(null);
 
       const { data: row, error: scheduleError } = await safeQuery(
-        supabase.from("schedules").select("company_id, destination").eq("id", scheduleId).single()
+        supabase.from("schedules").select("company_id, origin").eq("id", scheduleId).single()
       );
 
       if (cancelled) return;
 
       if (scheduleError || !row) {
-        setError("Couldn't load drop-off stations for this departure.");
+        setError("Couldn't load departure stations for this service.");
         setLoading(false);
         return;
       }
@@ -98,7 +89,7 @@ export default function AdvancedDropoffPage() {
           .from("stations")
           .select("id, name, address, province, lat, lng")
           .eq("company_id", row.company_id)
-          .eq("province", row.destination)
+          .eq("province", row.origin)
       );
 
       if (cancelled) return;
@@ -122,10 +113,10 @@ export default function AdvancedDropoffPage() {
     if (!station) return;
 
     sessionStorage.setItem(
-      "booklan_advanced_dropoff",
+      "booklan_advanced_departure",
       JSON.stringify({ id: station.id, name: station.name, address: station.address })
     );
-    router.push("/advanced/summary");
+    router.push("/advanced/dropoff");
   }
 
   if (!schedule) return null;
@@ -145,10 +136,10 @@ export default function AdvancedDropoffPage() {
           </button>
           <div className="flex min-w-0 flex-col">
             <h1 className="text-[20px] font-extrabold tracking-[-0.4px] text-text-primary">
-              Drop-off station
+              Departure station
             </h1>
             <span className="truncate text-[12px] text-text-secondary">
-              {company} in {schedule.destination}
+              {company} in {schedule.origin}
             </span>
           </div>
         </div>
@@ -172,8 +163,8 @@ export default function AdvancedDropoffPage() {
                 No stations listed
               </span>
               <span className="text-[12.5px] leading-[19px] text-text-secondary">
-                {company} has no drop-off point registered in {schedule.destination} yet. Go back
-                and choose another departure.
+                {company} has no departure depot registered in {schedule.origin} yet. Go back and
+                choose another service.
               </span>
             </div>
           )}

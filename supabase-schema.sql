@@ -121,6 +121,7 @@ create table advanced_bookings (
   payment_status text not null default 'unpaid' check (payment_status in ('paid', 'unpaid')),
   -- Which of the operator's stations the passenger chose to be set down at.
   -- Nullable: bookings made before the drop-off step existed have none.
+  departure_station_id uuid references stations (id) on delete set null,
   dropoff_station_id uuid references stations (id) on delete set null,
   created_at timestamptz not null default now()
 );
@@ -359,6 +360,32 @@ insert into stations (company_id, name, province, address, lat, lng) values
 -- ----------------------------------------------------------------------------
 -- Schedules (advance booking / Plan Trip — one row per departure time)
 -- ----------------------------------------------------------------------------
+-- Departure stations in Phnom Penh. Advance booking asks where to board,
+-- and every operator runs more than one depot in the capital.
+insert into stations (company_id, name, province, address, lat, lng) values
+  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Central Terminal', 'Phnom Penh', 'St 106, near Central Market, Doun Penh', 11.5695, 104.9160),
+  ('11111111-1111-1111-1111-111111111111', 'Vireak Buntham Night Market Office', 'Phnom Penh', 'Sisowath Quay, Doun Penh', 11.5760, 104.9230),
+  ('22222222-2222-2222-2222-222222222222', 'Larryta Olympic Stadium Depot', 'Phnom Penh', 'Monireth Blvd, Prampi Makara', 11.5510, 104.9190),
+  ('22222222-2222-2222-2222-222222222222', 'Larryta Chbar Ampov Depot', 'Phnom Penh', 'National Road 1, Chbar Ampov', 11.5325, 104.9545),
+  ('33333333-3333-3333-3333-333333333333', 'Capitol Tour Chom Chao Depot', 'Phnom Penh', 'National Road 4, Por Sen Chey', 11.5333, 104.8187),
+  ('33333333-3333-3333-3333-333333333333', 'Capitol Tour Prek Pnov Depot', 'Phnom Penh', 'National Road 5, Prek Pnov', 11.6240, 104.8720),
+  ('44444444-4444-4444-4444-444444444444', 'Mekong Express Central Terminal', 'Phnom Penh', 'St 106, near Central Market, Doun Penh', 11.5695, 104.9190),
+  ('44444444-4444-4444-4444-444444444444', 'Mekong Express Night Market Office', 'Phnom Penh', 'Sisowath Quay, Doun Penh', 11.5760, 104.9260),
+  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Olympic Stadium Depot', 'Phnom Penh', 'Monireth Blvd, Prampi Makara', 11.5510, 104.9220),
+  ('55555555-5555-5555-5555-555555555555', 'Giant Ibis Chbar Ampov Depot', 'Phnom Penh', 'National Road 1, Chbar Ampov', 11.5325, 104.9575),
+  ('66666666-6666-6666-6666-666666666666', 'Phnom Penh Sorya Chom Chao Depot', 'Phnom Penh', 'National Road 4, Por Sen Chey', 11.5333, 104.8217),
+  ('66666666-6666-6666-6666-666666666666', 'Phnom Penh Sorya Prek Pnov Depot', 'Phnom Penh', 'National Road 5, Prek Pnov', 11.6240, 104.8750),
+  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Central Terminal', 'Phnom Penh', 'St 106, near Central Market, Doun Penh', 11.5695, 104.9220),
+  ('77777777-7777-7777-7777-777777777777', 'Rith Mony Night Market Office', 'Phnom Penh', 'Sisowath Quay, Doun Penh', 11.5760, 104.9290),
+  ('88888888-8888-8888-8888-888888888888', 'Bayon Olympic Stadium Depot', 'Phnom Penh', 'Monireth Blvd, Prampi Makara', 11.5510, 104.9250),
+  ('88888888-8888-8888-8888-888888888888', 'Bayon Chbar Ampov Depot', 'Phnom Penh', 'National Road 1, Chbar Ampov', 11.5325, 104.9605),
+  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Chom Chao Depot', 'Phnom Penh', 'National Road 4, Por Sen Chey', 11.5333, 104.8247),
+  ('99999999-9999-9999-9999-999999999999', 'Seila Angkor Prek Pnov Depot', 'Phnom Penh', 'National Road 5, Prek Pnov', 11.6240, 104.8780),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Kumho Samco Central Terminal', 'Phnom Penh', 'St 106, near Central Market, Doun Penh', 11.5695, 104.9250),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Kumho Samco Night Market Office', 'Phnom Penh', 'Sisowath Quay, Doun Penh', 11.5760, 104.9320),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'iBus Cambodia Olympic Stadium Depot', 'Phnom Penh', 'Monireth Blvd, Prampi Makara', 11.5510, 104.9280),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'iBus Cambodia Chbar Ampov Depot', 'Phnom Penh', 'National Road 1, Chbar Ampov', 11.5325, 104.9635);
+
 insert into schedules
   (company_id, origin, destination, departure_time, arrival_time, duration_hours, price_per_seat, seats_total, seats_available, days_available)
 values
