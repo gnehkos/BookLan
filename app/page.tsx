@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import BooklanLogo from "@/components/BooklanLogo";
+import SplashScreen from "@/components/SplashScreen";
+
+/** How long the launch screen holds before the app takes over. */
+const SPLASH_MS = 2100;
 
 /**
- * The app's entry point: three-step onboarding, shown once. Skipping or
- * finishing records the fact in localStorage so returning users go straight to
- * the sign-in screen.
- *
- * The launch screen is not here — SplashGate in the root layout plays it over
- * whatever route was opened, so it runs on every visit rather than only on this
- * one.
+ * The app's entry point: launch screen, then three-step onboarding shown once.
+ * Skipping or finishing records the fact in localStorage so returning users go
+ * straight from the splash to the sign-in screen.
  */
 const STEPS = [
   {
@@ -36,13 +36,28 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [ready, setReady] = useState(false);
+  const [splashLeaving, setSplashLeaving] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
 
+  // The splash always runs its full beat, so the brand does not flash past on a
+  // fast connection. Where it hands off is decided underneath it.
   useEffect(() => {
-    if (localStorage.getItem("booklan_onboarded") === "true") {
-      router.replace("/auth/login");
-      return;
-    }
-    setReady(true);
+    const onboarded = localStorage.getItem("booklan_onboarded") === "true";
+
+    const fade = setTimeout(() => setSplashLeaving(true), SPLASH_MS);
+    const finish = setTimeout(() => {
+      setSplashDone(true);
+      if (onboarded) {
+        router.replace("/auth/login");
+      } else {
+        setReady(true);
+      }
+    }, SPLASH_MS + 450);
+
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(finish);
+    };
   }, [router]);
 
   function finish() {
@@ -58,6 +73,7 @@ export default function OnboardingPage() {
     setStep((current) => current + 1);
   }
 
+  if (!splashDone) return <SplashScreen leaving={splashLeaving} />;
   if (!ready) return null;
 
   const current = STEPS[step];

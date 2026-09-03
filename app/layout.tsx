@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import BottomNav from "@/components/BottomNav";
-import SplashGate from "@/components/SplashGate";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -42,7 +41,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           switching tabs jumped instead of moving.
         */}
         <BottomNav />
-        <SplashGate />
       </body>
     </html>
   );
