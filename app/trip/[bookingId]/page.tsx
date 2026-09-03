@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { CheckCircle2, Flag, Loader2, Star, Ticket } from "lucide-react";
+import { CheckCircle2, ChevronDown, Flag, Loader2, Star, Ticket } from "lucide-react";
 import Button from "@/components/Button";
 import { NAV_CLEARANCE } from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
@@ -77,6 +77,7 @@ export default function TripPage() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [panelRef, panelHeight] = useMeasuredHeight<HTMLDivElement>(PANEL_HEIGHT_FALLBACK);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -164,6 +165,8 @@ export default function TripPage() {
   }
 
   const company = booking.active_trips?.companies?.name ?? "Your bus";
+  const vehicleType = booking.active_trips?.companies?.vehicle_type ?? "bus";
+  const dropoffName = booking.stations?.name ?? null;
   const companyId = booking.active_trips?.company_id ?? null;
   const destinationName = booking.stations?.name ?? booking.active_trips?.destination ?? "your stop";
   const totalKm = booking.active_trips?.distance_km ?? 0;
@@ -193,13 +196,40 @@ export default function TripPage() {
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-5">
-          <span className="pointer-events-auto inline-flex items-center gap-1.5 rounded-pill border border-border bg-white px-3 py-1.5 shadow-[var(--shadow-float)]">
+        {/* The ticket pill doubles as a toggle: the ID is what a driver asks
+            for, and everything else about the trip sits one tap behind it
+            rather than crowding the map. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-start px-4 pt-5">
+          <button
+            onClick={() => setShowDetails((open) => !open)}
+            aria-expanded={showDetails}
+            className="glass pointer-events-auto inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5"
+          >
             <Ticket className="h-3.5 w-3.5 text-primary" />
             <span className="font-mono text-[12px] font-medium text-text-primary">
               {booking.ticket_id}
             </span>
-          </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-text-muted transition-transform duration-200 ${
+                showDetails ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showDetails && (
+            <div className="glass glass-solid pointer-events-auto mt-2 grid w-full grid-cols-2 gap-x-3 gap-y-2.5 rounded-[16px] p-3.5">
+              <Detail label="Ticket ID" value={booking.ticket_id} mono />
+              <Detail label="Operator" value={company} />
+              <Detail label="Vehicle" value={vehicleType} capitalize />
+              <Detail
+                label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
+                value={booking.seat_numbers.join(", ")}
+              />
+              <Detail label="Destination" value={destinationName} />
+              <Detail label="Distance left" value={`${remainingKm} km`} />
+              {dropoffName && <Detail label="Drop-off" value={dropoffName} />}
+            </div>
+          )}
         </div>
 
         {/* Floating trip panel, detached from the edges and clear of the nav. */}
@@ -381,6 +411,33 @@ function TripRating({
           Skip
         </Button>
       </div>
+    </div>
+  );
+}
+
+function Detail({
+  label,
+  value,
+  mono = false,
+  capitalize = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col">
+      <span className="text-[9.5px] font-bold tracking-[0.4px] text-text-muted">
+        {label.toUpperCase()}
+      </span>
+      <span
+        className={`truncate text-[12.5px] font-semibold text-text-primary ${
+          mono ? "font-mono" : ""
+        } ${capitalize ? "capitalize" : ""}`}
+      >
+        {value}
+      </span>
     </div>
   );
 }

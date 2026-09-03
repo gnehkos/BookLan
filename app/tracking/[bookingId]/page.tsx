@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import {
+  ChevronDown,
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
@@ -77,6 +78,7 @@ export default function TrackingPage() {
   const [showCallModal, setShowCallModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [messages, setMessages] = useState<{ id: number; from: "you" | "driver"; text: string }[]>([]);
   const [draft, setDraft] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -273,6 +275,7 @@ export default function TrackingPage() {
   }
 
   const companyName = booking.active_trips?.companies?.name ?? "Your bus";
+  const vehicleType = booking.active_trips?.companies?.vehicle_type ?? "bus";
   const driverName = driverNameFor(bookingId);
   const destination = booking.active_trips?.destination ?? "your destination";
   const etaMinutes = Math.round((distance / AVG_SPEED_KMH) * 60);
@@ -331,11 +334,6 @@ export default function TrackingPage() {
                 Seat{booking.seat_numbers.length > 1 ? "s" : ""} {booking.seat_numbers.join(", ")} ·
                 to {destination}
               </span>
-              <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-text-secondary">
-                <span className="truncate font-semibold text-text-primary">{driverName}</span>
-                <span className="text-border">|</span>
-                <span className="truncate font-mono text-[11.5px]">{DRIVER_PHONE}</span>
-              </span>
             </div>
             <div className="flex shrink-0 gap-2">
               <button
@@ -354,6 +352,57 @@ export default function TrackingPage() {
               </button>
             </div>
           </div>
+
+          {/* The number gets its own row rather than trailing the driver's
+              name: it is what someone reaches for when they cannot find the
+              bus, and it was previously the smallest text on the panel. */}
+          <div className="mt-3 flex items-center gap-3 rounded-[14px] bg-surface px-3 py-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+              <Phone className="h-3.5 w-3.5 text-primary" />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-[10px] font-bold tracking-[0.4px] text-text-muted">
+                YOUR DRIVER
+              </span>
+              <span className="truncate text-[13px] font-bold text-text-primary">
+                {driverName}
+              </span>
+            </span>
+            <button
+              onClick={() => setShowCallModal(true)}
+              className="shrink-0 font-mono text-[14px] font-bold tracking-[0.3px] text-primary underline decoration-primary/30 underline-offset-4"
+            >
+              {DRIVER_PHONE}
+            </button>
+          </div>
+
+          {/* Everything else about the vehicle, folded away until asked for. */}
+          <button
+            onClick={() => setShowDetails((open) => !open)}
+            aria-expanded={showDetails}
+            className="mt-2 flex w-full items-center justify-between rounded-[12px] px-1 py-1.5 text-left"
+          >
+            <span className="text-[12px] font-bold text-text-secondary">Trip details</span>
+            <ChevronDown
+              className={`h-4 w-4 text-text-muted transition-transform duration-200 ${
+                showDetails ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {showDetails && (
+            <div className="mb-1 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-[14px] bg-surface p-3">
+              <Detail label="Ticket ID" value={booking.ticket_id} mono />
+              <Detail label="Operator" value={companyName} />
+              <Detail label="Vehicle" value={vehicleType} capitalize />
+              <Detail
+                label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
+                value={booking.seat_numbers.join(", ")}
+              />
+              <Detail label="Destination" value={destination} />
+              <Detail label="Distance left" value={`${distance} km`} />
+            </div>
+          )}
 
           {phase === "approaching" && (
             <>
@@ -529,6 +578,33 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
         </div>
         {children}
       </div>
+    </div>
+  );
+}
+
+function Detail({
+  label,
+  value,
+  mono = false,
+  capitalize = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  capitalize?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col">
+      <span className="text-[9.5px] font-bold tracking-[0.4px] text-text-muted">
+        {label.toUpperCase()}
+      </span>
+      <span
+        className={`truncate text-[12.5px] font-semibold text-text-primary ${
+          mono ? "font-mono" : ""
+        } ${capitalize ? "capitalize" : ""}`}
+      >
+        {value}
+      </span>
     </div>
   );
 }
