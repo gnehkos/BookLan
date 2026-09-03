@@ -26,6 +26,7 @@ import ChatBubble from "@/components/ChatBubble";
 import ChatComposer from "@/components/ChatComposer";
 import { appendMessage, formatDuration, getThread, type ChatMessage } from "@/lib/chat";
 import CallScreen from "@/components/CallScreen";
+import TicketQr from "@/components/TicketQr";
 import Portal from "@/components/Portal";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
@@ -82,6 +83,7 @@ export default function TrackingPage() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -327,14 +329,31 @@ export default function TrackingPage() {
           </button>
         </div>
 
-        {/* Ticket pill — what the driver checks against on arrival. */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-end px-4 pt-5">
-          <span className="glass inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5">
-            <Ticket className="h-3.5 w-3.5 text-primary" />
-            <span className="font-mono text-[12px] font-medium text-text-primary">
-              {booking.ticket_id}
+        {/* Ticket ID and its QR in one panel, open by default: this is the
+            screen where the driver arrives and scans, so it should need no
+            tap. Collapsible for when it covers something on the map. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col items-end px-4 pt-5">
+          <button
+            onClick={() => setTicketOpen((open) => !open)}
+            aria-expanded={ticketOpen}
+            className={`glass glass-solid pointer-events-auto flex flex-col items-center gap-2 p-2.5 ${
+              ticketOpen ? "rounded-[16px]" : "rounded-pill"
+            }`}
+          >
+            <span className="inline-flex items-center gap-1.5 px-1">
+              <Ticket className="h-3.5 w-3.5 text-primary" />
+              <span className="font-mono text-[12px] font-bold text-text-primary">
+                {booking.ticket_id}
+              </span>
+              <ChevronDown
+                className={`h-3.5 w-3.5 text-text-muted transition-transform duration-200 ${
+                  ticketOpen ? "rotate-180" : ""
+                }`}
+              />
             </span>
-          </span>
+
+            {ticketOpen && <TicketQr ticketId={booking.ticket_id} size={104} />}
+          </button>
         </div>
 
         {/* Floating panel: detached from the edges and clear of the nav. */}

@@ -1,4 +1,5 @@
 import CompanyLogo from "@/components/CompanyLogo";
+import TicketQr from "@/components/TicketQr";
 
 /**
  * Boarding ticket, shaped like a paper one: a white stub with punched notches
@@ -35,6 +36,9 @@ export default function Ticket({
           <span className="truncate text-[15px] font-semibold text-text-primary">{company}</span>
           <span className="truncate text-[12px] text-text-secondary">{route}</span>
         </div>
+        {/* The driver scans this to verify the ticket and record that they
+            actually met the passenger. */}
+        <TicketQr ticketId={ticketId} size={54} className="shrink-0 border border-border" />
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-3 px-4 pb-4">

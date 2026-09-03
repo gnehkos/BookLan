@@ -199,28 +199,15 @@ export default function SummaryPage() {
             </span>
             <div className="flex items-center gap-2">
               <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
-              <span className="text-[12px] text-text-secondary">
-                to {trip.destination}
-              </span>
+              <span className="truncate text-[12px] text-text-secondary">to {trip.destination}</span>
             </div>
           </div>
-        </div>
-
-        {/* Seats and total kept apart from the rest: they are the two numbers
-            a passenger checks before paying. */}
-        <div className="mx-4 mt-3 flex gap-3">
-          <div className="flex flex-1 flex-col gap-1 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
+          <div className="flex shrink-0 flex-col items-end">
             <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
               {seat.seatNumbers.length > 1 ? "SEATS" : "SEAT"}
             </span>
-            <span className="truncate text-[17px] font-extrabold text-text-primary">
+            <span className="text-[17px] font-extrabold leading-tight text-text-primary">
               {seat.seatNumbers.join(", ")}
-            </span>
-          </div>
-          <div className="flex flex-1 flex-col gap-1 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-            <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TOTAL</span>
-            <span className="truncate text-[17px] font-extrabold text-primary">
-              ${seat.totalPrice.toFixed(2)}
             </span>
           </div>
         </div>

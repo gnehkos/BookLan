@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, ChevronDown, Flag, Loader2, Star, Ticket } from "lucide-react";
 import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
+import TicketQr from "@/components/TicketQr";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
@@ -232,7 +233,12 @@ export default function TripPage() {
               </button>
 
               {showDetails && (
-                <div className="glass glass-solid pointer-events-auto grid w-[262px] grid-cols-2 gap-x-3 gap-y-2.5 rounded-[16px] p-3.5">
+                <div className="glass glass-solid pointer-events-auto flex w-[262px] flex-col gap-3 rounded-[16px] p-3.5">
+                  <div className="flex justify-center">
+                    <TicketQr ticketId={booking.ticket_id} size={104} />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
                   <Detail label="Ticket ID" value={booking.ticket_id} mono />
                   <Detail label="Operator" value={company} />
                   <Detail label="Vehicle" value={vehicleType} capitalize />
@@ -243,6 +249,7 @@ export default function TripPage() {
                   <Detail label="Destination" value={destinationName} />
                   <Detail label="Distance left" value={`${remainingKm} km`} />
                   {dropoffName && <Detail label="Drop-off" value={dropoffName} />}
+                  </div>
                 </div>
               )}
             </div>

@@ -6,6 +6,7 @@ import { CalendarClock, MapPin, Ticket as TicketIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import Button from "@/components/Button";
 import BookingExtras from "@/components/BookingExtras";
+import TicketToggle from "@/components/TicketToggle";
 import BookingReceipt from "@/components/BookingReceipt";
 import FareBreakdown from "@/components/FareBreakdown";
 import ErrorState from "@/components/ErrorState";
@@ -403,7 +404,9 @@ function ScheduledCard({
         )
       }
       topActions={
-        tab === "past" && !cancelled ? (
+        tab === "current" ? (
+          <TicketToggle ticketId={booking.ticket_id} />
+        ) : tab === "past" && !cancelled ? (
           <BookingExtras
             bookingId={booking.id}
             companyId={schedule?.company_id ?? null}
@@ -511,7 +514,9 @@ function BookingCard({
         )
       }
       topActions={
-        tab === "past" && !isCancelled ? (
+        tab === "current" ? (
+          <TicketToggle ticketId={booking.ticket_id} />
+        ) : tab === "past" && !isCancelled ? (
           <BookingExtras
             bookingId={booking.id}
             companyId={booking.active_trips?.company_id ?? null}

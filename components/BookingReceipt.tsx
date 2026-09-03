@@ -43,23 +43,25 @@ export default function BookingReceipt({
   return (
     <div className="relative overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)]">
       <div className="p-4">
-        {/* Tag first, on its own line — the route then gets the full width. */}
-        <div className="flex items-center gap-2">
-          {typeTag}
-          {vehicleBadge}
-          {topActions && <span className="ml-auto flex shrink-0 gap-1.5">{topActions}</span>}
-        </div>
-
-        <div className="mt-3 flex items-center gap-3">
+        {/* The operator leads. The booking kind and vehicle used to sit in a
+            band above it, which made the first thing on the card a pair of
+            labels rather than who is carrying you; they now trail the company
+            name, where they read as description. */}
+        <div className="flex items-center gap-3">
           <CompanyLogo name={company} size={40} />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold text-text-primary">
               <span className="truncate">{origin ?? "Unknown"}</span>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-text-muted" />
               <span className="truncate">{destination ?? "Unknown"}</span>
             </span>
-            <span className="truncate text-[12px] text-text-secondary">{company}</span>
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate text-[12px] text-text-secondary">{company}</span>
+              {typeTag}
+              {vehicleBadge}
+            </span>
           </div>
+          {topActions && <span className="flex shrink-0 gap-1.5">{topActions}</span>}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
