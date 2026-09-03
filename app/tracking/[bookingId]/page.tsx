@@ -202,6 +202,16 @@ export default function TrackingPage() {
 
   useEffect(() => {
     if (phase !== "approved") return;
+
+    // The driver approving the ticket is the moment the passenger boards, so
+    // stamp it now. Best-effort: a failure here must not strand the handover.
+    void safeQuery(
+      supabase
+        .from("bookings")
+        .update({ boarded_at: new Date().toISOString() })
+        .eq("id", bookingId)
+    );
+
     const timer = setTimeout(() => router.push(`/trip/${bookingId}`), APPROVED_MS);
     return () => clearTimeout(timer);
   }, [phase, router, bookingId]);

@@ -85,6 +85,12 @@ create table bookings (
   total_price double precision not null,
   payment_status text not null default 'unpaid' check (payment_status in ('paid', 'unpaid')),
   distance_remaining_km integer not null,
+  -- Where the passenger waited, named rather than only as coordinates, so a
+  -- receipt read months later still means something.
+  pickup_name text,
+  -- Milestones, for the detail panel in booking history.
+  boarded_at timestamptz,
+  completed_at timestamptz,
   created_at timestamptz not null default now()
 );
 

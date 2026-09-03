@@ -12,7 +12,12 @@ import { supabase } from "@/lib/supabase";
 /** Marks a finished trip complete so it stops counting as an active booking. */
 export async function completeBooking(bookingId: string) {
   try {
-    await supabase.from("bookings").update({ status: "completed" }).eq("id", bookingId);
+    await supabase
+      .from("bookings")
+      // Stamped here rather than inferred later, so booking history can show
+      // when the trip actually ended.
+      .update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("id", bookingId);
   } catch {
     // Non-fatal: the passenger has already arrived either way.
   }

@@ -22,6 +22,7 @@ export default function BookingReceipt({
   total,
   statusSlot,
   actions,
+  extras,
   notchColorClass = "bg-surface",
 }: {
   company: string;
@@ -36,6 +37,8 @@ export default function BookingReceipt({
   total: number;
   statusSlot?: React.ReactNode;
   actions?: React.ReactNode;
+  /** Controls shown under the stub, used by booking history. */
+  extras?: React.ReactNode;
   /** Must match the surface behind the card for the notches to look punched. */
   notchColorClass?: string;
 }) {
@@ -106,6 +109,7 @@ export default function BookingReceipt({
       </div>
 
       {actions && <div className="px-4 pb-4">{actions}</div>}
+      {extras && <div className="px-4 pb-4">{extras}</div>}
     </div>
   );
 }

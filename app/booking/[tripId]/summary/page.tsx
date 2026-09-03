@@ -91,6 +91,7 @@ export default function SummaryPage() {
           pickup_lat: pickup.lat,
           pickup_lng: pickup.lng,
           dropoff_station_id: dropoff.id,
+          pickup_name: pickup.stationName ?? pickup.placeName ?? null,
           ticket_id: ticketId,
           status: "confirmed",
           total_price: seat.totalPrice,

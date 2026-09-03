@@ -46,6 +46,7 @@ export default function BusDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [allReviews, setAllReviews] = useState(false);
   const [reviews, setReviews] = useState<Review[] | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -98,7 +99,6 @@ export default function BusDetailPage() {
           .select("id, rating, comment, users(name)")
           .eq("company_id", trip.company_id)
           .order("created_at", { ascending: false })
-          .limit(3)
       );
       if (!cancelled) setReviews((data as unknown as Review[]) ?? []);
     })();
@@ -356,7 +356,7 @@ export default function BusDetailPage() {
                   Ratings &amp; Reviews
                 </span>
                 <div className="mt-3 flex flex-col gap-3">
-                  {reviewList.map((review, i) => (
+                  {(allReviews ? reviewList : reviewList.slice(0, 2)).map((review, i) => (
                     <div key={`${review.author}-${i}`} className="rounded-[12px] bg-surface p-4">
                       <div className="flex items-center gap-2">
                         <span className="flex-1 text-[14px] font-medium text-text-primary">
@@ -377,6 +377,22 @@ export default function BusDetailPage() {
                     </div>
                   ))}
                 </div>
+
+                {reviewList.length > 2 && (
+                  <button
+                    onClick={() => setAllReviews((open) => !open)}
+                    className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-[12px] border border-border py-2.5 text-[13px] font-bold text-primary transition-colors hover:bg-surface"
+                  >
+                    {allReviews
+                      ? "Show fewer"
+                      : `See all ${reviewList.length} reviews`}
+                    <ChevronUp
+                      className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                        allReviews ? "" : "rotate-180"
+                      }`}
+                    />
+                  </button>
+                )}
               </Card>
 
               <Card>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, MapPin, Ticket as TicketIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import Button from "@/components/Button";
+import BookingExtras from "@/components/BookingExtras";
 import BookingReceipt from "@/components/BookingReceipt";
 import FareBreakdown from "@/components/FareBreakdown";
 import ErrorState from "@/components/ErrorState";
@@ -23,13 +24,19 @@ type BookingRow = {
   total_price: number;
   status: string;
   distance_remaining_km: number;
+  created_at: string;
+  pickup_name: string | null;
+  boarded_at: string | null;
+  completed_at: string | null;
   active_trips: {
     origin: string;
     destination: string;
     distance_km: number;
     price_per_km: number;
+    company_id: string;
     companies: { name: string; vehicle_type: VehicleType } | null;
   } | null;
+  stations: { name: string } | null;
 };
 
 type AdvancedBookingRow = {
@@ -40,13 +47,16 @@ type AdvancedBookingRow = {
   travel_date: string;
   total_price: number;
   status: string;
+  created_at: string;
   schedules: {
     origin: string;
     destination: string;
     departure_time: string;
     arrival_time: string;
+    company_id: string;
     companies: { name: string; vehicle_type: VehicleType } | null;
   } | null;
+  stations: { name: string } | null;
 };
 
 const TABS: { mode: TabMode; label: string }[] = [
@@ -75,6 +85,9 @@ export default function BookingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  // Booking ids this passenger has already rated, so history offers the
+  // form only where it can still be used.
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const stored = localStorage.getItem("booklan_user_id");
@@ -92,7 +105,7 @@ export default function BookingsPage() {
     const roadQuery = supabase
       .from("bookings")
       .select(
-        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, active_trips(origin, destination, distance_km, price_per_km, companies(name, vehicle_type))"
+        "id, trip_id, ticket_id, seat_numbers, total_price, status, distance_remaining_km, created_at, pickup_name, boarded_at, completed_at, active_trips(origin, destination, distance_km, price_per_km, company_id, companies(name, vehicle_type)), stations(name)"
       )
       .eq("user_id", uid)
       .order("created_at", { ascending: false });
@@ -100,7 +113,7 @@ export default function BookingsPage() {
     const scheduledQuery = supabase
       .from("advanced_bookings")
       .select(
-        "id, schedule_id, ticket_id, seat_numbers, travel_date, total_price, status, schedules(origin, destination, departure_time, arrival_time, companies(name, vehicle_type))"
+        "id, schedule_id, ticket_id, seat_numbers, travel_date, total_price, status, created_at, schedules(origin, destination, departure_time, arrival_time, company_id, companies(name, vehicle_type)), stations:dropoff_station_id(name)"
       )
       .eq("user_id", uid)
       .order("travel_date", { ascending: true });
@@ -128,6 +141,33 @@ export default function BookingsPage() {
       setScheduled((sched.data as unknown as AdvancedBookingRow[]) ?? []);
     }
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await safeQuery(
+        supabase.from("reviews").select("booking_id").eq("user_id", userId)
+      );
+      if (cancelled || !data) return;
+      setReviewedIds(
+        new Set(
+          (data as { booking_id: string | null }[])
+            .map((row) => row.booking_id)
+            .filter((id): id is string => Boolean(id))
+        )
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, tab]);
+
+  const markReviewed = useCallback((bookingId: string) => {
+    setReviewedIds((current) => new Set(current).add(bookingId));
   }, []);
 
   useEffect(() => {
@@ -239,6 +279,8 @@ export default function BookingsPage() {
                 key={booking.id}
                 booking={booking}
                 tab={tab}
+                reviewed={reviewedIds.has(booking.id)}
+                onReviewed={markReviewed}
                 cancelling={cancellingId === booking.id}
                 onTrack={() =>
                   // Already boarded? Go to the live trip, not the pickup handover.
@@ -258,8 +300,11 @@ export default function BookingsPage() {
               <ScheduledCard
                 key={booking.id}
                 booking={booking}
+                tab={tab}
                 cancelling={cancellingId === booking.id}
                 onCancel={() => handleCancelScheduled(booking)}
+                reviewed={reviewedIds.has(booking.id)}
+                onReviewed={markReviewed}
               />
             ))}
         </div>
@@ -299,12 +344,18 @@ function StatusBadge({ status }: { status: string }) {
 
 function ScheduledCard({
   booking,
+  tab,
   cancelling,
   onCancel,
+  reviewed,
+  onReviewed,
 }: {
   booking: AdvancedBookingRow;
+  tab: TabMode;
   cancelling: boolean;
   onCancel: () => void;
+  reviewed: boolean;
+  onReviewed: (bookingId: string) => void;
 }) {
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const schedule = booking.schedules;
@@ -351,6 +402,22 @@ function ScheduledCard({
           </Button>
         )
       }
+      extras={
+        tab === "past" && !cancelled ? (
+          <BookingExtras
+            bookingId={booking.id}
+            companyId={schedule?.company_id ?? null}
+            reviewed={reviewed}
+            onReviewed={onReviewed}
+            milestones={{
+              bookedAt: booking.created_at,
+              travelDate: booking.travel_date,
+              departure: `${schedule?.departure_time ?? "--"} - ${schedule?.arrival_time ?? "--"}`,
+              dropoffName: booking.stations?.name ?? null,
+            }}
+          />
+        ) : undefined
+      }
     />
   );
 }
@@ -361,12 +428,16 @@ function BookingCard({
   cancelling,
   onTrack,
   onCancel,
+  reviewed,
+  onReviewed,
 }: {
   booking: BookingRow;
   tab: TabMode;
   cancelling: boolean;
   onTrack: () => void;
   onCancel: () => void;
+  reviewed: boolean;
+  onReviewed: (bookingId: string) => void;
 }) {
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const company = booking.active_trips?.companies;
@@ -439,6 +510,23 @@ function BookingCard({
             </Button>
           </div>
         )
+      }
+      extras={
+        tab === "past" && !isCancelled ? (
+          <BookingExtras
+            bookingId={booking.id}
+            companyId={booking.active_trips?.company_id ?? null}
+            reviewed={reviewed}
+            onReviewed={onReviewed}
+            milestones={{
+              bookedAt: booking.created_at,
+              boardedAt: booking.boarded_at,
+              completedAt: booking.completed_at,
+              pickupName: booking.pickup_name,
+              dropoffName: booking.stations?.name ?? null,
+            }}
+          />
+        ) : undefined
       }
     />
   );
