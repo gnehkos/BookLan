@@ -32,9 +32,11 @@ export default function PickupPage() {
   const [placeName, setPlaceName] = useState<string | null>(null);
   const [roadName, setRoadName] = useState<string | null>(null);
   const [sheetRef, sheetHeight] = useMeasuredHeight<HTMLDivElement>(140);
-  // Set when arriving from the bus list to change an existing pin, which
-  // decides both where the map opens and where Back returns to.
+  // The pin already chosen, so the map opens on it rather than on the device.
   const [existing, setExisting] = useState<[number, number] | null>(null);
+  // Whether this screen was opened to change that pin, which is the only case
+  // where Back belongs on the bus list.
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("booklan_destination");
@@ -43,6 +45,13 @@ export default function PickupPage() {
       return;
     }
     setDestination(stored);
+
+    // Read once and cleared: arriving here any other way is a fresh pin, even
+    // if a previous pickup is still in session.
+    if (sessionStorage.getItem("booklan_pickup_edit") === "1") {
+      sessionStorage.removeItem("booklan_pickup_edit");
+      setEditing(true);
+    }
 
     const pinned = sessionStorage.getItem("booklan_pickup");
     if (pinned) {
@@ -118,7 +127,7 @@ export default function PickupPage() {
         <div className="absolute inset-x-4 top-5 z-20">
           <div className="glass glass-solid flex items-center gap-3 rounded-[16px] px-3.5 py-3">
             <button
-              onClick={() => router.push(existing ? "/booking/buses" : "/search")}
+              onClick={() => router.push(editing ? "/booking/buses" : "/search")}
               aria-label="Back"
               className="shrink-0 text-text-primary"
             >

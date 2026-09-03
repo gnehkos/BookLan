@@ -197,7 +197,9 @@ export default function BusesPage() {
       <div className="flex w-full max-w-[390px] flex-1 flex-col pb-28">
         <div className="flex items-center gap-3 px-4 pt-6 pb-4">
           <button
-            onClick={() => router.back()}
+            // Explicitly to search, not back: Back led to the pin screen,
+            // whose own Back led here, and the two trapped each other.
+            onClick={() => router.push("/search")}
             aria-label="Back"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
@@ -216,7 +218,11 @@ export default function BusesPage() {
         {/* From / to — both tappable */}
         <div className="mx-4 rounded-[12px] bg-white p-2 shadow-[var(--shadow-float)]">
           <button
-            onClick={() => router.push("/booking/pickup")}
+            onClick={() => {
+              // Tells the pin screen this is an edit, so its Back returns here.
+              sessionStorage.setItem("booklan_pickup_edit", "1");
+              router.push("/booking/pickup");
+            }}
             className="flex w-full items-center gap-3 rounded-[10px] p-2 text-left hover:bg-surface"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] bg-surface">

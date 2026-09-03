@@ -210,7 +210,10 @@ export default function AdvancedDeparturePage() {
         </div>
 
         {selectedId && (
-          <div className="sticky bottom-4 mt-6 px-4">
+          // Fixed rather than sticky: with only one or two stations the list is
+          // shorter than the screen, and a sticky element then sits wherever
+          // the content happens to end — halfway up.
+          <div className="fixed inset-x-0 bottom-4 z-20 mx-auto w-full max-w-[393px] px-4">
             <Button onClick={handleConfirm}>Confirm drop-off</Button>
           </div>
         )}
