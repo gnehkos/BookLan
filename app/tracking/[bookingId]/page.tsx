@@ -387,12 +387,14 @@ export default function TrackingPage() {
                 {driverName}
               </span>
             </span>
-            <button
-              onClick={() => setShowCallModal(true)}
+            {/* The number itself places a real call through the device's dialer.
+                The round button beside the driver's name is the in-app call. */}
+            <a
+              href={`tel:${DRIVER_PHONE}`}
               className="shrink-0 font-mono text-[14px] font-bold tracking-[0.3px] text-primary underline decoration-primary/30 underline-offset-4"
             >
               {DRIVER_PHONE}
-            </button>
+            </a>
           </div>
 
           {/* Everything else about the vehicle, folded away until asked for. */}
