@@ -1,12 +1,12 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import MapAttribution from "@/components/MapAttribution";
 import { useCallback, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
-import { TILE_ATTRIBUTION, TILE_LABEL_URL,
-  TILE_URL, userIcon } from "@/lib/mapTheme";
+import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, userIcon } from "@/lib/mapTheme";
 
 /**
  * The passenger's own map. Deliberately shows only their location — plotting
@@ -45,6 +45,7 @@ export default function BusMap() {
 
   return (
     <MapContainer
+      attributionControl={false}
       center={center}
       zoom={15}
       // Pinch and wheel zoom stay on — this is the passenger's main map.
@@ -52,7 +53,7 @@ export default function BusMap() {
       zoomControl={false}
       className="h-full w-full"
     >
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      <TileLayer url={TILE_URL} />
       {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {userPos && <Marker position={userPos} icon={userIcon} />}
@@ -67,6 +68,7 @@ export default function BusMap() {
         bottomOffset={100}
         onPress={() => locate(false)}
       />
+      <MapAttribution />
     </MapContainer>
   );
 }

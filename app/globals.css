@@ -188,18 +188,8 @@ body {
   display: none;
 }
 
-/* Attribution kept legally intact but visually quiet. */
-.leaflet-control-attribution {
-  padding: 1px 6px !important;
-  border-radius: 6px 0 0 0;
-  background: rgba(255, 255, 255, 0.72) !important;
-  color: var(--color-text-muted) !important;
-  font-size: 9px !important;
-}
-
-.leaflet-control-attribution a {
-  color: var(--color-text-muted) !important;
-}
+/* Leaflet's own attribution control is switched off on every map; the credits
+   are rendered by components/MapAttribution.tsx instead, behind an ⓘ. */
 
 /* --- User location marker: navy dot with a pulsing ring and a "You" pill --- */
 .booklan-user-marker {

@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import MapAttribution from "@/components/MapAttribution";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from "react-leaflet";
@@ -9,12 +10,7 @@ import CompanyLogo from "@/components/CompanyLogo";
 import RecenterControl from "@/components/RecenterControl";
 import { colors } from "@/constants/theme";
 import {
-  TILE_ATTRIBUTION,
-  TILE_LABEL_URL,
-  TILE_URL,
-  currentLocationIcon,
-  destinationPinIcon,
-} from "@/lib/mapTheme";
+  TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, currentLocationIcon, destinationPinIcon } from "@/lib/mapTheme";
 import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
 
@@ -90,11 +86,12 @@ export default function TripMap({
 
   return (
     <MapContainer
+      attributionControl={false}
       bounds={L.latLngBounds([origin, destination]).pad(0.3)}
       zoomControl={false}
       className="h-full w-full"
     >
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+      <TileLayer url={TILE_URL} />
       {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {/* Travelled portion, faded out behind the bus. */}
@@ -151,6 +148,7 @@ export default function TripMap({
         label="Recenter to the bus"
         bottomOffset={panelHeight + 16}
       />
+      <MapAttribution />
     </MapContainer>
   );
 }

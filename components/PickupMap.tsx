@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import MapAttribution from "@/components/MapAttribution";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, Polyline, Rectangle, TileLayer, Tooltip, useMap } from "react-leaflet";
@@ -334,8 +335,9 @@ export default function PickupMap({
   // Zoomed right in: at a 12 m tolerance the roadside is only targetable up
   // close, so the map opens tight enough to actually hit it.
   return (
-    <MapContainer center={center} zoom={17} zoomControl={false} className="h-full w-full">
-      <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+    <MapContainer
+      attributionControl={false} center={center} zoom={17} zoomControl={false} className="h-full w-full">
+      <TileLayer url={TILE_URL} />
       {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
       {/* No-pickup wash over everything, with a dashed red edge… */}
@@ -371,6 +373,7 @@ export default function PickupMap({
         // button drifts into the middle of the map with nothing to sit against.
         bottomOffset={bottomInset + 26}
       />
+      <MapAttribution />
     </MapContainer>
   );
 }
