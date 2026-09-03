@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import Button from "@/components/Button";
-import { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
@@ -67,6 +66,9 @@ type BookingRow = {
   } | null;
 };
 
+/** Gap between a floating panel and the bottom of the screen. These flows
+ *  hide the nav, so there is nothing else to clear. */
+const SCREEN_INSET = 16;
 export default function TrackingPage() {
   const router = useRouter();
   const params = useParams<{ bookingId: string }>();
@@ -311,7 +313,7 @@ export default function TrackingPage() {
             company={companyName}
             destination={destination}
             etaMinutes={etaMinutes}
-            panelHeight={panelHeight + NAV_CLEARANCE + 24}
+            panelHeight={panelHeight + SCREEN_INSET + 24}
           />
         </div>
 
@@ -339,7 +341,7 @@ export default function TrackingPage() {
         <div
           ref={panelRef}
           className="glass glass-solid absolute inset-x-4 z-20 rounded-[20px] p-4"
-          style={{ bottom: NAV_CLEARANCE + 8 }}
+          style={{ bottom: SCREEN_INSET }}
         >
           <div className="flex items-center gap-3">
             <CompanyLogo name={companyName} size={40} />

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Check, ChevronUp, MapPin, Star, X } from "lucide-react";
 import Button from "@/components/Button";
-import { NAV_CLEARANCE } from "@/components/BottomNav";
 import CompanyLogo from "@/components/CompanyLogo";
 import CompanyPhotos from "@/components/CompanyPhotos";
 import ErrorState from "@/components/ErrorState";
@@ -35,6 +34,9 @@ type Review = { id: string; rating: number; comment: string | null; users: { nam
 /** Height of the sticky bottom panel, so scrolled content never hides under it. */
 const ACTION_BAR_HEIGHT = 150;
 
+/** Gap between a floating panel and the bottom of the screen. These flows
+ *  hide the nav, so there is nothing else to clear. */
+const SCREEN_INSET = 16;
 export default function BusDetailPage() {
   const router = useRouter();
   const params = useParams<{ tripId: string }>();
@@ -215,7 +217,7 @@ export default function BusDetailPage() {
         */}
         <div
           className="flex flex-col gap-4 overflow-y-auto px-4"
-          style={{ paddingBottom: ACTION_BAR_HEIGHT + NAV_CLEARANCE }}
+          style={{ paddingBottom: ACTION_BAR_HEIGHT + SCREEN_INSET }}
         >
           <Card>
             <SeatMap
@@ -233,7 +235,7 @@ export default function BusDetailPage() {
             rather than sitting flush against it. */}
         <div
           className="fixed inset-x-0 z-20 mx-auto w-full max-w-[390px] px-4"
-          style={{ bottom: NAV_CLEARANCE + 10 }}
+          style={{ bottom: SCREEN_INSET }}
         >
           <div className="overflow-hidden rounded-[20px] border border-border bg-white shadow-[var(--shadow-lift)]">
             <button

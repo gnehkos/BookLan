@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { CheckCircle2, ChevronDown, Flag, Loader2, Star, Ticket } from "lucide-react";
 import Button from "@/components/Button";
-import { NAV_CLEARANCE } from "@/components/BottomNav";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
@@ -65,6 +64,9 @@ function readOrStampStart(bookingId: string) {
 /** Starting estimate for the panel; the real height is measured on mount. */
 const PANEL_HEIGHT_FALLBACK = 240;
 
+/** Gap between a floating panel and the bottom of the screen. These flows
+ *  hide the nav, so there is nothing else to clear. */
+const SCREEN_INSET = 16;
 export default function TripPage() {
   const router = useRouter();
   const params = useParams<{ bookingId: string }>();
@@ -192,7 +194,7 @@ export default function TripPage() {
             progress={progress}
             remainingKm={remainingKm}
             etaMinutes={etaMinutes}
-            panelHeight={panelHeight + NAV_CLEARANCE + 24}
+            panelHeight={panelHeight + SCREEN_INSET + 24}
           />
         </div>
 
@@ -236,7 +238,7 @@ export default function TripPage() {
         <div
           ref={panelRef}
           className="absolute inset-x-4 z-20 rounded-[16px] bg-white p-4 shadow-[var(--shadow-float)]"
-          style={{ bottom: NAV_CLEARANCE + 8 }}
+          style={{ bottom: SCREEN_INSET }}
         >
           {arrived ? (
             <TripRating
@@ -280,7 +282,7 @@ export default function TripPage() {
         {!arrived && (
           <div
             className="pointer-events-none absolute inset-x-0 z-10 flex justify-center"
-            style={{ bottom: NAV_CLEARANCE + 16 + panelHeight }}
+            style={{ bottom: SCREEN_INSET + 8 + panelHeight }}
           >
             <span className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-[11px] font-semibold text-white shadow-[var(--shadow-float)]">
               <Flag className="h-3 w-3" />
