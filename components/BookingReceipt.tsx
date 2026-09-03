@@ -55,8 +55,8 @@ export default function BookingReceipt({
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-text-muted" />
               <span className="truncate">{destination ?? "Unknown"}</span>
             </span>
-            <span className="flex min-w-0 items-center gap-1.5">
-              <span className="truncate text-[12px] text-text-secondary">{company}</span>
+            <span className="truncate text-[12px] text-text-secondary">{company}</span>
+            <span className="flex min-w-0 flex-wrap items-center gap-1.5">
               {typeTag}
               {vehicleBadge}
             </span>
