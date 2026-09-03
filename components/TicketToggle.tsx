@@ -51,12 +51,7 @@ export default function TicketToggle({ ticketId }: { ticketId: string }) {
                 {ticketId}
               </span>
 
-              <TicketQr ticketId={ticketId} size={188} className="mt-4" />
-
-              <p className="mt-3 text-center text-[11.5px] leading-[17px] text-text-secondary">
-                Show this to your driver. They scan it to confirm they have met
-                you and to verify the ticket.
-              </p>
+              <TicketQr ticketId={ticketId} size={188} className="my-4" />
             </div>
           </div>
         </Portal>
