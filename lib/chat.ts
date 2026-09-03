@@ -10,12 +10,70 @@
  */
 const STORAGE_KEY = "booklan_chats";
 
+/**
+ * `system` covers events rather than speech — a call ending, for instance —
+ * and renders centred rather than as a bubble.
+ */
+export type ChatMessageKind = "text" | "image" | "voice" | "system";
+
 export type ChatMessage = {
   id: number;
   from: "you" | "driver";
   text: string;
   at: number;
+  kind?: ChatMessageKind;
+  /** Data URL for an image or a recording. Stored inline, see compressImage. */
+  media?: string;
+  /** Recording length in seconds, for voice notes. */
+  duration?: number;
 };
+
+/** What the inbox shows as a thread's last line. */
+export function previewText(message: ChatMessage | null) {
+  if (!message) return "";
+  if (message.kind === "image") return "Photo";
+  if (message.kind === "voice") return `Voice message · ${formatDuration(message.duration ?? 0)}`;
+  return message.text;
+}
+
+export function formatDuration(seconds: number) {
+  const whole = Math.max(0, Math.round(seconds));
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+}
+
+/**
+ * Shrinks a picked photo before it is stored.
+ *
+ * Threads live in localStorage, which holds a few megabytes in total — a single
+ * modern phone photo would fill it and start throwing on every later write. The
+ * long edge is capped and the result re-encoded as JPEG.
+ */
+export function compressImage(file: File, maxEdge = 900, quality = 0.7): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read that file."));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("Could not read that image."));
+      image.onload = () => {
+        const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+
+        const context = canvas.getContext("2d");
+        if (!context) {
+          reject(new Error("Could not process that image."));
+          return;
+        }
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      image.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export type ChatThread = {
   bookingId: string;
@@ -71,7 +129,10 @@ export function appendMessage(
     ? { ...existing, ...meta, messages: existing.messages }
     : { ...meta, messages: [] };
 
-  thread.messages = [...thread.messages, { ...message, id: Date.now(), at: Date.now() }];
+  thread.messages = [
+    ...thread.messages,
+    { kind: "text", ...message, id: Date.now(), at: Date.now() },
+  ];
   threads[meta.bookingId] = thread;
   writeAll(threads);
   return thread;

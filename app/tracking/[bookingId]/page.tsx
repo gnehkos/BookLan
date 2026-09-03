@@ -11,7 +11,6 @@ import {
   Loader2,
   MessageCircle,
   Phone,
-  Send,
   Ticket,
   X,
 } from "lucide-react";
@@ -24,7 +23,9 @@ import { AVG_SPEED_KMH } from "@/constants/booking";
 import { releaseTripSeats } from "@/lib/seats";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { DRIVER_PHONE, driverNameFor } from "@/constants/drivers";
-import { appendMessage, getThread } from "@/lib/chat";
+import ChatBubble from "@/components/ChatBubble";
+import ChatComposer from "@/components/ChatComposer";
+import { appendMessage, formatDuration, getThread, type ChatMessage } from "@/lib/chat";
 import CallScreen from "@/components/CallScreen";
 import Portal from "@/components/Portal";
 
@@ -79,8 +80,7 @@ export default function TrackingPage() {
   const [showChatModal, setShowChatModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [messages, setMessages] = useState<{ id: number; from: "you" | "driver"; text: string }[]>([]);
-  const [draft, setDraft] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -235,21 +235,28 @@ export default function TrackingPage() {
     router.push("/home");
   }
 
-  function sendMessage() {
-    const text = draft.trim();
-    if (!text || !booking) return;
-
+  function sendMessage(message: Omit<ChatMessage, "id" | "at">) {
     const thread = appendMessage(
       {
         bookingId,
-        company: booking.active_trips?.companies?.name ?? "Your bus",
+        company: companyName,
         driver: driverNameFor(bookingId),
-        destination: booking.active_trips?.destination ?? "your destination",
+        destination,
       },
-      { from: "you", text }
+      message
     );
     setMessages(thread.messages);
-    setDraft("");
+  }
+
+  /** A finished call is recorded in the thread, the way a messaging app does. */
+  function logCall(outcome: { connected: boolean; seconds: number }) {
+    sendMessage({
+      from: "you",
+      kind: "system",
+      text: outcome.connected
+        ? `Call ended · ${formatDuration(outcome.seconds)}`
+        : "Call cancelled",
+    });
   }
 
   if (loading) {
@@ -466,7 +473,10 @@ export default function TrackingPage() {
           subtitle={`Driver · ${companyName}`}
           phone={DRIVER_PHONE}
           companyName={companyName}
-            onClose={() => setShowCallModal(false)}
+            onClose={(outcome) => {
+            setShowCallModal(false);
+            logCall(outcome);
+          }}
           />
         </Portal>
       )}
@@ -508,35 +518,12 @@ export default function TrackingPage() {
                 </p>
               )}
               {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[14px] ${
-                    message.from === "you"
-                      ? "self-end bg-primary text-white"
-                      : "self-start bg-surface text-text-primary"
-                  }`}
-                >
-                  {message.text}
-                </div>
+                <ChatBubble key={message.id} message={message} />
               ))}
             </div>
 
-            <div className="flex items-center gap-2 border-t border-border px-5 py-3 pb-5">
-              <input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Type a message…"
-                className="h-11 flex-1 rounded-pill border border-border bg-surface px-4 text-[14px] text-text-primary outline-none placeholder:text-text-muted focus:border-primary"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!draft.trim()}
-                aria-label="Send message"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white disabled:opacity-40"
-              >
-                <Send className="h-[18px] w-[18px]" />
-              </button>
+            <div className="border-t border-border px-4 py-3 pb-5">
+              <ChatComposer onSend={sendMessage} />
             </div>
           </div>
           </Modal>

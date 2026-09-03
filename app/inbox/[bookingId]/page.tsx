@@ -2,10 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Phone, Send } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import CallScreen from "@/components/CallScreen";
 import CompanyLogo from "@/components/CompanyLogo";
-import { appendMessage, getThread, relativeTime, type ChatThread } from "@/lib/chat";
+import ChatBubble from "@/components/ChatBubble";
+import ChatComposer from "@/components/ChatComposer";
+import {
+  appendMessage,
+  formatDuration,
+  getThread,
+  relativeTime,
+  type ChatMessage,
+  type ChatThread,
+} from "@/lib/chat";
 import { DRIVER_PHONE } from "@/constants/drivers";
 
 export default function ChatThreadPage() {
@@ -14,7 +23,6 @@ export default function ChatThreadPage() {
   const bookingId = params.bookingId;
 
   const [thread, setThread] = useState<ChatThread | null>(null);
-  const [draft, setDraft] = useState("");
   const [ready, setReady] = useState(false);
   const [calling, setCalling] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
@@ -28,9 +36,8 @@ export default function ChatThreadPage() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [thread?.messages.length]);
 
-  function send() {
-    const text = draft.trim();
-    if (!text || !thread) return;
+  function send(message: Omit<ChatMessage, "id" | "at">) {
+    if (!thread) return;
     setThread(
       appendMessage(
         {
@@ -39,11 +46,22 @@ export default function ChatThreadPage() {
           driver: thread.driver,
           destination: thread.destination,
         },
-        { from: "you", text }
+        message
       )
     );
-    setDraft("");
   }
+
+  /** A finished call is recorded in the thread, the way a messaging app does. */
+  function logCall(outcome: { connected: boolean; seconds: number }) {
+    send({
+      from: "you",
+      kind: "system",
+      text: outcome.connected
+        ? `Call ended · ${formatDuration(outcome.seconds)}`
+        : "Call cancelled",
+    });
+  }
+
 
   if (!ready) return null;
 
@@ -99,45 +117,27 @@ export default function ChatThreadPage() {
           {thread.messages.map((message) => (
             <div
               key={message.id}
-              className={`flex max-w-[80%] flex-col gap-1 ${
-                message.from === "you" ? "self-end items-end" : "self-start items-start"
+              className={`flex flex-col gap-1 ${
+                message.kind === "system"
+                  ? "items-center self-center"
+                  : message.from === "you"
+                    ? "items-end self-end"
+                    : "items-start self-start"
               }`}
             >
-              <div
-                className={`rounded-2xl px-3.5 py-2.5 text-[14px] ${
-                  message.from === "you"
-                    ? "bg-primary text-white"
-                    : "bg-white text-text-primary"
-                }`}
-              >
-                {message.text}
-              </div>
-              <span className="px-1 text-[10px] text-text-muted">
-                {relativeTime(message.at)}
-              </span>
+              <ChatBubble message={message} />
+              {message.kind !== "system" && (
+                <span className="px-1 text-[10px] text-text-muted">
+                  {relativeTime(message.at)}
+                </span>
+              )}
             </div>
           ))}
           <div ref={endRef} />
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[393px] border-t border-border bg-white px-5 py-3 pb-[104px]">
-          <div className="flex items-center gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Type a message…"
-              className="h-11 flex-1 rounded-pill border border-border bg-surface px-4 text-[14px] text-text-primary outline-none placeholder:text-text-muted focus:border-primary"
-            />
-            <button
-              onClick={send}
-              disabled={!draft.trim()}
-              aria-label="Send message"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white disabled:opacity-40"
-            >
-              <Send className="h-[18px] w-[18px]" />
-            </button>
-          </div>
+        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[393px] border-t border-border bg-white px-4 py-3 pb-5">
+          <ChatComposer onSend={send} />
         </div>
       </div>
 
@@ -147,7 +147,10 @@ export default function ChatThreadPage() {
           subtitle={`Driver · ${thread.company}`}
           phone={DRIVER_PHONE}
           companyName={thread.company}
-          onClose={() => setCalling(false)}
+          onClose={(outcome) => {
+            setCalling(false);
+            logCall(outcome);
+          }}
         />
       )}
 

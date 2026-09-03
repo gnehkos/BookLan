@@ -15,7 +15,7 @@ import ActiveTripBanner from "@/components/ActiveTripBanner";
 import CompanyLogo from "@/components/CompanyLogo";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { driverNameFor } from "@/constants/drivers";
-import { lastMessage, listThreads, relativeTime, type ChatThread } from "@/lib/chat";
+import { lastMessage, listThreads, previewText, relativeTime, type ChatThread } from "@/lib/chat";
 
 type Tab = "messages" | "notifications";
 
@@ -227,7 +227,7 @@ export default function InboxPage() {
                       </span>
                       <span className="truncate text-[12px] text-text-muted">
                         {last?.from === "you" ? "You: " : ""}
-                        {last?.text}
+                        {previewText(last)}
                       </span>
                     </div>
                   </button>

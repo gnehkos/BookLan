@@ -23,7 +23,11 @@ export default function CallScreen({
   subtitle: string;
   phone: string;
   companyName: string;
-  onClose: () => void;
+  /**
+   * Ending the call reports whether it had connected and how long it ran, so
+   * the chat can record it the way a messaging app does.
+   */
+  onClose: (outcome: { connected: boolean; seconds: number }) => void;
 }) {
   const [connected, setConnected] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -81,7 +85,7 @@ export default function CallScreen({
           </button>
 
           <button
-            onClick={onClose}
+            onClick={() => onClose({ connected, seconds })}
             aria-label="End call"
             className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-error text-white transition-transform active:scale-95"
           >
