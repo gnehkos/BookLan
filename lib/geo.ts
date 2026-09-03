@@ -55,7 +55,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR1",
     name: "National Road 1",
-    serves: ["Prey Veng", "Svay Rieng", "Phnom Penh"],
+    serves: ["Kandal", "Phnom Penh", "Prey Veng", "Svay Rieng"],
     path: [
       PHNOM_PENH_POINT,
       [11.48, 105.05],
@@ -67,7 +67,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR2",
     name: "National Road 2",
-    serves: ["Takeo", "Phnom Penh"],
+    serves: ["Kandal", "Phnom Penh", "Takeo"],
     path: [
       PHNOM_PENH_POINT,
       [11.4, 104.88],
@@ -78,7 +78,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR3",
     name: "National Road 3",
-    serves: ["Kampot", "Kep", "Phnom Penh"],
+    serves: ["Kampot", "Kandal", "Kep", "Phnom Penh"],
     path: [
       PHNOM_PENH_POINT,
       [11.45, 104.85],
@@ -92,7 +92,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR4",
     name: "National Road 4",
-    serves: ["Sihanoukville", "Phnom Penh"],
+    serves: ["Kampong Speu", "Kandal", "Koh Kong", "Phnom Penh", "Sihanoukville"],
     path: [
       PHNOM_PENH_POINT,
       [11.5, 104.75],
@@ -107,7 +107,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR5",
     name: "National Road 5",
-    serves: ["Battambang", "Phnom Penh"],
+    serves: ["Banteay Meanchey", "Battambang", "Kampong Chhnang", "Kandal", "Pailin", "Phnom Penh", "Pursat"],
     path: [
       PHNOM_PENH_POINT,
       [11.75, 104.85],
@@ -122,7 +122,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR6",
     name: "National Road 6",
-    serves: ["Siem Reap", "Phnom Penh"],
+    serves: ["Banteay Meanchey", "Kampong Thom", "Kandal", "Oddar Meanchey", "Phnom Penh", "Preah Vihear", "Siem Reap"],
     path: [
       PHNOM_PENH_POINT,
       [11.8, 104.95],
@@ -137,7 +137,7 @@ export const NATIONAL_ROADS: RoadCorridor[] = [
   {
     id: "NR7",
     name: "National Road 7",
-    serves: ["Kampong Cham", "Kratie", "Phnom Penh"],
+    serves: ["Kampong Cham", "Kratie", "Mondulkiri", "Phnom Penh", "Ratanakiri", "Stung Treng", "Tbong Khmum"],
     path: [
       PHNOM_PENH_POINT,
       [11.8, 104.95],

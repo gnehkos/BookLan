@@ -256,7 +256,7 @@ export default function TrackingPage() {
         <div className="flex w-full max-w-[390px] flex-1 flex-col pb-24">
           <div className="flex items-center gap-2 px-4 pt-6 pb-3">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push("/bookings")}
               aria-label="Back"
               className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
             >
@@ -297,7 +297,7 @@ export default function TrackingPage() {
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-5">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/bookings")}
             aria-label="Back"
             className="glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
           >

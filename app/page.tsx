@@ -28,7 +28,7 @@ const STEPS = [
   {
     image: "/onboarding/step-3.png",
     title: "Pay and get picked up",
-    body: "Pay securely in-app with E-Bank app, or your card. Show your Ticket ID to the driver and hop on.",
+    body: "Pay securely in-app with your E-Bank account. Show your Ticket ID to the driver and hop on.",
   },
 ] as const;
 

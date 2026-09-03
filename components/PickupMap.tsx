@@ -239,11 +239,14 @@ function DraggableMarker({
 
 export default function PickupMap({
   destination,
+  initialPosition = null,
   onPositionChange,
   bottomInset = 0,
 }: {
   /** Only roads serving this destination are drawn and accepted. */
   destination: string;
+  /** A pin already chosen, when returning to change it. */
+  initialPosition?: [number, number] | null;
   onPositionChange: (
     position: [number, number],
     allowed: boolean,
@@ -288,6 +291,14 @@ export default function PickupMap({
       setPosition(pos);
     }
 
+    // Coming back to adjust an existing pin: start where it was left, not at
+    // wherever the device happens to be now.
+    if (initialPosition) {
+      resolve(initialPosition);
+      setMoved(true);
+      return;
+    }
+
     if (!("geolocation" in navigator)) {
       resolve(PHNOM_PENH);
       return;
@@ -297,7 +308,7 @@ export default function PickupMap({
       () => resolve(PHNOM_PENH),
       { enableHighAccuracy: true, timeout: 5000 }
     );
-  }, [onPositionChange]);
+  }, [onPositionChange, initialPosition]);
 
   // The effect above reports whenever the position changes, so this only has
   // to record it.

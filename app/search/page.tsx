@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronRight, Search, X } from "lucide-react";
 import ActiveBookingModal from "@/components/ActiveBookingModal";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBooking";
-import { POPULAR_DESTINATIONS } from "@/constants/booking";
+import { POPULAR_DESTINATIONS, PROVINCES } from "@/constants/booking";
 import { roadsFor } from "@/lib/geo";
 import { DEFAULT_ROAD_BADGE, roadBadge } from "@/constants/theme";
 
@@ -20,12 +20,12 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [blockedBy, setBlockedBy] = useState<ActivePickupBooking | null>(null);
 
+  // Empty search offers the busy routes; typing searches every province, so
+  // anywhere in the country is reachable even without a scheduled service.
   const matches = useMemo(() => {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return POPULAR_DESTINATIONS;
-    return POPULAR_DESTINATIONS.filter((place) =>
-      place.name.toLowerCase().includes(trimmed)
-    );
+    return PROVINCES.filter((place) => place.name.toLowerCase().includes(trimmed));
   }, [query]);
 
   async function selectDestination(destination: string) {

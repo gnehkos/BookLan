@@ -156,7 +156,9 @@ export default function InboxPage() {
         <div className="border-b border-border bg-white px-5 pt-6 pb-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.back()}
+              // Explicit: leaving a chat pushes /inbox, so history holds
+              // inbox -> chat -> inbox and router.back() returned to the chat.
+              onClick={() => router.push("/home")}
               aria-label="Back"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-surface"
             >

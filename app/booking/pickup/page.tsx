@@ -32,6 +32,9 @@ export default function PickupPage() {
   const [placeName, setPlaceName] = useState<string | null>(null);
   const [roadName, setRoadName] = useState<string | null>(null);
   const [sheetRef, sheetHeight] = useMeasuredHeight<HTMLDivElement>(140);
+  // Set when arriving from the bus list to change an existing pin, which
+  // decides both where the map opens and where Back returns to.
+  const [existing, setExisting] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("booklan_destination");
@@ -40,6 +43,17 @@ export default function PickupPage() {
       return;
     }
     setDestination(stored);
+
+    const pinned = sessionStorage.getItem("booklan_pickup");
+    if (pinned) {
+      try {
+        const parsed = JSON.parse(pinned) as { lat: number; lng: number };
+        setExisting([parsed.lat, parsed.lng]);
+      } catch {
+        // Malformed leftover; fall through to a fresh pin.
+      }
+    }
+
     setReady(true);
   }, [router]);
 
@@ -94,6 +108,7 @@ export default function PickupPage() {
         <div className="absolute inset-0 z-0">
           <PickupMap
             destination={destination}
+            initialPosition={existing}
             onPositionChange={handlePositionChange}
             bottomInset={sheetHeight}
           />
@@ -103,7 +118,7 @@ export default function PickupPage() {
         <div className="absolute inset-x-4 top-5 z-20">
           <div className="glass glass-solid flex items-center gap-3 rounded-[16px] px-3.5 py-3">
             <button
-              onClick={() => router.push("/search")}
+              onClick={() => router.push(existing ? "/booking/buses" : "/search")}
               aria-label="Back"
               className="shrink-0 text-text-primary"
             >

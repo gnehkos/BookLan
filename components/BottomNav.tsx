@@ -16,25 +16,23 @@ const TABS: { label: string; href: string; icon: ComponentType<{ className?: str
 export const NAV_CLEARANCE = 80;
 
 /**
- * Focused steps inside a flow, and everything before sign-in, show no nav.
- * Listed here rather than by each page opting in, because the nav is mounted
- * once in the root layout.
+ * The only screens that show the nav.
+ *
+ * An allowlist rather than a list of exclusions: everything else is a step
+ * inside a booking flow, where a nav bar invites the passenger to abandon a
+ * half-finished booking. New flow screens are hidden by default this way,
+ * which is the safer direction to be wrong in.
  */
-const HIDDEN_EXACT = ["/"];
-const HIDDEN_PREFIXES = ["/auth", "/booking/pickup", "/advanced/dropoff"];
+const NAV_ROUTES = new Set(["/home", "/advanced", "/bookings", "/profile", "/support", "/legal"]);
 
 export default function BottomNav() {
   const pathname = usePathname();
-
-  const hidden =
-    HIDDEN_EXACT.includes(pathname) ||
-    HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
   const activeIndex = TABS.findIndex(
     (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
   );
 
-  if (hidden) return null;
+  if (!NAV_ROUTES.has(pathname)) return null;
 
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
