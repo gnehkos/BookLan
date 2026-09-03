@@ -44,11 +44,8 @@ export default function PaymentCard({
       }
 
       await onSuccess();
-    } catch (thrown) {
-      // Surface the real reason. A generic message hid a database column that
-      // did not exist yet, which looked like a payment failure for days.
-      const reason = thrown instanceof Error ? thrown.message : "";
-      setError(reason ? `Couldn't complete the booking: ${reason}` : "Something went wrong. Please try again.");
+    } catch {
+      setError("Something went wrong. Please try again.");
       setPaying(false);
     }
   }
