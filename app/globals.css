@@ -254,6 +254,15 @@ body {
   white-space: nowrap;
 }
 
+/* Khmer at 10px extra-bold is unreadable — the script carries diacritics above
+   and below the baseline that collapse at that size and weight. */
+:root[data-lang="km"] .booklan-user-label {
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
 /* --- Current location: blue dot with an expanding glow, Google-Maps style --- */
 .booklan-current-marker {
   position: relative;

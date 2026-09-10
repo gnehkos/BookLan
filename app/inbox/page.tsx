@@ -174,7 +174,7 @@ export default function InboxPage() {
           {t("home.inbox")}
           </h1>
             <span className="rounded-[8px] bg-accent px-2.5 py-1 text-[11px] font-bold text-primary">
-              {count} item{count === 1 ? "" : "s"}
+              {t("inbox.itemCount", { n: count })}
             </span>
           </div>
 
@@ -189,7 +189,7 @@ export default function InboxPage() {
                     : "text-text-muted"
                 }`}
               >
-                {mode}
+                {mode === "messages" ? t("inbox.messagesTab") : t("inbox.notificationsTab")}
               </button>
             ))}
           </div>
@@ -203,8 +203,7 @@ export default function InboxPage() {
                   <MessageCircle className="h-10 w-10 text-text-muted" />
                   <p className="text-[14px] text-text-secondary">{t("inbox.noMessages")}</p>
                   <p className="max-w-[260px] text-[12px] text-text-muted">
-                    Message your driver from the tracking screen and the conversation shows up
-                    here.
+                    {t("inbox.messagesHint")}
                   </p>
                 </div>
               )}

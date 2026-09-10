@@ -217,7 +217,7 @@ export default function BusesPage() {
               {t("buses.title", { destination: p(destination) })}
             </h1>
             <span className="text-[12px] text-text-secondary">
-              {sortedTrips.length} available now
+              {t("buses.availableNow", { n: sortedTrips.length })}
             </span>
           </div>
         </div>
@@ -367,7 +367,7 @@ function BusCard({
             <span className="flex items-center gap-1.5 text-[12px] text-text-secondary">
               <Star className="h-3.5 w-3.5 fill-warning text-warning" />
               <span className="font-medium text-text-primary">{profile.rating}</span>
-              <span className="capitalize">· {vehicleType}</span>
+              <span>· {vehicleType === "van" ? t("common.van") : t("common.bus")}</span>
             </span>
           </div>
 

@@ -6,6 +6,7 @@ import { ChevronRight, Navigation } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import { NAV_CLEARANCE } from "@/components/BottomNav";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useProvinceName, useT } from "@/lib/i18n";
 
 type ActiveTrip = {
   id: string;
@@ -34,6 +35,8 @@ const HIDDEN_ON = ["/tracking", "/trip"];
 export const BANNER_CLEARANCE = 76;
 
 export default function ActiveTripBanner() {
+  const t = useT();
+  const p = useProvinceName();
   const router = useRouter();
   const pathname = usePathname();
   const [booking, setBooking] = useState<ActiveTrip | null>(null);
@@ -92,12 +95,14 @@ export default function ActiveTripBanner() {
 
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[13px] font-semibold text-white">
-            {onTrip ? `On the way to ${destination}` : `${company} is on the way`}
+            {onTrip
+              ? t("ontrip.onTheWay", { destination: p(destination) })
+              : t("banner.companyOnWay", { company })}
           </span>
           <span className="truncate text-[11px] text-white/70">
             {onTrip
               ? "Tap to view your live trip"
-              : `${booking.distance_remaining_km} km away · tap to track`}
+              : t("banner.kmAwayTapTrack", { km: booking.distance_remaining_km })}
           </span>
         </span>
 

@@ -154,7 +154,7 @@ export default function PickupPage() {
             <span className="flex min-w-0 flex-col">
               <span className="text-[11px] font-bold text-text-primary">{t("pickup.allowed")}</span>
               <span className="truncate text-[9px] font-medium text-text-muted">
-                On {roadLabel}
+                {t("pickup.onRoad", { road: roadLabel })}
               </span>
             </span>
           </div>

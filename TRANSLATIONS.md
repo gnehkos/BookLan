@@ -154,6 +154,7 @@ These change how much gets translated, so they are worth settling first.
 | `buses.sortCheapest` | Cheapest | ថោកបំផុត |
 | `buses.sortMostSeats` | Most seats | កៅអីនៅសល់ច្រើនបំផុត |
 | `buses.seatsLeft` | {n} seats | {n} កៅអី |
+| `buses.availableNow` | {n} available now | មាន {n} ឥឡូវនេះ |
 
 ## 7. Seat selection and company details
 
@@ -285,6 +286,9 @@ These change how much gets translated, so they are worth settling first.
 |---|---|---|
 | `ontrip.inProgress` | Trip in progress | ដំណើរកំពុងបន្ត |
 | `ontrip.onTheWay` | On the way to {destination} | កំពុងធ្វើដំណើរទៅ {destination} |
+| `banner.companyOnWay` | {company} is on the way | {company} កំពុងមកដល់ |
+| `banner.tapLiveTrip` | tap to view live trip | ចុចដើម្បីមើលដំណើរផ្ទាល់ |
+| `banner.kmAwayTapTrack` | {km} km away · tap to track | នៅ {km} គម · ចុចដើម្បីតាមដាន |
 | `ontrip.kmLeft` | {km} km left | នៅសល់ {km} គម |
 | `ontrip.arrivedAt` | Arrived at {destination} | បានមកដល់ {destination} |
 | `ontrip.backToBookings` | Back to bookings | ត្រឡប់ទៅការកក់ |
@@ -339,6 +343,10 @@ These change how much gets translated, so they are worth settling first.
 | `inbox.title` | Inbox | សារ |
 | `inbox.empty` | Nothing here yet. | មិនទាន់មានអ្វីនៅទីនេះទេ។ |
 | `inbox.noMessages` | No messages yet. | មិនទាន់មានសារទេ។ |
+| `inbox.messagesTab` | Messages | សារ |
+| `inbox.notificationsTab` | Notifications | ការជូនដំណឹង |
+| `inbox.itemCount` | {n} items | {n} ធាតុ |
+| `inbox.messagesHint` | Message your driver from the tracking screen and the conversation shows up here. | ផ្ញើសារទៅអ្នកបើកបរពីអេក្រង់តាមដាន នោះការសន្ទនានឹងបង្ហាញនៅទីនេះ។ |
 | `inbox.gone` | This conversation is no longer available. | ការសន្ទនានេះលែងមានហើយ។ |
 | `inbox.statusApproaching` | Vehicle Approaching | យានយន្តកំពុងខិតជិត |
 | `inbox.statusConfirmed` | Booking Confirmed | ការកក់បានបញ្ជាក់ |

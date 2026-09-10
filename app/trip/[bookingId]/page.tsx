@@ -242,9 +242,12 @@ export default function TripPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
-                  <Detail label="Ticket ID" value={booking.ticket_id} mono />
+                  <Detail label={t("common.ticketId")} value={booking.ticket_id} mono />
                   <Detail label={t("common.operator")} value={company} />
-                  <Detail label={t("common.vehicle")} value={vehicleType} capitalize />
+                  <Detail
+                label={t("common.vehicle")}
+                value={vehicleType === "van" ? t("common.van") : t("common.bus")}
+              />
                   <Detail
                     label={booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat")}
                     value={booking.seat_numbers.join(", ")}
