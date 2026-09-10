@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
+import { clearSession } from "@/lib/session";
 import { safeQuery, supabase } from "@/lib/supabase";
 
 const BusMap = dynamic(() => import("@/components/BusMap"), {
@@ -30,17 +31,26 @@ export default function HomePage() {
 
     let cancelled = false;
     (async () => {
-      const { data } = await safeQuery(
-        supabase.from("users").select("profile_photo_url").eq("id", userId).single()
+      // Doubles as the session check: a stored id whose row has gone leaves the
+      // app looking signed in while every booking fails its foreign key.
+      const { data, error } = await safeQuery(
+        supabase.from("users").select("id, profile_photo_url").eq("id", userId).maybeSingle()
       );
-      if (cancelled || !data) return;
-      setPhotoUrl(data.profile_photo_url);
+      if (cancelled) return;
+
+      if (!error && !data) {
+        clearSession();
+        router.replace("/auth/login");
+        return;
+      }
+
+      if (data) setPhotoUrl(data.profile_photo_url);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   return (
     // Same 390px phone shell as every other screen, so the map doesn't sprawl

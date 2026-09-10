@@ -12,6 +12,8 @@ import { colors } from "@/constants/theme";
 import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, userIcon, vehicleIcon } from "@/lib/mapTheme";
 import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
+import { approachAlongRoad, roadsFor } from "@/lib/geo";
+import { useNationalRoads } from "@/lib/useNationalRoads";
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -25,10 +27,13 @@ function hash(value: string) {
 }
 
 /**
- * `bookings` tracks how far the bus still is, not where it is, so the bus
- * marker sits that real distance from the pickup pin on a bearing derived from
- * the booking id. Distance and ETA are real; the heading is filler until the
- * schema carries live vehicle coordinates.
+ * `bookings` tracks how far the bus still is, not where it is, so the marker's
+ * position has to be derived. It is placed that real distance back along the
+ * corridor the bus is travelling, which puts it on the origin side — a bus to
+ * Siem Reap approaches from Phnom Penh, not down from Siem Reap.
+ *
+ * This fallback is only reached when the destination maps to no corridor, and
+ * scatters the bus on an arbitrary bearing instead.
  */
 function offsetPosition(
   origin: [number, number],
@@ -116,10 +121,25 @@ export default function TrackingMap({
   // and the marker slides along it, instead of re-routing every countdown tick.
   const startDistance = useRef(distanceKm);
   if (distanceKm > startDistance.current) startDistance.current = distanceKm;
-  const startPosition = offsetPosition(pickup, startDistance.current, hash(bookingId) % 360);
 
-  const roadRoute = useRoadRoute(startPosition, pickup);
-  const path: LatLng[] = roadRoute ?? [startPosition, pickup];
+  // The corridor this trip runs on, with real routed geometry once it lands.
+  const { roads } = useNationalRoads();
+  const serving = roadsFor(destination).map((road) => road.id);
+  const corridor = roads.find((road) => serving.includes(road.id));
+
+  // Walking back along that corridor puts the bus on the side it is actually
+  // coming from. Without one, fall back to the arbitrary bearing.
+  const approach = corridor
+    ? approachAlongRoad(corridor.path, pickup, startDistance.current)
+    : null;
+
+  const startPosition: LatLng =
+    approach?.[0] ?? offsetPosition(pickup, startDistance.current, hash(bookingId) % 360);
+
+  // Only route when there is no corridor to follow — the corridor already is
+  // the road. The hook no-ops on null rather than fetching a zero-length route.
+  const roadRoute = useRoadRoute(approach ? null : startPosition, approach ? null : pickup);
+  const path: LatLng[] = approach ?? roadRoute ?? [startPosition, pickup];
 
   const travelled =
     startDistance.current > 0 ? 1 - distanceKm / startDistance.current : 1;

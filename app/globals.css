@@ -501,6 +501,10 @@ body {
   animation: pin-hint-in 0.4s ease-out both;
 }
 
+.booklan-pin-hint.leaflet-tooltip-top::before {
+  border-top-color: #ffffff;
+}
+
 .booklan-pin-hint.leaflet-tooltip-right::before {
   border-right-color: #ffffff;
 }
@@ -513,6 +517,10 @@ body {
 .booklan-pin-hint--warn.leaflet-tooltip {
   border-color: #fecaca;
   background: #fef2f2;
+}
+
+.booklan-pin-hint--warn.leaflet-tooltip-top::before {
+  border-top-color: #fef2f2;
 }
 
 .booklan-pin-hint--warn.leaflet-tooltip-right::before {

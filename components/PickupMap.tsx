@@ -212,8 +212,11 @@ function DraggableMarker({
       {hint && (
         <Tooltip
           permanent
-          direction="right"
-          offset={[14, -12]}
+          // Above the pin, not beside it. To the right it ran off a phone-width
+          // map and Leaflet's map pane clips its overflow, so the warning was
+          // invisible on a phone while fitting fine on a laptop.
+          direction="top"
+          offset={[0, -30]}
           className={`booklan-pin-hint${hint.warn ? " booklan-pin-hint--warn" : ""}`}
         >
           {/* Two short lines rather than one long one: the instruction reads at

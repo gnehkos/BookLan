@@ -11,7 +11,7 @@
 -- profile photos, the reviews table, the 'completed' booking status, and every
 -- operator whose logo ships in public/logos/.
 -- ============================================================================
-
+x`
 create extension if not exists pgcrypto;
 
 -- ----------------------------------------------------------------------------

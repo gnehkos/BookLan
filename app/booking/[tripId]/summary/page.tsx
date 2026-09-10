@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
 import VehicleBadge from "@/components/VehicleBadge";
 import PaymentCard from "@/components/PaymentCard";
+import { verifyStoredUser } from "@/lib/session";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
 import { SERVICE_FEE_USD } from "@/constants/booking";
@@ -62,6 +63,19 @@ export default function SummaryPage() {
     setDropoff(JSON.parse(dropoffStored));
     setReady(true);
   }, [router, tripId]);
+
+  // Catch a dead session before payment rather than after: the booking insert
+  // would fail its foreign key on user_id and read as a payment error.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const userId = await verifyStoredUser();
+      if (!cancelled && !userId) router.replace("/auth/login");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handlePaymentSuccess() {
     if (!trip || !pickup || !seat || !dropoff) return;

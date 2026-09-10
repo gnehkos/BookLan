@@ -244,6 +244,58 @@ export function nearestRoad(
  * runs out through the city, and a passenger waiting at that end of it is on
  * the bus's route like any other.
  */
+/** Straight-line distance between two points, in km. */
+export function distanceKmBetween(a: LatLng, b: LatLng): number {
+  const [ax, ay] = toPlanar(a[0], a[1], a[0]);
+  const [bx, by] = toPlanar(b[0], b[1], a[0]);
+  return Math.hypot(bx - ax, by - ay);
+}
+
+/**
+ * The stretch of road a bus is still to travel before it reaches `target`.
+ *
+ * Corridors are ordered from Phnom Penh outward, so walking backwards from the
+ * pickup point means walking toward the origin — which is the direction a bus
+ * heading to this destination actually comes from. Returns the sub-path from
+ * that point up to the pickup, so the marker can follow the real carriageway
+ * rather than a straight line across country.
+ *
+ * Clamped to the start of the road when the bus is further away than the
+ * corridor is long.
+ */
+export function approachAlongRoad(
+  path: LatLng[],
+  target: LatLng,
+  distanceKm: number
+): LatLng[] | null {
+  if (path.length < 2 || distanceKm <= 0) return null;
+
+  // Where on the road the passenger is waiting.
+  let nearest = 0;
+  let nearestKm = Infinity;
+  for (let i = 0; i < path.length; i++) {
+    const d = distanceKmBetween(path[i], target);
+    if (d < nearestKm) {
+      nearestKm = d;
+      nearest = i;
+    }
+  }
+
+  // Walk back toward the origin until the remaining distance is covered.
+  let travelled = 0;
+  let index = nearest;
+  while (index > 0 && travelled < distanceKm) {
+    travelled += distanceKmBetween(path[index - 1], path[index]);
+    index--;
+  }
+
+  const approach = path.slice(index, nearest + 1);
+  if (approach.length < 2) return null;
+
+  // End on the pin itself, so the bus arrives exactly where the passenger is.
+  return [...approach, target];
+}
+
 export function isPickupAllowed(
   lat: number,
   lng: number,
