@@ -14,6 +14,7 @@ import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
 import { approachAlongRoad, roadsFor } from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
+import { useT } from "@/lib/i18n";
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -115,6 +116,7 @@ export default function TrackingMap({
   etaMinutes: number;
   panelHeight: number;
 }) {
+  const t = useT();
   const pickup: LatLng = [lat, lng];
 
   // Anchor the route to where the bus started so the geometry is fetched once
@@ -199,7 +201,7 @@ export default function TrackingMap({
       <RecenterControl
         target={pickup}
         zoom={13}
-        label="Recenter to my location"
+        label={t("track.recenter")}
         bottomOffset={panelHeight + 16}
       />
       <MapAttribution />

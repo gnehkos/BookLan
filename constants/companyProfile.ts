@@ -10,21 +10,19 @@
 export type CompanyProfile = {
   rating: number;
   tripCount: string;
-  reviews: { author: string; stars: number; text: string }[];
-  policies: string[];
+  reviews: { author: string; stars: number; textKey: string }[];
+  policyKeys: string[];
 };
 
-const POLICIES = [
-  "Free cancellation up to 1 hour before departure (10% fee after)",
-  "1 large luggage + 1 carry-on included per seat",
-  "No smoking on board · Pets not allowed",
-];
+// Keys, not text: this module has no access to a hook, so the screens that
+// render these translate them.
+const POLICIES = ["policy.1", "policy.2", "policy.3"];
 
 const REVIEW_POOL = [
-  { author: "Sochary", stars: 5, text: "Very clean bus and the driver was on time. Comfortable ride!" },
-  { author: "Dara", stars: 4, text: "Good AC and WiFi worked most of the way. Recommend." },
-  { author: "Sreyneang", stars: 5, text: "Driver picked me up right where I dropped the pin. Easy." },
-  { author: "Vuthy", stars: 4, text: "Seats were comfortable, arrived about 15 minutes early." },
+  { author: "Sochary", stars: 5, textKey: "demoReview.1" },
+  { author: "Dara", stars: 4, textKey: "demoReview.2" },
+  { author: "Sreyneang", stars: 5, textKey: "demoReview.3" },
+  { author: "Vuthy", stars: 4, textKey: "demoReview.4" },
 ];
 
 function hash(value: string) {
@@ -47,6 +45,6 @@ export function companyProfile(companyName: string): CompanyProfile {
     rating: Math.round(rating * 10) / 10,
     tripCount,
     reviews: [REVIEW_POOL[start], REVIEW_POOL[(start + 1) % REVIEW_POOL.length]],
-    policies: POLICIES,
+    policyKeys: POLICIES,
   };
 }

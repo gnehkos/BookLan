@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Ticket } from "lucide-react";
 import Button from "@/components/Button";
 import type { ActivePickupBooking } from "@/lib/activeBooking";
+import { useT } from "@/lib/i18n";
 
 /**
  * Shown when a passenger tries to start a second roadside pickup booking while
@@ -18,6 +19,7 @@ export default function ActiveBookingModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const t = useT();
   const destination = booking.active_trips?.destination;
 
   return (
@@ -30,9 +32,7 @@ export default function ActiveBookingModal({
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-accent">
             <Ticket className="h-6 w-6 text-primary" />
           </span>
-          <span className="text-[16px] font-semibold text-text-primary">
-            You already have a bus on the way
-          </span>
+          <span className="text-[16px] font-semibold text-text-primary">{t("activeBooking.title")}</span>
           <p className="text-center text-[12px] text-text-secondary">
             Your booking {booking.ticket_id}
             {destination ? ` to ${destination}` : ""} is still active. Finish or cancel it before
@@ -40,15 +40,9 @@ export default function ActiveBookingModal({
           </p>
 
           <div className="mt-2 flex w-full flex-col gap-2">
-            <Button onClick={() => router.push(`/tracking/${booking.id}`)}>
-              View my booking
-            </Button>
-            <Button variant="outline" onClick={() => router.push("/advanced")}>
-              Book a scheduled ticket
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Close
-            </Button>
+            <Button onClick={() => router.push(`/tracking/${booking.id}`)}>{t("activeBooking.view")}</Button>
+            <Button variant="outline" onClick={() => router.push("/advanced")}>{t("activeBooking.scheduled")}</Button>
+            <Button variant="ghost" onClick={onClose}>{t("common.close")}</Button>
           </div>
         </div>
       </div>

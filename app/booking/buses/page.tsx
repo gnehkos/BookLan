@@ -18,6 +18,8 @@ import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import { companyProfile } from "@/constants/companyProfile";
+import { useT, useProvinceName } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
 
@@ -78,10 +80,10 @@ const DEFAULT_ACCENT = {
   badgeText: "text-primary",
 };
 
-const SORT_TABS: { mode: SortMode; label: string }[] = [
-  { mode: "soonest", label: "Soonest" },
-  { mode: "cheapest", label: "Cheapest" },
-  { mode: "seats", label: "Most seats" },
+const SORT_TABS: { mode: SortMode; labelKey: TranslationKey }[] = [
+  { mode: "soonest", labelKey: "buses.sortSoonest" },
+  { mode: "cheapest", labelKey: "buses.sortCheapest" },
+  { mode: "seats", labelKey: "buses.sortMostSeats" },
 ];
 
 function formatDuration(km: number) {
@@ -92,7 +94,9 @@ function formatDuration(km: number) {
 }
 
 export default function BusesPage() {
+  const p = useProvinceName();
   const router = useRouter();
+  const t = useT();
   const [destination, setDestination] = useState<string | null>(null);
   const [pickup, setPickup] = useState<StoredPickup | null>(null);
   const [trips, setTrips] = useState<ActiveTrip[]>([]);
@@ -137,7 +141,7 @@ export default function BusesPage() {
 
       if (!cancelled) {
         if (fetchError) {
-          setError("Couldn't load buses. Check your connection and try again.");
+          setError(t("buses.loadFailed"));
         } else {
           setTrips((data as unknown as ActiveTrip[]) ?? []);
         }
@@ -200,14 +204,14 @@ export default function BusesPage() {
             // Explicitly to search, not back: Back led to the pin screen,
             // whose own Back led here, and the two trapped each other.
             onClick={() => router.push("/search")}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-[16px] font-semibold text-text-primary">
-              Buses to {destination}
+              {t("buses.title", { destination: p(destination) })}
             </h1>
             <span className="text-[12px] text-text-secondary">
               {sortedTrips.length} available now
@@ -229,7 +233,7 @@ export default function BusesPage() {
               <Navigation className="h-3.5 w-3.5 text-text-secondary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">FROM</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.from")}</span>
               <span className="truncate text-[14px] font-semibold text-text-primary">
                 {pickupName}
               </span>
@@ -247,9 +251,9 @@ export default function BusesPage() {
               <MapPin className="h-3.5 w-3.5 text-primary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TO</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.to")}</span>
               <span className="truncate text-[14px] font-semibold text-primary">
-                {destination}
+                {p(destination)}
               </span>
             </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
@@ -259,7 +263,7 @@ export default function BusesPage() {
         {/* Sort tabs */}
         <div className="px-4 pt-4">
           <div className="flex items-center gap-1 rounded-pill bg-white/70 p-1">
-            {SORT_TABS.map(({ mode, label }) => (
+            {SORT_TABS.map(({ mode, labelKey }) => (
               <button
                 key={mode}
                 onClick={() => setSortMode(mode)}
@@ -269,7 +273,7 @@ export default function BusesPage() {
                     : "bg-white text-text-secondary hover:bg-surface"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -289,7 +293,7 @@ export default function BusesPage() {
 
           {!loading && !error && sortedTrips.length === 0 && (
             <p className="py-8 text-center text-sm text-text-secondary">
-              No buses heading to {destination} right now.
+              {t("buses.none", { destination: p(destination) })}
             </p>
           )}
 
@@ -309,7 +313,7 @@ export default function BusesPage() {
 
       {destinationSheetOpen && (
         <DestinationSheet
-          current={destination}
+          current={p(destination)}
           onSelect={changeDestination}
           onClose={() => setDestinationSheetOpen(false)}
         />
@@ -331,6 +335,7 @@ function BusCard({
   topPick: boolean;
   onSelect: () => void;
 }) {
+  const t = useT();
   const companyName = trip.companies?.name ?? "Unknown company";
   const vehicleType = trip.companies?.vehicle_type ?? "bus";
   const profile = companyProfile(companyName);
@@ -393,7 +398,7 @@ function BusCard({
           />
           <InfoChip
             icon={<Users className="h-3.5 w-3.5" />}
-            text={`${trip.seats_available} seats`}
+            text={t("buses.seatsLeft", { n: trip.seats_available })}
             className={lowSeats ? "bg-[#FEF2F2] text-error" : "bg-surface text-text-secondary"}
           />
         </div>
@@ -412,6 +417,7 @@ function InfoChip({
   text: string;
   className: string;
 }) {
+  const p = useProvinceName();
   return (
     <span
       className={`flex items-center justify-center gap-1 rounded-[10px] px-2 py-2 text-[11px] font-medium ${className}`}

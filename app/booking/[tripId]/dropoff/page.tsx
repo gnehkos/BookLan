@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
 
 const StationMap = dynamic(() => import("@/components/StationMap"), {
   ssr: false,
@@ -24,6 +25,7 @@ type Station = {
 
 export default function DropoffPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ tripId: string }>();
   const tripId = params.tripId;
 
@@ -70,7 +72,7 @@ export default function DropoffPage() {
 
       if (!cancelled) {
         if (stationsError) {
-          setError("Couldn't load drop-off stations. Check your connection and try again.");
+          setError(t("station.loadFailedDropoff"));
         } else {
           setStations((data as Station[]) ?? []);
         }
@@ -104,12 +106,12 @@ export default function DropoffPage() {
         <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-4">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-[16px] font-semibold text-text-primary">Choose Drop-off Station</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">{t("station.chooseDropoff")}</h1>
         </div>
 
         <div className="flex flex-col gap-3 px-4 pt-4">
@@ -125,9 +127,7 @@ export default function DropoffPage() {
           )}
 
           {!loading && !error && stations.length === 0 && (
-            <p className="py-8 text-center text-sm text-text-secondary">
-              No drop-off stations available for this route.
-            </p>
+            <p className="py-8 text-center text-sm text-text-secondary">{t("station.noneForRoute")}</p>
           )}
 
           {!loading &&
@@ -160,7 +160,7 @@ export default function DropoffPage() {
           // Fixed, not pushed down with mt-auto: with a short list the column
           // does not fill the screen, so the button settled mid-page.
           <div className="fixed inset-x-0 bottom-4 z-20 mx-auto w-full max-w-[390px] px-4">
-            <Button onClick={handleConfirm}>Confirm drop-off</Button>
+            <Button onClick={handleConfirm}>{t("station.confirmDropoff")}</Button>
           </div>
         )}
       </div>

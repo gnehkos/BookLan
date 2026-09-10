@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
+import { useLanguage, useT } from "@/lib/i18n";
 import { safeQuery, supabase } from "@/lib/supabase";
 
 /** Public Supabase Storage bucket holding profile photos. */
@@ -25,6 +26,8 @@ const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export default function ProfilePage() {
   const router = useRouter();
+  const t = useT();
+  const { language, setLanguage } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
@@ -87,7 +90,7 @@ export default function ProfilePage() {
     if (!file || !userId) return;
 
     if (file.size > MAX_PHOTO_BYTES) {
-      setPhotoError("That image is over 5MB. Please pick a smaller one.");
+      setPhotoError(t("signup.photoTooBig"));
       return;
     }
 
@@ -113,7 +116,7 @@ export default function ProfilePage() {
       setPhotoError(
         missingBucket
           ? "Photo storage isn't set up yet. Run supabase-setup.sql in the Supabase SQL editor."
-          : "Couldn't upload your photo. Please try again."
+          : t("profile.photoFailed")
       );
       setUploadingPhoto(false);
       return;
@@ -129,7 +132,7 @@ export default function ProfilePage() {
 
     if (saveError) {
       setPhotoUrl(previousUrl);
-      setPhotoError("Photo uploaded but couldn't be saved to your profile.");
+      setPhotoError(t("profile.photoNotSaved"));
       setUploadingPhoto(false);
       return;
     }
@@ -158,11 +161,11 @@ export default function ProfilePage() {
     const trimmedPhone = phoneDraft.trim();
 
     if (!trimmedName) {
-      setFormError("Please enter your name.");
+      setFormError(t("profile.nameRequired"));
       return;
     }
     if (trimmedPhone.replace(/\D/g, "").length < 8) {
-      setFormError("Enter a valid phone number.");
+      setFormError(t("profile.phoneInvalid"));
       return;
     }
 
@@ -177,8 +180,8 @@ export default function ProfilePage() {
       // `users.phone` is unique, so a clash is the likely cause.
       setFormError(
         /duplicate|unique/i.test(error.message)
-          ? "That number is already used by another account."
-          : "Couldn't save your changes. Please try again."
+          ? t("profile.phoneTaken")
+          : t("profile.saveFailed")
       );
       setSaving(false);
       return;
@@ -208,7 +211,7 @@ export default function ProfilePage() {
     <div className="flex min-h-screen flex-col items-center bg-surface">
       <div className="flex w-full max-w-[390px] flex-1 flex-col bg-surface pb-[188px]">
         <div className="px-4 pt-6 pb-4">
-          <h1 className="text-[16px] font-semibold text-text-primary">Profile</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">{t("profile.title")}</h1>
         </div>
 
         <div className="mx-4 flex flex-col items-center gap-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
@@ -218,12 +221,12 @@ export default function ProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingPhoto}
             className="relative h-24 w-24"
-            aria-label="Change profile photo"
+            aria-label={t("profile.changePhoto")}
           >
             <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface">
               {photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoUrl} alt="Your profile" className="h-full w-full object-cover" />
+                <img src={photoUrl} alt={t("home.yourProfile")} className="h-full w-full object-cover" />
               ) : (
                 <UserIcon className="h-10 w-10 text-text-muted" />
               )}
@@ -251,10 +254,10 @@ export default function ProfilePage() {
 
           <div className="flex flex-col items-center">
             <span className="text-[17px] font-bold text-text-primary">
-              {name || "Add your name"}
+              {name || t("profile.addName")}
             </span>
             <span className="mt-0.5 text-[13px] text-text-secondary">
-              {phone || "Add your phone number"}
+              {phone || t("profile.addPhone")}
             </span>
           </div>
 
@@ -262,37 +265,55 @@ export default function ProfilePage() {
             onClick={openEditor}
             className="mt-1 flex items-center gap-1.5 rounded-pill border border-border bg-white px-4 py-2 text-[13px] font-semibold text-primary transition-colors hover:bg-surface"
           >
-            <Pencil className="h-3.5 w-3.5" />
-            Edit profile
-          </button>
+            <Pencil className="h-3.5 w-3.5" />{t("profile.edit")}</button>
         </div>
 
-        <SectionLabel>Preferences</SectionLabel>
+        <SectionLabel>{t("profile.preferences")}</SectionLabel>
         <div className="mx-4 flex flex-col gap-3">
           <SettingsRow
             icon={<Bell className="h-5 w-5" />}
-            label="Notifications"
+            label={t("profile.notifications")}
             trailing={
               <Toggle checked={notifications} onChange={() => setNotifications((v) => !v)} />
             }
           />
           <SettingsRow
             icon={<Globe className="h-5 w-5" />}
-            label="Language"
-            trailing={<span className="text-[12px] text-text-secondary">English</span>}
+            label={t("profile.language")}
+            trailing={
+              // A two-state segment rather than a switch: the labels have to
+              // name both languages, and each in its own script, so someone who
+              // cannot read the current one can still find their way back.
+              <span className="flex gap-0.5 rounded-pill bg-surface p-0.5">
+                {(["en", "km"] as const).map((code) => (
+                  <button
+                    key={code}
+                    onClick={() => setLanguage(code)}
+                    aria-pressed={language === code}
+                    className={`rounded-pill px-3 py-1 text-[12px] font-bold transition-colors ${
+                      language === code
+                        ? "bg-white text-primary shadow-[var(--shadow-soft)]"
+                        : "text-text-secondary"
+                    }`}
+                  >
+                    {code === "en" ? t("profile.english") : "ខ្មែរ"}
+                  </button>
+                ))}
+              </span>
+            }
           />
         </div>
 
-        <SectionLabel>Support</SectionLabel>
+        <SectionLabel>{t("profile.support")}</SectionLabel>
         <div className="mx-4 flex flex-col gap-3">
           <SettingsRow
             icon={<HelpCircle className="h-5 w-5" />}
-            label="Help and Support"
+            label={t("profile.helpSupport")}
             href="/support"
           />
           <SettingsRow
             icon={<Shield className="h-5 w-5" />}
-            label="Terms and Privacy"
+            label={t("profile.termsPrivacy")}
             href="/legal"
           />
         </div>
@@ -302,16 +323,14 @@ export default function ProfilePage() {
             onClick={handleLogout}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-[12px] border border-error bg-white text-[14px] font-semibold text-error hover:bg-error/5"
           >
-            <LogOut className="h-5 w-5" />
-            Log out
-          </button>
+            <LogOut className="h-5 w-5" />{t("profile.logout")}</button>
         </div>
       </div>
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <button
-            aria-label="Cancel editing"
+            aria-label={t("profile.cancelEditing")}
             onClick={cancelEditor}
             className="absolute inset-0 bg-black/35 backdrop-blur-[2px]"
           />
@@ -320,42 +339,34 @@ export default function ProfilePage() {
             <span className="mx-auto mb-4 block h-1 w-10 rounded-full bg-border" />
 
             <div className="flex items-center justify-between">
-              <h2 className="text-[19px] font-extrabold tracking-[-0.3px] text-text-primary">
-                Edit profile
-              </h2>
+              <h2 className="text-[19px] font-extrabold tracking-[-0.3px] text-text-primary">{t("profile.edit")}</h2>
               <button
                 onClick={cancelEditor}
-                aria-label="Close"
+                aria-label={t("common.close")}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-text-secondary"
               >
                 <X className="h-[18px] w-[18px]" />
               </button>
             </div>
-            <p className="mt-1 text-[13px] text-text-secondary">
-              Drivers see your name and call this number when they arrive.
-            </p>
+            <p className="mt-1 text-[13px] text-text-secondary">{t("profile.editSubtitle")}</p>
 
             <label
               htmlFor="edit-name"
               className="mb-2 mt-6 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
-            >
-              FULL NAME
-            </label>
+            >{t("signup.fullName")}</label>
             <input
               id="edit-name"
               autoFocus
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
-              placeholder="e.g. Dara Sok"
+              placeholder={t("signup.namePlaceholder")}
               className="h-[52px] w-full rounded-2xl border border-border bg-surface px-4 text-[15px] text-text-primary outline-none focus:border-secondary"
             />
 
             <label
               htmlFor="edit-phone"
               className="mb-2 mt-4 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
-            >
-              PHONE NUMBER
-            </label>
+            >{t("phone.label")}</label>
             <input
               id="edit-phone"
               type="tel"
@@ -373,15 +384,13 @@ export default function ProfilePage() {
                 onClick={cancelEditor}
                 disabled={saving}
                 className="h-[52px] flex-1 rounded-2xl border border-border bg-white text-[15px] font-bold text-text-secondary transition-colors hover:bg-surface disabled:opacity-50"
-              >
-                Cancel
-              </button>
+              >{t("common.cancel")}</button>
               <button
                 onClick={saveProfile}
                 disabled={saving}
                 className="flex h-[52px] flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-primary to-primary-dark text-[15px] font-bold text-white shadow-[0_2px_8px_rgba(16,37,68,0.18)] transition-transform active:scale-[0.99] disabled:opacity-60 disabled:shadow-none"
               >
-                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save changes"}
+                {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : t("profile.saveChanges")}
               </button>
             </div>
           </div>

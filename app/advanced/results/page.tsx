@@ -9,6 +9,8 @@ import ErrorState from "@/components/ErrorState";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { CITIES } from "@/constants/booking";
+import { useT, useProvinceName } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
 
@@ -66,14 +68,16 @@ const DEFAULT_ACCENT = {
   badgeText: "text-primary",
 };
 
-const SORT_TABS: { mode: SortMode; label: string }[] = [
-  { mode: "earliest", label: "Earliest" },
-  { mode: "cheapest", label: "Cheapest" },
-  { mode: "seats", label: "Most seats" },
+const SORT_TABS: { mode: SortMode; labelKey: TranslationKey }[] = [
+  { mode: "earliest", labelKey: "results.sortEarliest" },
+  { mode: "cheapest", labelKey: "buses.sortCheapest" },
+  { mode: "seats", labelKey: "buses.sortMostSeats" },
 ];
 
 export default function AdvancedResultsPage() {
+  const p = useProvinceName();
   const router = useRouter();
+  const t = useT();
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
@@ -113,7 +117,7 @@ export default function AdvancedResultsPage() {
     );
 
     if (fetchError) {
-      setError("Couldn't load departures. Check your connection and try again.");
+      setError(t("results.loadFailed"));
     } else {
       setSchedules((data as unknown as Schedule[]) ?? []);
     }
@@ -164,14 +168,14 @@ export default function AdvancedResultsPage() {
         <div className="flex items-center gap-3 px-4 pt-6 pb-4">
           <button
             onClick={() => router.push("/advanced")}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-[16px] font-semibold text-text-primary">
-              Departures to {to}
+              Departures to {p(to)}
             </h1>
             <span className="text-[12px] text-text-secondary">
               {sorted.length} scheduled · {date}
@@ -187,9 +191,9 @@ export default function AdvancedResultsPage() {
               <MapPin className="h-3.5 w-3.5 text-text-secondary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">FROM</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.from")}</span>
               <select
-                value={from}
+                value={p(from)}
                 onChange={(e) => {
                   const next = e.target.value;
                   updateRoute(next, next === to ? (CITIES.find((c) => c !== next) ?? to) : to);
@@ -212,9 +216,9 @@ export default function AdvancedResultsPage() {
               <MapPin className="h-3.5 w-3.5 text-primary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TO</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.to")}</span>
               <select
-                value={to}
+                value={p(to)}
                 onChange={(e) => updateRoute(from, e.target.value)}
                 className="w-full truncate bg-transparent text-[14px] font-semibold text-primary outline-none"
               >
@@ -230,7 +234,7 @@ export default function AdvancedResultsPage() {
           {/* Vertically centred across both rows, clear of the text. */}
           <button
             onClick={() => updateRoute(to, from)}
-            aria-label="Swap origin and destination"
+            aria-label={t("plan.swap")}
             className="absolute right-4 top-[76px] flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-sm transition-colors hover:bg-surface"
           >
             <ArrowRightLeft className="h-4 w-4 text-text-secondary" />
@@ -243,7 +247,7 @@ export default function AdvancedResultsPage() {
               <CalendarDays className="h-3.5 w-3.5 text-text-secondary" />
             </span>
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">DATE</span>
+              <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("results.date")}</span>
               <input
                 type="date"
                 value={date}
@@ -259,7 +263,7 @@ export default function AdvancedResultsPage() {
 
         <div className="px-4 pt-4">
           <div className="flex w-full items-center gap-1 rounded-pill bg-white/70 p-1">
-            {SORT_TABS.map(({ mode, label }) => (
+            {SORT_TABS.map(({ mode, labelKey }) => (
               <button
                 key={mode}
                 onClick={() => setSortMode(mode)}
@@ -269,7 +273,7 @@ export default function AdvancedResultsPage() {
                     : "bg-white text-text-secondary hover:bg-surface"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -289,7 +293,7 @@ export default function AdvancedResultsPage() {
 
           {!loading && !error && sorted.length === 0 && (
             <p className="py-10 text-center text-sm text-text-secondary">
-              No departures from {from} to {to}.
+              No departures from {p(from)} to {p(to)}.
             </p>
           )}
 

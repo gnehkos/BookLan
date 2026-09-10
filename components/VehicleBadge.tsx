@@ -3,7 +3,12 @@
  * the two are distinguishable at a glance on any card without adding new
  * colours to the palette.
  */
+"use client";
+
+import { useT } from "@/lib/i18n";
+
 export default function VehicleBadge({ type }: { type: "bus" | "van" }) {
+  const t = useT();
   const isVan = type === "van";
   return (
     <span
@@ -11,7 +16,7 @@ export default function VehicleBadge({ type }: { type: "bus" | "van" }) {
         isVan ? "bg-[#EFF6FF] text-secondary" : "bg-[#E8EEF4] text-primary"
       }`}
     >
-      {type}
+      {isVan ? t("common.van") : t("common.bus")}
     </span>
   );
 }

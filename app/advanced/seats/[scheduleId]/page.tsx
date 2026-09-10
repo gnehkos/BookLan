@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -24,6 +25,7 @@ type ScheduleDetail = {
 
 export default function AdvancedSeatsPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ scheduleId: string }>();
   const scheduleId = params.scheduleId;
 
@@ -58,7 +60,7 @@ export default function AdvancedSeatsPage() {
 
       if (!cancelled) {
         if (fetchError || !data) {
-          setError("Couldn't load this schedule. It may no longer be available.");
+          setError(t("schedule.loadFailed"));
         } else {
           setSchedule(data as unknown as ScheduleDetail);
         }
@@ -108,7 +110,7 @@ export default function AdvancedSeatsPage() {
           <div className="flex items-center gap-2 px-4 pt-6 pb-3">
             <button
               onClick={() => router.back()}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
             >
               <ArrowLeft className="h-6 w-6 text-text-primary" />
@@ -129,7 +131,7 @@ export default function AdvancedSeatsPage() {
         <div className="flex items-center gap-2 px-4 pt-6 pb-3">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
@@ -146,7 +148,7 @@ export default function AdvancedSeatsPage() {
         </div>
 
         <div className="mx-4 flex items-center justify-between rounded-card bg-surface p-4 text-[14px]">
-          <span className="text-text-secondary">Price per seat</span>
+          <span className="text-text-secondary">{t("seats.pricePerSeat")}</span>
           <span className="font-bold text-text-primary">
             ${schedule.price_per_seat.toFixed(2)}
           </span>
@@ -165,9 +167,7 @@ export default function AdvancedSeatsPage() {
         <div className="mt-auto px-4 pt-8">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-[12px] font-semibold text-text-secondary">
-                Selected seats
-              </span>
+              <span className="text-[12px] font-semibold text-text-secondary">{t("seats.selectedSeats")}</span>
               <span
                 className={`text-[14px] font-bold ${
                   selectedSeats.length ? "text-text-primary" : "text-text-muted"
@@ -177,15 +177,13 @@ export default function AdvancedSeatsPage() {
               </span>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-[12px] font-semibold text-text-secondary">Subtotal</span>
+              <span className="text-[12px] font-semibold text-text-secondary">{t("seats.subtotal")}</span>
               <span className="text-[16px] font-extrabold text-primary">
                 ${totalPrice.toFixed(2)}
               </span>
             </div>
           </div>
-          <Button disabled={selectedSeats.length === 0} onClick={handleContinue}>
-            Continue
-          </Button>
+          <Button disabled={selectedSeats.length === 0} onClick={handleContinue}>{t("common.continue")}</Button>
         </div>
       </div>
 

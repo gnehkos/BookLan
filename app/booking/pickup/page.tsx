@@ -8,6 +8,7 @@ import Button from "@/components/Button";
 import { describePlace } from "@/lib/reverseGeocode";
 import { roadsFor } from "@/lib/geo";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 const PickupMap = dynamic(() => import("@/components/PickupMap"), {
   ssr: false,
@@ -24,7 +25,9 @@ const PickupMap = dynamic(() => import("@/components/PickupMap"), {
  * Deliberately no bottom nav: this is a focused step inside the booking flow.
  */
 export default function PickupPage() {
+  const p = useProvinceName();
   const router = useRouter();
+  const t = useT();
   const [ready, setReady] = useState(false);
   const [destination, setDestination] = useState<string | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
@@ -116,7 +119,7 @@ export default function PickupPage() {
       <div className="relative w-full max-w-[393px] overflow-hidden bg-white">
         <div className="absolute inset-0 z-0">
           <PickupMap
-            destination={destination}
+            destination={p(destination)}
             initialPosition={existing}
             onPositionChange={handlePositionChange}
             bottomInset={sheetHeight}
@@ -128,34 +131,28 @@ export default function PickupPage() {
           <div className="glass glass-solid flex items-center gap-3 rounded-[16px] px-3.5 py-3">
             <button
               onClick={() => router.push(editing ? "/booking/buses" : "/search")}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="shrink-0 text-text-primary"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-[14px] font-extrabold text-text-primary">
-                Set your pickup point
-              </span>
-              <span className="truncate text-[11px] text-text-muted">
-                Drag the pin, or long-press anywhere on the map
-              </span>
+              <span className="truncate text-[14px] font-extrabold text-text-primary">{t("pickup.title")}</span>
+              <span className="truncate text-[11px] text-text-muted">{t("pickup.subtitle")}</span>
             </div>
           </div>
         </div>
 
         {/* Zone legend */}
         <div className="glass glass-solid absolute left-4 top-[104px] z-20 flex w-[158px] flex-col gap-2.5 rounded-[14px] px-3.5 py-3">
-          <span className="text-[9px] font-extrabold uppercase tracking-[0.6px] text-text-muted">
-            Pickup zones
-          </span>
+          <span className="text-[9px] font-extrabold uppercase tracking-[0.6px] text-text-muted">{t("pickup.zones")}</span>
 
           <div className="flex items-center gap-2">
             <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] bg-[#DCFCE7]">
               <CheckCircle2 className="h-3 w-3 text-success" />
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="text-[11px] font-bold text-text-primary">Pickup allowed</span>
+              <span className="text-[11px] font-bold text-text-primary">{t("pickup.allowed")}</span>
               <span className="truncate text-[9px] font-medium text-text-muted">
                 On {roadLabel}
               </span>
@@ -167,10 +164,8 @@ export default function PickupPage() {
               <Ban className="h-3 w-3 text-error" />
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="text-[11px] font-bold text-text-primary">No pickup</span>
-              <span className="text-[9px] font-medium text-text-muted">
-                Any other road
-              </span>
+              <span className="text-[11px] font-bold text-text-primary">{t("pickup.notAllowed")}</span>
+              <span className="text-[9px] font-medium text-text-muted">{t("pickup.otherRoads")}</span>
             </span>
           </div>
         </div>
@@ -194,7 +189,7 @@ export default function PickupPage() {
                   allowed ? "text-text-primary" : "text-error"
                 }`}
               >
-                {allowed ? (placeName ?? roadName ?? "Finding this place…") : "Can't be picked up here"}
+                {allowed ? (placeName ?? roadName ?? t("pickup.finding")) : t("pickup.cannotHere")}
               </span>
               <span
                 className={`truncate text-[11.5px] leading-tight ${
@@ -203,16 +198,16 @@ export default function PickupPage() {
               >
                 {allowed
                   ? roadName
-                    ? `On ${roadName}`
+                    ? t("pickup.onRoad", { road: roadName })
                     : "Pickup allowed here"
-                  : `Buses to ${destination} don't pass this spot`}
+                  : t("pickup.wontPass", { destination: p(destination) })}
               </span>
             </div>
           </div>
 
           <div className="mt-3">
             <Button disabled={!position || !allowed} onClick={confirmPickup}>
-              {allowed ? "Confirm pickup location" : `Move pin onto ${roadLabel}`}
+              {allowed ? t("pickup.confirm") : t("pickup.moveOnto", { road: roadLabel })}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 /**
  * A booking rendered as a paper receipt: details on the upper half, a punched
@@ -40,6 +41,8 @@ export default function BookingReceipt({
   /** Must match the surface behind the card for the notches to look punched. */
   notchColorClass?: string;
 }) {
+  const p = useProvinceName();
+  const t = useT();
   return (
     <div className="relative overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)]">
       <div className="p-4">
@@ -51,9 +54,9 @@ export default function BookingReceipt({
           <CompanyLogo name={company} size={40} />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-1.5 text-[15px] font-semibold text-text-primary">
-              <span className="truncate">{origin ?? "Unknown"}</span>
+              <span className="truncate">{p(origin) || "Unknown"}</span>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-text-muted" />
-              <span className="truncate">{destination ?? "Unknown"}</span>
+              <span className="truncate">{p(destination) || "Unknown"}</span>
             </span>
             <span className="truncate text-[12px] text-text-secondary">{company}</span>
             <span className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -96,7 +99,7 @@ export default function BookingReceipt({
 
       <div className="flex items-end justify-between gap-3 px-4 pb-4 pt-4">
         <div className="flex min-w-0 flex-col">
-          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TICKET ID</span>
+          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.ticketId")}</span>
           <span className="truncate font-mono text-[14px] font-bold text-text-primary">
             {ticketId}
           </span>

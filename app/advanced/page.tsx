@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowRightLeft, CalendarDays, MapPin, Search } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import { CITIES } from "@/constants/booking";
+import { useT, useProvinceName } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
 
@@ -13,23 +15,26 @@ function todayISO() {
 }
 
 /** Today / Tomorrow / a weekday label, for the quick-pick date chips. */
-function dateChips() {
+function dateChips(t: (key: TranslationKey) => string) {
+  const p = useProvinceName();
   return [0, 1, 2].map((offset) => {
     const day = new Date();
     day.setDate(day.getDate() + offset);
     const iso = day.toISOString().slice(0, 10);
     const label =
       offset === 0
-        ? "Today"
+        ? t("plan.today")
         : offset === 1
-          ? "Tomorrow"
+          ? t("plan.tomorrow")
           : day.toLocaleDateString(undefined, { weekday: "short" });
     return { iso, label, sub: day.toLocaleDateString(undefined, { day: "numeric", month: "short" }) };
   });
 }
 
 export default function AdvancedBookingPage() {
+  const p = useProvinceName();
   const router = useRouter();
+  const t = useT();
   const [ready, setReady] = useState(false);
   const [from, setFrom] = useState<string>(CITIES[0]);
   const [to, setTo] = useState<string>(CITIES[1]);
@@ -65,12 +70,8 @@ export default function AdvancedBookingPage() {
             aria-hidden
             className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10 blur-3xl"
           />
-          <h1 className="relative text-[27px] font-extrabold tracking-[-0.7px] text-white">
-            Plan a trip
-          </h1>
-          <p className="relative mt-1.5 max-w-[270px] text-[13.5px] leading-[20px] text-white/65">
-            Reserve a seat on a scheduled departure, up to a week ahead.
-          </p>
+          <h1 className="relative text-[27px] font-extrabold tracking-[-0.7px] text-white">{t("plan.title")}</h1>
+          <p className="relative mt-1.5 max-w-[270px] text-[13.5px] leading-[20px] text-white/65">{t("plan.subtitle")}</p>
         </div>
 
         <div className="mx-4 -mt-10 flex flex-col gap-5 rounded-[24px] bg-white p-5 shadow-[var(--shadow-lift)]">
@@ -81,7 +82,7 @@ export default function AdvancedBookingPage() {
                 <MapPin className="h-4 w-4 text-text-secondary" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">FROM</span>
+                <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">{t("common.from")}</span>
                 <select
                   value={from}
                   onChange={(e) => {
@@ -93,7 +94,7 @@ export default function AdvancedBookingPage() {
                 >
                   {CITIES.map((city) => (
                     <option key={city} value={city}>
-                      {city}
+                      {p(city)}
                     </option>
                   ))}
                 </select>
@@ -107,7 +108,7 @@ export default function AdvancedBookingPage() {
                 <MapPin className="h-4 w-4 text-white" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">TO</span>
+                <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">{t("common.to")}</span>
                 <select
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
@@ -115,7 +116,7 @@ export default function AdvancedBookingPage() {
                 >
                   {toOptions.map((city) => (
                     <option key={city} value={city}>
-                      {city}
+                      {p(city)}
                     </option>
                   ))}
                 </select>
@@ -128,7 +129,7 @@ export default function AdvancedBookingPage() {
                 setFrom(to);
                 setTo(prevFrom);
               }}
-              aria-label="Swap origin and destination"
+              aria-label={t("plan.swap")}
               className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-white shadow-[var(--shadow-float)] transition-transform active:scale-95"
             >
               <ArrowRightLeft className="h-4 w-4 text-primary" />
@@ -136,11 +137,9 @@ export default function AdvancedBookingPage() {
           </div>
 
           <div>
-            <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">
-              TRAVEL DATE
-            </span>
+            <span className="text-[10px] font-bold tracking-[0.5px] text-text-muted">{t("plan.travelDate")}</span>
             <div className="mt-2.5 flex gap-2">
-              {dateChips().map((chip) => (
+              {dateChips(t).map((chip) => (
                 <button
                   key={chip.iso}
                   onClick={() => setDate(chip.iso)}
@@ -178,9 +177,7 @@ export default function AdvancedBookingPage() {
             onClick={handleSearch}
             className="flex h-[54px] w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-b from-primary to-primary-dark text-[15px] font-bold text-white transition-transform active:scale-[0.99]"
           >
-            <Search className="h-[18px] w-[18px]" />
-            Search departures
-          </button>
+            <Search className="h-[18px] w-[18px]" />{t("plan.searchDepartures")}</button>
         </div>
       </div>
 

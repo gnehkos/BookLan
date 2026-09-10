@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
+import { useT } from "@/lib/i18n";
 
 export default function PaymentCard({
   amount,
@@ -12,6 +13,7 @@ export default function PaymentCard({
   itemName: string;
   onSuccess: () => Promise<void> | void;
 }) {
+  const t = useT();
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,14 +40,14 @@ export default function PaymentCard({
       const payData = await payRes.json();
 
       if (!payData.success) {
-        setError(payData.error ?? "Payment failed. Please try again.");
+        setError(payData.error ?? t("payment.failed"));
         setPaying(false);
         return;
       }
 
       await onSuccess();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t("payment.error"));
       setPaying(false);
     }
   }
@@ -57,18 +59,18 @@ export default function PaymentCard({
             the brand they are about to pay from. */}
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-border bg-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logos/aba.jpg" alt="ABA Bank" className="h-full w-full object-contain" />
+          <img src="/logos/aba.jpg" alt={t("payment.bank")} className="h-full w-full object-contain" />
         </div>
         <div className="flex min-w-0 flex-col">
-          <span className="text-[15px] font-bold text-text-primary">ABA Bank</span>
-          <span className="text-[13px] text-text-secondary">Pay with your ABA Account</span>
+          <span className="text-[15px] font-bold text-text-primary">{t("payment.bank")}</span>
+          <span className="text-[13px] text-text-secondary">{t("payment.subtitle")}</span>
         </div>
       </div>
 
       {error && <p className="text-sm text-error">{error}</p>}
 
       <Button loading={paying} onClick={handlePay}>
-        Pay ${amount.toFixed(2)} with ABA
+        {t("payment.pay", { amount: amount.toFixed(2) })}
       </Button>
     </div>
   );

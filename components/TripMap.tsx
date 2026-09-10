@@ -13,6 +13,7 @@ import {
   TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, currentLocationIcon, destinationPinIcon } from "@/lib/mapTheme";
 import { useRoadRoute } from "@/lib/useRoadRoute";
 import { pointAtFraction, sliceFrom, type LatLng } from "@/lib/polyline";
+import { useT } from "@/lib/i18n";
 
 /**
  * Frames the journey once, then leaves the viewport alone. Re-fitting on every
@@ -75,6 +76,7 @@ export default function TripMap({
   etaMinutes: number;
   panelHeight: number;
 }) {
+  const t = useT();
   // Fixed endpoints, so this resolves once for the whole trip rather than
   // re-requesting a route on every tick.
   const roadRoute = useRoadRoute(origin, destination);
@@ -121,7 +123,9 @@ export default function TripMap({
           <span className="block text-[14px] font-semibold text-text-primary">
             {destinationName}
           </span>
-          <span className="mt-0.5 block text-[12px] text-text-secondary">Drop-off station</span>
+          <span className="mt-0.5 block text-[12px] text-text-secondary">
+          {t("station.dropoffTitle")}
+          </span>
         </Popup>
       </Marker>
 
@@ -145,7 +149,7 @@ export default function TripMap({
       <RecenterControl
         target={position}
         zoom={11}
-        label="Recenter to the bus"
+        label={t("ontrip.recenter")}
         bottomOffset={panelHeight + 16}
       />
       <MapAttribution />

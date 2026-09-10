@@ -16,6 +16,8 @@ import CompanyLogo from "@/components/CompanyLogo";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { driverNameFor } from "@/constants/drivers";
 import { lastMessage, listThreads, previewText, relativeTime, type ChatThread } from "@/lib/chat";
+import { useT } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type Tab = "messages" | "notifications";
 
@@ -51,7 +53,10 @@ const TONE_ICONS: Record<Notification["tone"], typeof CircleCheck> = {
 };
 
 /** Notifications are derived from the passenger's real bookings. */
-function notificationsFor(bookings: BookingRow[]): Notification[] {
+function notificationsFor(
+  bookings: BookingRow[],
+  t: (key: TranslationKey) => string
+): Notification[] {
   return bookings.flatMap((booking) => {
     const company = booking.active_trips?.companies?.name ?? "your bus";
     const destination = booking.active_trips?.destination ?? "your destination";
@@ -61,7 +66,7 @@ function notificationsFor(bookings: BookingRow[]): Notification[] {
       return [
         {
           id: `${booking.id}-cancelled`,
-          title: "Booking Cancelled",
+          title: t("inbox.statusCancelled"),
           body: `Your ${company} booking to ${destination} was cancelled.`,
           at,
           tone: "error" as const,
@@ -73,7 +78,7 @@ function notificationsFor(bookings: BookingRow[]): Notification[] {
       return [
         {
           id: `${booking.id}-complete`,
-          title: "Trip Complete",
+          title: t("inbox.statusComplete"),
           body: `Your trip to ${destination} is complete. Rate your experience.`,
           at,
           tone: "success" as const,
@@ -84,7 +89,7 @@ function notificationsFor(bookings: BookingRow[]): Notification[] {
     const items: Notification[] = [
       {
         id: `${booking.id}-confirmed`,
-        title: "Booking Confirmed",
+        title: t("inbox.statusConfirmed"),
         body: `Your seat on ${company} to ${destination} has been confirmed.`,
         at,
         tone: "info",
@@ -94,7 +99,7 @@ function notificationsFor(bookings: BookingRow[]): Notification[] {
     if (booking.distance_remaining_km > 0 && booking.distance_remaining_km <= 5) {
       items.unshift({
         id: `${booking.id}-approaching`,
-        title: "Vehicle Approaching",
+        title: t("inbox.statusApproaching"),
         body: `Your bus is ${booking.distance_remaining_km} km away. Be ready at your pickup point.`,
         at: at + 1,
         tone: "warning",
@@ -107,6 +112,7 @@ function notificationsFor(bookings: BookingRow[]): Notification[] {
 
 export default function InboxPage() {
   const router = useRouter();
+  const t = useT();
   const [tab, setTab] = useState<Tab>("messages");
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -144,7 +150,7 @@ export default function InboxPage() {
   }, [router]);
 
   const notifications = useMemo(
-    () => notificationsFor(bookings).sort((a, b) => b.at - a.at),
+    () => notificationsFor(bookings, t).sort((a, b) => b.at - a.at),
     [bookings]
   );
 
@@ -159,14 +165,14 @@ export default function InboxPage() {
               // Explicit: leaving a chat pushes /inbox, so history holds
               // inbox -> chat -> inbox and router.back() returned to the chat.
               onClick={() => router.push("/home")}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-surface"
             >
               <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
             </button>
             <h1 className="flex-1 text-[22px] font-extrabold tracking-[-0.4px] text-text-primary">
-              Inbox
-            </h1>
+          {t("home.inbox")}
+          </h1>
             <span className="rounded-[8px] bg-accent px-2.5 py-1 text-[11px] font-bold text-primary">
               {count} item{count === 1 ? "" : "s"}
             </span>
@@ -195,7 +201,7 @@ export default function InboxPage() {
               {threads.length === 0 && (
                 <div className="flex flex-col items-center gap-2 py-16 text-center">
                   <MessageCircle className="h-10 w-10 text-text-muted" />
-                  <p className="text-[14px] text-text-secondary">No messages yet.</p>
+                  <p className="text-[14px] text-text-secondary">{t("inbox.noMessages")}</p>
                   <p className="max-w-[260px] text-[12px] text-text-muted">
                     Message your driver from the tracking screen and the conversation shows up
                     here.
@@ -248,7 +254,7 @@ export default function InboxPage() {
               {!loading && notifications.length === 0 && (
                 <div className="flex flex-col items-center gap-2 py-16 text-center">
                   <Bus className="h-10 w-10 text-text-muted" />
-                  <p className="text-[14px] text-text-secondary">Nothing here yet.</p>
+                  <p className="text-[14px] text-text-secondary">{t("inbox.empty")}</p>
                 </div>
               )}
 

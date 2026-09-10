@@ -108,6 +108,13 @@ body {
   font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
 }
 
+/* Khmer needs its own face, and a little more line height — the script stacks
+   diacritics above and below the baseline and clips at Latin metrics. */
+:root[data-lang="km"] body {
+  font-family: var(--font-khmer), var(--font-jakarta), Arial, sans-serif;
+  line-height: 1.65;
+}
+
 @keyframes slide-up {
   from {
     transform: translateY(100%);

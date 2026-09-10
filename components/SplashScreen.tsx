@@ -1,6 +1,7 @@
 "use client";
 
 import BooklanLogo from "@/components/BooklanLogo";
+import { useT } from "@/lib/i18n";
 
 /**
  * The launch screen.
@@ -15,6 +16,7 @@ import BooklanLogo from "@/components/BooklanLogo";
  * never repainted to suit a background.
  */
 export default function SplashScreen({ leaving = false }: { leaving?: boolean }) {
+  const t = useT();
   return (
     <div
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-white transition-opacity duration-500 ${
@@ -56,8 +58,8 @@ export default function SplashScreen({ leaving = false }: { leaving?: boolean })
           BookLan
         </h1>
         <p className="mt-3 text-[13.5px] font-medium tracking-[0.2px] text-text-muted opacity-0 animate-[splash-rise_0.6s_cubic-bezier(0.22,1,0.36,1)_0.95s_forwards]">
-          No station. No waiting.
-        </p>
+          {t("splash.slogan")}
+          </p>
       </div>
 
       {/* Indeterminate sweep — no fake percentage, it is just a launch beat. */}

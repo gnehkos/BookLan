@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, Phone, User as UserIcon } from "lucide-react";
 import Button from "@/components/Button";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
 
 const AVATAR_BUCKET = "avatars";
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export default function CreateProfilePage() {
   const router = useRouter();
+  const t = useT();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -48,7 +50,7 @@ export default function CreateProfilePage() {
     if (!file) return;
 
     if (file.size > MAX_PHOTO_BYTES) {
-      setError("That image is over 5MB. Please pick a smaller one.");
+      setError(t("signup.photoTooBig"));
       return;
     }
 
@@ -104,7 +106,7 @@ export default function CreateProfilePage() {
     );
 
     if (upsertError || !data) {
-      setError(upsertError?.message ?? "Couldn't save your profile. Please try again.");
+      setError(upsertError?.message ?? t("signup.saveFailed"));
       setSaving(false);
       return;
     }
@@ -124,7 +126,7 @@ export default function CreateProfilePage() {
     // is required — there is no skipping past it.
     const trimmed = name.trim();
     if (!trimmed) {
-      setError("Please enter your name so drivers know who to look for.");
+      setError(t("signup.nameRequired"));
       return;
     }
     setSaving(true);
@@ -134,12 +136,10 @@ export default function CreateProfilePage() {
   return (
     <div className="flex min-h-screen justify-center bg-white">
       <div className="flex w-full max-w-[393px] flex-1 flex-col px-6 pb-10 pt-16">
-        <h1 className="text-[30px] font-extrabold leading-[45px] tracking-[-0.8px] text-text-primary">
-          Create account
-        </h1>
+        <h1 className="text-[30px] font-extrabold leading-[45px] tracking-[-0.8px] text-text-primary">{t("signup.title")}</h1>
         <p className="mt-2 text-[15px] font-medium leading-[22.5px] text-text-muted">
-          Add your name so drivers know who&apos;s travelling.
-        </p>
+          {t("signup.subtitle")}
+          </p>
 
         <div className="mt-10 flex flex-col items-center">
           {/* overflow-hidden lives on the inner circle only — on the button it
@@ -147,7 +147,7 @@ export default function CreateProfilePage() {
           <button
             onClick={() => fileInputRef.current?.click()}
             className="relative h-24 w-24"
-            aria-label="Upload profile photo"
+            aria-label={t("signup.uploadPhoto")}
           >
             <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-surface">
               {photoPreview ? (
@@ -165,7 +165,7 @@ export default function CreateProfilePage() {
               <Camera className="h-4 w-4 text-white" />
             </span>
           </button>
-          <span className="mt-3 text-[12px] text-text-muted">Profile photo (optional)</span>
+          <span className="mt-3 text-[12px] text-text-muted">{t("signup.photoOptional")}</span>
 
           <input
             ref={fileInputRef}
@@ -180,13 +180,12 @@ export default function CreateProfilePage() {
           <label
             htmlFor="name"
             className="mb-2.5 block text-[12px] font-bold tracking-[0.4px] text-text-secondary"
-          >
-            FULL NAME <span className="text-error">*</span>
+          >{t("signup.fullName")}<span className="text-error">*</span>
           </label>
           <input
             id="name"
             type="text"
-            placeholder="e.g. Dara Sok"
+            placeholder={t("signup.namePlaceholder")}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="h-[54px] w-full rounded-2xl border border-border bg-surface px-5 text-[15px] text-text-primary outline-none focus:border-primary"
@@ -194,14 +193,12 @@ export default function CreateProfilePage() {
         </div>
 
         <div className="mt-6">
-          <span className="mb-2.5 block text-[12px] font-bold tracking-[0.4px] text-text-secondary">
-            PHONE NUMBER
-          </span>
+          <span className="mb-2.5 block text-[12px] font-bold tracking-[0.4px] text-text-secondary">{t("phone.label")}</span>
           {/* Read-only: it was verified on the previous step. */}
           <div className="flex h-[54px] w-full items-center gap-3 rounded-2xl border border-border bg-surface px-5">
             <Phone className="h-4 w-4 shrink-0 text-text-muted" />
             <span className="flex-1 text-[15px] font-bold text-text-primary">{phone}</span>
-            <span className="text-[12px] text-text-muted">Verified</span>
+            <span className="text-[12px] text-text-muted">{t("signup.verified")}</span>
           </div>
         </div>
 
@@ -209,7 +206,7 @@ export default function CreateProfilePage() {
 
         <div className="mt-auto pt-10">
           <Button loading={saving} disabled={saving || name.trim().length === 0} onClick={handleContinue}>
-            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create account"}
+            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : t("signup.title")}
           </Button>
         </div>
       </div>

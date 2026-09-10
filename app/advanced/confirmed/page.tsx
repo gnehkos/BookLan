@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
 import Ticket from "@/components/Ticket";
+import { useT } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -20,6 +21,7 @@ type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 
 export default function AdvancedConfirmedPage() {
   const router = useRouter();
+  const t = useT();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
   const [seat, setSeat] = useState<StoredSeat | null>(null);
   const [travelDate, setTravelDate] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function AdvancedConfirmedPage() {
           <CheckCircle2 className="h-14 w-14 text-success" strokeWidth={2} />
         </div>
 
-        <h1 className="mt-5 text-2xl font-bold text-text-primary">Booking Confirmed!</h1>
+        <h1 className="mt-5 text-2xl font-bold text-text-primary">{t("confirmed.title")}</h1>
         <p className="mt-1 text-center text-[14px] text-text-secondary">
           Your seat is reserved for {travelDate}. Show your ticket when boarding.
         </p>
@@ -62,26 +64,24 @@ export default function AdvancedConfirmedPage() {
             route={`${schedule.origin} → ${schedule.destination}`}
             ticketId={ticketId}
             details={[
-              { label: "Travel date", value: travelDate ?? "" },
+              { label: t("common.travelDate"), value: travelDate ?? "" },
               {
-                label: "Departure",
+                label: t("common.departure"),
                 value: `${schedule.departure_time} – ${schedule.arrival_time}`,
               },
               {
-                label: seat.seatNumbers.length > 1 ? "Seats" : "Seat",
+                label: seat.seatNumbers.length > 1 ? t("common.seats") : t("common.seat"),
                 value: seat.seatNumbers.join(", "),
               },
-              { label: "Total paid", value: `$${seat.totalPrice.toFixed(2)}` },
+              { label: t("common.totalPaid"), value: `$${seat.totalPrice.toFixed(2)}` },
             ]}
-            footnote="Show this ID to the driver when boarding"
+            footnote={t("confirmed.showId")}
           />
         </div>
 
         <div className="mt-6 flex w-full flex-col gap-3">
-          <Button onClick={() => router.push("/bookings")}>View All Bookings</Button>
-          <Button variant="outline" onClick={() => router.push("/advanced")}>
-            Search More Buses
-          </Button>
+          <Button onClick={() => router.push("/bookings")}>{t("confirmed.viewAll")}</Button>
+          <Button variant="outline" onClick={() => router.push("/advanced")}>{t("confirmed.searchMore")}</Button>
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import Button from "@/components/Button";
 import CompanyLogo from "@/components/CompanyLogo";
 import ErrorState from "@/components/ErrorState";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 const StationMap = dynamic(() => import("@/components/StationMap"), {
   ssr: false,
@@ -43,6 +44,8 @@ type StoredSchedule = {
  */
 export default function AdvancedDropoffPage() {
   const router = useRouter();
+  const t = useT();
+  const p = useProvinceName();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
   const [stations, setStations] = useState<Station[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -104,7 +107,7 @@ export default function AdvancedDropoffPage() {
       if (cancelled) return;
 
       if (stationsError) {
-        setError("Couldn't load drop-off stations. Check your connection and try again.");
+        setError(t("station.loadFailedDropoff"));
       } else {
         setStations((data as Station[]) ?? []);
       }
@@ -138,17 +141,17 @@ export default function AdvancedDropoffPage() {
         <div className="flex items-center gap-3 px-4 pb-4 pt-6">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[var(--shadow-soft)]"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
           <div className="flex min-w-0 flex-col">
             <h1 className="text-[20px] font-extrabold tracking-[-0.4px] text-text-primary">
-              Drop-off station
-            </h1>
+          {t("station.dropoffTitle")}
+          </h1>
             <span className="truncate text-[12px] text-text-secondary">
-              {company} in {schedule.destination}
+              {t("station.inProvince", { company, province: p(schedule.destination) })}
             </span>
           </div>
         </div>
@@ -168,12 +171,9 @@ export default function AdvancedDropoffPage() {
           {!loading && !error && stations.length === 0 && (
             <div className="flex flex-col items-center gap-2 rounded-card bg-white px-6 py-12 text-center shadow-[var(--shadow-soft)]">
               <MapPin className="h-6 w-6 text-text-muted" />
-              <span className="text-[14px] font-semibold text-text-primary">
-                No stations listed
-              </span>
+              <span className="text-[14px] font-semibold text-text-primary">{t("station.noneListed")}</span>
               <span className="text-[12.5px] leading-[19px] text-text-secondary">
-                {company} has no drop-off point registered in {schedule.destination} yet. Go back
-                and choose another departure.
+                {t("station.noDropoff", { company, province: p(schedule.destination) })}
               </span>
             </div>
           )}
@@ -223,7 +223,7 @@ export default function AdvancedDropoffPage() {
           // shorter than the screen, and a sticky element then sits wherever
           // the content happens to end — halfway up.
           <div className="fixed inset-x-0 bottom-4 z-20 mx-auto w-full max-w-[393px] px-4">
-            <Button onClick={handleConfirm}>Confirm drop-off</Button>
+            <Button onClick={handleConfirm}>{t("station.confirmDropoff")}</Button>
           </div>
         )}
       </div>

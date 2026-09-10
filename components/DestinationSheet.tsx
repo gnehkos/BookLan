@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { MapPin, Search, X } from "lucide-react";
 import { POPULAR_DESTINATIONS } from "@/constants/booking";
+import { useT, useProvinceName } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 /**
  * Change-destination sheet. Slides up from the bottom like the seat picker,
@@ -18,6 +20,8 @@ export default function DestinationSheet({
   onSelect: (destination: string) => void;
   onClose: () => void;
 }) {
+  const p = useProvinceName();
+  const t = useT();
   const [query, setQuery] = useState("");
 
   const matches = useMemo(() => {
@@ -38,12 +42,12 @@ export default function DestinationSheet({
 
         <div className="flex items-start justify-between px-5 pt-3">
           <div className="flex flex-col">
-            <h2 className="text-[16px] font-semibold text-text-primary">Change destination</h2>
+            <h2 className="text-[16px] font-semibold text-text-primary">{t("destinationSheet.title")}</h2>
             <span className="text-[12px] text-text-secondary">Currently going to {current}</span>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface"
           >
             <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
@@ -57,7 +61,7 @@ export default function DestinationSheet({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search a province"
+              placeholder={t("destinationSheet.search")}
               className="w-full bg-transparent text-[15px] text-text-primary outline-none placeholder:text-text-muted"
             />
           </div>
@@ -65,7 +69,7 @@ export default function DestinationSheet({
 
         <div className="mt-4 flex-1 overflow-y-auto px-5 pb-6">
           <span className="text-[12px] font-bold tracking-[0.4px] text-text-muted">
-            {query.trim() ? "MATCHES" : "POPULAR DESTINATIONS"}
+            {query.trim() ? t("search.matches") : t("search.popular")}
           </span>
 
           <div className="mt-3 flex flex-col gap-2">
@@ -79,7 +83,7 @@ export default function DestinationSheet({
               const active = place.name === current;
               return (
                 <button
-                  key={place.name}
+                  key={p(place.name)}
                   onClick={() => {
                     onSelect(place.name);
                     onClose();
@@ -99,14 +103,12 @@ export default function DestinationSheet({
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[14px] font-semibold text-text-primary">
-                      {place.name}
+                      {p(place.name)}
                     </span>
-                    <span className="truncate text-[11px] text-text-muted">{place.note}</span>
+                    <span className="truncate text-[11px] text-text-muted">{t(place.noteKey as TranslationKey)}</span>
                   </span>
                   {active && (
-                    <span className="shrink-0 text-[11px] font-semibold text-primary">
-                      Current
-                    </span>
+                    <span className="shrink-0 text-[11px] font-semibold text-primary">{t("destinationSheet.current")}</span>
                   )}
                 </button>
               );

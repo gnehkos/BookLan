@@ -10,6 +10,7 @@ import { PHNOM_PENH } from "@/constants/booking";
 import { ROAD_TOLERANCE_KM, isPickupAllowed, nearestRoad, roadsFor } from "@/lib/geo";
 import { useNationalRoads } from "@/lib/useNationalRoads";
 import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, dropPinIcon } from "@/lib/mapTheme";
+import { useT } from "@/lib/i18n";
 
 /** Zone colours are deliberately deeper than the UI status colours so the
  *  overlays stay readable at low fill over pale map tiles. */
@@ -259,6 +260,7 @@ export default function PickupMap({
   /** Height of the floating sheet, so the recenter button sits just above it. */
   bottomInset?: number;
 }) {
+  const t = useT();
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [position, setPosition] = useState<[number, number] | null>(null);
   // Testers did not realise the pin could be moved, so the instruction stays
@@ -330,10 +332,10 @@ export default function PickupMap({
   // Instruction first, then the reason a pin is refused; nothing once the pin
   // sits somewhere valid and the sheet below can speak for itself.
   const hint = !moved
-    ? { title: "Hold to set pickup", sub: "or drag this pin", warn: false }
+    ? { title: t("pickup.hintTitle"), sub: t("pickup.hintSub"), warn: false }
     : allowed
       ? null
-      : { title: "Wrong road", sub: "Your bus won't pass here", warn: true };
+      : { title: t("pickup.warnTitle"), sub: t("pickup.warnSub"), warn: true };
 
   // Zoomed right in: at a 12 m tolerance the roadside is only targetable up
   // close, so the map opens tight enough to actually hit it.
@@ -370,7 +372,7 @@ export default function PickupMap({
       <RecenterControl
         target={position}
         zoom={17}
-        label="Recenter to my pin"
+        label={t("pickup.recenter")}
         // The sheet is inset 16px from the bottom, so clearing its top edge
         // takes that plus its height, plus a small gap. Anything more and the
         // button drifts into the middle of the map with nothing to sit against.

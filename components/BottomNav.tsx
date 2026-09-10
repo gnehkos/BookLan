@@ -4,12 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarClock, Home, Ticket, User } from "lucide-react";
 import type { ComponentType } from "react";
+import { useT } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
-const TABS: { label: string; href: string; icon: ComponentType<{ className?: string }> }[] = [
-  { label: "Home", href: "/home", icon: Home },
-  { label: "Plan Trip", href: "/advanced", icon: CalendarClock },
-  { label: "Bookings", href: "/bookings", icon: Ticket },
-  { label: "Profile", href: "/profile", icon: User },
+// Labels are keys, not text: this table is module scope and cannot call a hook.
+const TABS: { labelKey: TranslationKey; href: string; icon: ComponentType<{ className?: string }> }[] = [
+  { labelKey: "nav.home", href: "/home", icon: Home },
+  { labelKey: "nav.planTrip", href: "/advanced", icon: CalendarClock },
+  { labelKey: "nav.bookings", href: "/bookings", icon: Ticket },
+  { labelKey: "nav.profile", href: "/profile", icon: User },
 ];
 
 /** Height of the bar plus its bottom margin — screens pad past this. */
@@ -27,6 +30,7 @@ const NAV_ROUTES = new Set(["/home", "/advanced", "/bookings", "/profile", "/sup
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const t = useT();
 
   const activeIndex = TABS.findIndex(
     (tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`)
@@ -40,7 +44,8 @@ export default function BottomNav() {
           is tuned in one place. The nav is the most transparent of them: it
           sits over the map, and the map should read through it. */}
       <div className="glass glass-clear pointer-events-auto flex w-full max-w-[358px] rounded-pill p-1.5">
-        {TABS.map(({ label, href, icon: Icon }, index) => {
+        {TABS.map(({ labelKey, href, icon: Icon }, index) => {
+          const label = t(labelKey);
           const active = index === activeIndex;
           return (
             <Link

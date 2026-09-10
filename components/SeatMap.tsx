@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Check, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export type VehicleType = "bus" | "van";
 
@@ -39,6 +40,7 @@ export default function SeatMap({
   onToggle: (seat: number) => void;
   seedKey: string;
 }) {
+  const t = useT();
   const rows = Math.ceil(seatsTotal / SEATS_PER_ROW);
   const atLimit = selectedSeats.length >= seatsAvailable;
 
@@ -63,27 +65,19 @@ export default function SeatMap({
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center gap-3 text-[11px] font-medium text-text-secondary">
         <span className="flex items-center gap-1.5">
-          <span className="h-[18px] w-[18px] rounded-[5px] border border-border bg-surface" />
-          Available
-        </span>
+          <span className="h-[18px] w-[18px] rounded-[5px] border border-border bg-surface" />{t("seats.available")}</span>
         <span className="flex items-center gap-1.5">
           <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border border-primary bg-primary">
             <Check className="h-[9px] w-[9px] text-white" strokeWidth={3} />
-          </span>
-          Selected
-        </span>
+          </span>{t("seats.selected")}</span>
         <span className="flex items-center gap-1.5">
           <span className="flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border border-border bg-border">
             <X className="h-[9px] w-[9px] text-text-secondary" strokeWidth={3} />
-          </span>
-          Occupied
-        </span>
+          </span>{t("seats.occupied")}</span>
       </div>
 
       <div className="rounded-[20px] bg-surface px-4 pb-4 pt-3">
-        <span className="mx-auto mb-2.5 block w-fit rounded-pill border border-border bg-white px-3 py-0.5 text-[10px] font-semibold tracking-[0.5px] text-text-secondary">
-          FRONT
-        </span>
+        <span className="mx-auto mb-2.5 block w-fit rounded-pill border border-border bg-white px-3 py-0.5 text-[10px] font-semibold tracking-[0.5px] text-text-secondary">{t("seats.front")}</span>
 
         <div className="flex flex-col gap-1.5">
           {Array.from({ length: rows }).map((_, rowIndex) => (
@@ -136,7 +130,7 @@ export default function SeatMap({
       {atLimit && (
         <p className="text-center text-[12px] font-semibold text-text-secondary">
           {seatsAvailable === 1
-            ? "Only 1 seat is left on this trip."
+            ? t("seats.onlyOne")
             : `All ${seatsAvailable} remaining seats on this trip are selected.`}
         </p>
       )}

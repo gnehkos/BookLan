@@ -11,6 +11,7 @@ import { safeQuery, supabase } from "@/lib/supabase";
 import { AVG_SPEED_KMH } from "@/constants/booking";
 import { useMeasuredHeight } from "@/lib/useMeasuredHeight";
 import { completeBooking } from "@/lib/seats";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 const TripMap = dynamic(() => import("@/components/TripMap"), {
   ssr: false,
@@ -69,7 +70,9 @@ const PANEL_HEIGHT_FALLBACK = 240;
  *  hide the nav, so there is nothing else to clear. */
 const SCREEN_INSET = 16;
 export default function TripPage() {
+  const p = useProvinceName();
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ bookingId: string }>();
   const bookingId = params.bookingId;
 
@@ -103,9 +106,9 @@ export default function TripPage() {
       // The id comes from the URL, so confirm the trip is actually this
       // passenger's before showing it.
       if (error || !row) {
-        setLoadError("Couldn't load your trip. It may no longer exist.");
+        setLoadError(t("ontrip.loadFailed"));
       } else if (row.user_id !== localStorage.getItem("booklan_user_id")) {
-        setLoadError("This trip belongs to a different account.");
+        setLoadError(t("ontrip.wrongAccount"));
       } else {
         setBooking(row);
         // A finished trip opens at the end; a running one resumes from when it
@@ -209,7 +212,7 @@ export default function TripPage() {
           <div className="flex items-start justify-between gap-3">
             <button
               onClick={() => router.push("/bookings")}
-              aria-label="Back to bookings"
+              aria-label={t("ontrip.backToBookings")}
               className="glass pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
             >
               <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
@@ -240,15 +243,15 @@ export default function TripPage() {
 
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2.5">
                   <Detail label="Ticket ID" value={booking.ticket_id} mono />
-                  <Detail label="Operator" value={company} />
-                  <Detail label="Vehicle" value={vehicleType} capitalize />
+                  <Detail label={t("common.operator")} value={company} />
+                  <Detail label={t("common.vehicle")} value={vehicleType} capitalize />
                   <Detail
-                    label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
+                    label={booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat")}
                     value={booking.seat_numbers.join(", ")}
                   />
-                  <Detail label="Destination" value={destinationName} />
-                  <Detail label="Distance left" value={`${remainingKm} km`} />
-                  {dropoffName && <Detail label="Drop-off" value={dropoffName} />}
+                  <Detail label={t("common.destination")} value={destinationName} />
+                  <Detail label={t("track.distanceLeft")} value={`${remainingKm} km`} />
+                  {dropoffName && <Detail label={t("common.dropoff")} value={dropoffName} />}
                   </div>
                 </div>
               )}
@@ -277,17 +280,17 @@ export default function TripPage() {
                 <span className="flex h-2 w-2 shrink-0 rounded-full bg-success" />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-[14px] font-semibold text-text-primary">
-                    On the way to {destinationName}
+                    {t("ontrip.onTheWay", { destination: p(destinationName) })}
                   </span>
                   <span className="truncate text-[12px] text-text-secondary">
-                    {company} · {remainingKm} km left
+                    {company} · {t("ontrip.kmLeft", { km: remainingKm })}
                   </span>
                 </div>
                 <span className="shrink-0 rounded-[10px] bg-accent px-2.5 py-1 text-right">
                   <span className="block text-[16px] font-bold leading-tight text-primary">
                     {etaMinutes}
                   </span>
-                  <span className="block text-[10px] text-text-secondary">min</span>
+                  <span className="block text-[10px] text-text-secondary">{t("track.min")}</span>
                 </span>
               </div>
 
@@ -307,9 +310,7 @@ export default function TripPage() {
             style={{ bottom: SCREEN_INSET + 8 + panelHeight }}
           >
             <span className="inline-flex items-center gap-1.5 rounded-pill bg-primary px-3 py-1.5 text-[11px] font-semibold text-white shadow-[var(--shadow-float)]">
-              <Flag className="h-3 w-3" />
-              Trip in progress
-            </span>
+              <Flag className="h-3 w-3" />{t("ontrip.inProgress")}</span>
           </div>
         )}
       </div>
@@ -333,6 +334,8 @@ function TripRating({
   bookingId: string;
   destinationName: string;
 }) {
+  const p = useProvinceName();
+  const t = useT();
   const router = useRouter();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -359,7 +362,7 @@ function TripRating({
     );
 
     if (saveError) {
-      setError("Couldn't save your review. Please try again.");
+      setError(t("rate.saveFailed"));
       setSaving(false);
       return;
     }
@@ -372,12 +375,10 @@ function TripRating({
     return (
       <div className="flex flex-col items-center gap-2">
         <CheckCircle2 className="h-8 w-8 text-success" />
-        <span className="text-[14px] font-semibold text-text-primary">Thanks for the rating</span>
+        <span className="text-[14px] font-semibold text-text-primary">{t("rate.thanks")}</span>
         <div className="mt-1 flex w-full gap-3">
-          <Button onClick={() => router.push("/bookings?tab=past")}>My Bookings</Button>
-          <Button variant="outline" onClick={() => router.push("/home")}>
-            Done
-          </Button>
+          <Button onClick={() => router.push("/bookings?tab=past")}>{t("ontrip.myBookings")}</Button>
+          <Button variant="outline" onClick={() => router.push("/home")}>{t("common.done")}</Button>
         </div>
       </div>
     );
@@ -389,10 +390,10 @@ function TripRating({
         <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[14px] font-semibold text-text-primary">
-            Arrived at {destinationName}
+            {t("ontrip.arrivedAt", { destination: p(destinationName) })}
           </span>
           <span className="truncate text-[12px] text-text-secondary">
-            How was your trip with {company}?
+            {t("rate.title", { company })}
           </span>
         </div>
       </div>
@@ -420,7 +421,7 @@ function TripRating({
           onChange={(e) => setComment(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           maxLength={280}
-          placeholder="Add a comment (optional)"
+          placeholder={t("rate.comment")}
           className="h-11 w-full rounded-[12px] border border-border bg-surface px-3 text-[14px] text-text-primary outline-none placeholder:text-text-muted focus:border-primary"
         />
       )}
@@ -431,9 +432,7 @@ function TripRating({
         <Button disabled={rating === 0 || saving} onClick={submit}>
           {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Submit rating"}
         </Button>
-        <Button variant="outline" onClick={() => router.push("/home")}>
-          Skip
-        </Button>
+        <Button variant="outline" onClick={() => router.push("/home")}>{t("common.skip")}</Button>
       </div>
     </div>
   );

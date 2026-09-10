@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, ImageIcon, Mic, Send, Square } from "lucide-react";
 import { compressImage, formatDuration, type ChatMessage } from "@/lib/chat";
+import { useT } from "@/lib/i18n";
 
 type Outgoing = Omit<ChatMessage, "id" | "at">;
 
@@ -20,6 +21,7 @@ type Outgoing = Omit<ChatMessage, "id" | "at">;
  * dialog, which is the right fallback.
  */
 export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) => void }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -55,9 +57,9 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
     setError(null);
     try {
       const media = await compressImage(file);
-      onSend({ from: "you", kind: "image", text: "Photo", media });
+      onSend({ from: "you", kind: "image", text: t("chat.photo"), media });
     } catch {
-      setError("Couldn't attach that photo.");
+      setError(t("chat.photoFailed"));
     }
   }
 
@@ -70,7 +72,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
     }
 
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError("Voice messages aren't supported on this device.");
+      setError(t("chat.voiceUnsupported"));
       return;
     }
 
@@ -99,7 +101,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
           onSend({
             from: "you",
             kind: "voice",
-            text: "Voice message",
+            text: t("chat.voiceMessage"),
             media: reader.result as string,
             duration: length,
           });
@@ -111,7 +113,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
       setSeconds(0);
       setRecording(true);
     } catch {
-      setError("Microphone permission was declined.");
+      setError(t("chat.micDenied"));
     }
   }
 
@@ -145,21 +147,21 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
         {recording ? (
           <div className="flex h-11 flex-1 items-center gap-2.5 rounded-pill bg-error/10 px-4">
             <span className="h-2 w-2 animate-pulse rounded-full bg-error" />
-            <span className="flex-1 text-[13px] font-semibold text-error">Recording…</span>
+            <span className="flex-1 text-[13px] font-semibold text-error">{t("chat.recording")}</span>
             <span className="font-mono text-[13px] text-error">{formatDuration(seconds)}</span>
           </div>
         ) : (
           <>
             <button
               onClick={() => galleryRef.current?.click()}
-              aria-label="Send a photo"
+              aria-label={t("chat.sendPhoto")}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary transition-colors hover:bg-border"
             >
               <ImageIcon className="h-[18px] w-[18px]" />
             </button>
             <button
               onClick={() => cameraRef.current?.click()}
-              aria-label="Take a photo"
+              aria-label={t("chat.takePhoto")}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-text-secondary transition-colors hover:bg-border"
             >
               <Camera className="h-[18px] w-[18px]" />
@@ -168,7 +170,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendText()}
-              placeholder="Type a message…"
+              placeholder={t("chat.placeholder")}
               className="h-11 min-w-0 flex-1 rounded-pill border border-border bg-surface px-4 text-[14px] text-text-primary outline-none placeholder:text-text-muted focus:border-primary"
             />
           </>
@@ -177,7 +179,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
         {draft.trim() && !recording ? (
           <button
             onClick={sendText}
-            aria-label="Send message"
+            aria-label={t("chat.send")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white"
           >
             <Send className="h-[18px] w-[18px]" />
@@ -185,7 +187,7 @@ export default function ChatComposer({ onSend }: { onSend: (message: Outgoing) =
         ) : (
           <button
             onClick={toggleRecording}
-            aria-label={recording ? "Stop recording" : "Record a voice message"}
+            aria-label={recording ? t("chat.stopRecording") : t("chat.recordVoice")}
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-colors ${
               recording ? "bg-error text-white" : "bg-primary text-white"
             }`}

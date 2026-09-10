@@ -9,6 +9,7 @@ import PaymentCard from "@/components/PaymentCard";
 import { verifyStoredUser } from "@/lib/session";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
+import { useT } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -27,6 +28,7 @@ type StoredStation = { id: string; name: string; address: string };
 
 export default function AdvancedSummaryPage() {
   const router = useRouter();
+  const t = useT();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
   const [seat, setSeat] = useState<StoredSeat | null>(null);
   const [travelDate, setTravelDate] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export default function AdvancedSummaryPage() {
     );
 
     if (insertError || !booking) {
-      throw new Error(insertError?.message ?? "Could not create booking.");
+      throw new Error(insertError?.message ?? t("payment.createFailed"));
     }
 
     // Best-effort: the booking above already succeeded, so a failure here must never
@@ -155,12 +157,12 @@ export default function AdvancedSummaryPage() {
         <div className="flex items-center gap-2 bg-white px-4 pb-4 pt-6">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-[16px] font-semibold text-text-primary">Confirm Booking</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">{t("confirm.title")}</h1>
         </div>
 
         {/* Journey: the two stations joined by a connector, matching the
@@ -175,9 +177,7 @@ export default function AdvancedSummaryPage() {
 
             <div className="flex min-w-0 flex-1 flex-col gap-5">
               <div className="flex min-w-0 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                  DEPARTURE STATION
-                </span>
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("confirm.departureStation")}</span>
                 <span className="truncate text-[15px] font-semibold text-text-primary">
                   {departure?.name ?? schedule.origin}
                 </span>
@@ -187,9 +187,7 @@ export default function AdvancedSummaryPage() {
               </div>
 
               <div className="flex min-w-0 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                  DROP-OFF STATION
-                </span>
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("confirm.dropoffStation")}</span>
                 <span className="truncate text-[15px] font-semibold text-primary">
                   {dropoff?.name ?? schedule.destination}
                 </span>
@@ -224,9 +222,7 @@ export default function AdvancedSummaryPage() {
 
         {/* Fare breakdown — scheduled seats are a flat price each. */}
         <div className="mx-4 mt-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-            FARE BREAKDOWN
-          </span>
+          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("fare.title")}</span>
 
           <div className="mt-3 flex flex-col gap-2.5">
             <div className="flex items-center justify-between gap-3 text-[13px]">
@@ -240,7 +236,7 @@ export default function AdvancedSummaryPage() {
           </div>
 
           <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-            <span className="text-[14px] font-semibold text-text-primary">Total</span>
+            <span className="text-[14px] font-semibold text-text-primary">{t("common.total")}</span>
             <span className="text-[24px] font-bold leading-none text-primary">
               ${seat.totalPrice.toFixed(2)}
             </span>

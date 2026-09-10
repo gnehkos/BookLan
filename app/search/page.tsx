@@ -9,6 +9,8 @@ import { getActivePickupBooking, type ActivePickupBooking } from "@/lib/activeBo
 import { POPULAR_DESTINATIONS, PROVINCES } from "@/constants/booking";
 import { roadsFor } from "@/lib/geo";
 import { DEFAULT_ROAD_BADGE, roadBadge } from "@/constants/theme";
+import { useT, useProvinceName, useRoadName } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 /**
  * Pick where you're going — nothing more. Choosing a destination goes straight
@@ -16,7 +18,10 @@ import { DEFAULT_ROAD_BADGE, roadBadge } from "@/constants/theme";
  * the passenger will be standing.
  */
 export default function SearchPage() {
+  const p = useProvinceName();
+  const r = useRoadName();
   const router = useRouter();
+  const t = useT();
   const [query, setQuery] = useState("");
   const [blockedBy, setBlockedBy] = useState<ActivePickupBooking | null>(null);
 
@@ -50,7 +55,7 @@ export default function SearchPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => router.push("/home")}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-surface"
             >
               <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
@@ -60,7 +65,7 @@ export default function SearchPage() {
               <input
                 autoFocus
                 type="text"
-                placeholder="Where do you want to go?"
+                placeholder={t("search.title")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-full bg-transparent text-[15px] text-text-primary outline-none placeholder:text-text-muted"
@@ -68,7 +73,7 @@ export default function SearchPage() {
               {query && (
                 <button
                   onClick={() => setQuery("")}
-                  aria-label="Clear search"
+                  aria-label={t("search.clear")}
                   className="shrink-0 text-text-muted"
                 >
                   <X className="h-4 w-4" />
@@ -80,13 +85,13 @@ export default function SearchPage() {
 
         <div className="px-4 pt-5">
           <span className="text-[12px] font-bold tracking-[0.4px] text-text-muted">
-            {query.trim() ? "MATCHES" : "POPULAR DESTINATIONS"}
+            {query.trim() ? t("search.matches") : t("search.popular")}
           </span>
 
           <div className="mt-3 flex flex-col gap-2">
             {matches.length === 0 && (
               <p className="py-12 text-center text-[14px] text-text-secondary">
-                No destination matches &quot;{query}&quot;.
+                {t("search.noMatch", { query })}
               </p>
             )}
 
@@ -100,7 +105,7 @@ export default function SearchPage() {
                 >
                   <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <span className="truncate text-[16px] font-bold tracking-[-0.2px] text-text-primary">
-                      {place.name}
+                      {p(place.name)}
                     </span>
 
                     {/* The road is the practical detail — it is where the
@@ -115,14 +120,14 @@ export default function SearchPage() {
                             style={{ backgroundColor: tone.bg, color: tone.text }}
                             className="shrink-0 rounded-md px-2 py-[3px] text-[11px] font-bold tracking-[0.1px]"
                           >
-                            {road.name}
+                            {r(road)}
                           </span>
                         );
                       })}
                     </span>
 
                     <span className="truncate text-[12.5px] text-text-secondary">
-                      {place.note}
+                      {t(place.noteKey as TranslationKey)}
                     </span>
                   </span>
                   <ChevronRight className="h-[18px] w-[18px] shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5" />

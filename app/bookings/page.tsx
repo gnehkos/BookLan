@@ -13,6 +13,8 @@ import ErrorState from "@/components/ErrorState";
 import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { releaseScheduleSeats, releaseTripSeats } from "@/lib/seats";
+import { useT } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
 type TabMode = "current" | "past";
@@ -60,13 +62,14 @@ type AdvancedBookingRow = {
   stations: { name: string } | null;
 };
 
-const TABS: { mode: TabMode; label: string }[] = [
-  { mode: "current", label: "Current Bookings" },
-  { mode: "past", label: "History" },
+const TABS: { mode: TabMode; labelKey: TranslationKey }[] = [
+  { mode: "current", labelKey: "bookings.current" },
+  { mode: "past", labelKey: "bookings.history" },
 ];
 
 export default function BookingsPage() {
   const router = useRouter();
+  const t = useT();
   const [userId, setUserId] = useState<string | null>(null);
 
   /**
@@ -136,7 +139,7 @@ export default function BookingsPage() {
     ]);
 
     if (road.error || sched.error) {
-      setError("Couldn't load your bookings. Check your connection and try again.");
+      setError(t("bookings.loadFailed"));
     } else {
       setBookings((road.data as unknown as BookingRow[]) ?? []);
       setScheduled((sched.data as unknown as AdvancedBookingRow[]) ?? []);
@@ -184,7 +187,7 @@ export default function BookingsPage() {
     );
 
     if (cancelErr) {
-      setCancelError("Couldn't cancel this booking. Please try again.");
+      setCancelError(t("bookings.cancelFailed"));
     } else {
       await releaseTripSeats(booking.trip_id, booking.seat_numbers.length);
       if (userId) await loadBookings(tab, userId);
@@ -200,7 +203,7 @@ export default function BookingsPage() {
     );
 
     if (cancelErr) {
-      setCancelError("Couldn't cancel this booking. Please try again.");
+      setCancelError(t("bookings.cancelFailed"));
     } else {
       await releaseScheduleSeats(booking.schedule_id, booking.seat_numbers.length);
       if (userId) await loadBookings(tab, userId);
@@ -222,15 +225,11 @@ export default function BookingsPage() {
             aria-hidden
             className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-white/10 blur-3xl"
           />
-          <h1 className="relative text-[26px] font-extrabold tracking-[-0.6px] text-white">
-            My bookings
-          </h1>
-          <p className="relative mt-1 text-[13px] text-white/60">
-            Your tickets, past and present.
-          </p>
+          <h1 className="relative text-[26px] font-extrabold tracking-[-0.6px] text-white">{t("bookings.title")}</h1>
+          <p className="relative mt-1 text-[13px] text-white/60">{t("bookings.subtitle")}</p>
 
           <div className="relative mt-5 flex gap-1 rounded-pill bg-white/10 p-1">
-            {TABS.map(({ mode, label }) => (
+            {TABS.map(({ mode, labelKey }) => (
               <button
                 key={mode}
                 onClick={() => setTab(mode)}
@@ -238,7 +237,7 @@ export default function BookingsPage() {
                   tab === mode ? "bg-white text-primary" : "text-white/70 hover:text-white"
                 }`}
               >
-                {label}
+                {t(labelKey)}
               </button>
             ))}
           </div>
@@ -264,7 +263,7 @@ export default function BookingsPage() {
                 <CalendarClock className="h-10 w-10 text-text-muted" />
               )}
               <p className="text-[14px] text-text-secondary">
-                {tab === "current" ? "No current bookings yet." : "No past bookings yet."}
+                {tab === "current" ? t("bookings.noneCurrent") : t("bookings.nonePast")}
               </p>
             </div>
           )}
@@ -318,6 +317,7 @@ export default function BookingsPage() {
 
 /** Which booking flow produced this ticket — the two behave differently. */
 function TypeBadge({ kind }: { kind: "pickup" | "scheduled" }) {
+  const t = useT();
   const pickup = kind === "pickup";
   return (
     <span
@@ -325,20 +325,28 @@ function TypeBadge({ kind }: { kind: "pickup" | "scheduled" }) {
         pickup ? "bg-[#E8EEF4] text-primary" : "bg-[#EDE9FE] text-[#7C3AED]"
       }`}
     >
-      {pickup ? "Roadside pickup" : "Scheduled"}
+      {pickup ? t("confirm.roadsidePickup") : t("bookings.scheduled")}
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const t = useT();
   const cancelled = status === "cancelled";
+  // The value comes from the database, so map it rather than print it raw.
+  const label =
+    status === "cancelled"
+      ? t("bookings.cancelled")
+      : status === "completed"
+        ? t("bookings.completed")
+        : t("bookings.confirmed");
   return (
     <span
       className={`shrink-0 rounded-pill px-2.5 py-1 text-[11px] font-semibold capitalize ${
         cancelled ? "bg-error/10 text-error" : "bg-success/10 text-success"
       }`}
     >
-      {status}
+      {label}
     </span>
   );
 }
@@ -358,6 +366,7 @@ function ScheduledCard({
   reviewed: boolean;
   onReviewed: (bookingId: string) => void;
 }) {
+  const t = useT();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const schedule = booking.schedules;
   const company = schedule?.companies;
@@ -371,36 +380,30 @@ function ScheduledCard({
       origin={schedule?.origin}
       destination={schedule?.destination}
       rows={[
-        { label: "Travel date", value: booking.travel_date },
+        { label: t("common.travelDate"), value: booking.travel_date },
         {
-          label: "Departure",
+          label: t("common.departure"),
           value: `${schedule?.departure_time ?? "--"} – ${schedule?.arrival_time ?? "--"}`,
         },
         {
-          label: booking.seat_numbers.length > 1 ? "Seats" : "Seat",
+          label: booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat"),
           value: booking.seat_numbers.join(", "),
         },
-        { label: "Total paid", value: `$${booking.total_price.toFixed(2)}` },
+        { label: t("common.totalPaid"), value: `$${booking.total_price.toFixed(2)}` },
       ]}
       ticketId={booking.ticket_id}
       statusSlot={<StatusBadge status={booking.status} />}
       actions={
         cancelled ? undefined : confirmingCancel ? (
           <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
-            <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
+            <p className="text-center text-[13px] text-text-secondary">{t("bookings.cancelConfirm")}</p>
             <div className="flex gap-2">
-              <Button variant="outline" loading={cancelling} onClick={onCancel}>
-                Yes, cancel
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
-                Keep
-              </Button>
+              <Button variant="outline" loading={cancelling} onClick={onCancel}>{t("bookings.cancelYes")}</Button>
+              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>{t("bookings.keep")}</Button>
             </div>
           </div>
         ) : (
-          <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
-            Cancel Booking
-          </Button>
+          <Button variant="outline" onClick={() => setConfirmingCancel(true)}>{t("track.cancelBooking")}</Button>
         )
       }
       topActions={
@@ -442,6 +445,7 @@ function BookingCard({
   reviewed: boolean;
   onReviewed: (bookingId: string) => void;
 }) {
+  const t = useT();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const company = booking.active_trips?.companies;
   const isCancelled = booking.status === "cancelled";
@@ -455,12 +459,12 @@ function BookingCard({
       destination={booking.active_trips?.destination}
       rows={[
         {
-          label: "Distance",
+          label: t("common.distance"),
           value: `${booking.active_trips?.distance_km ?? 0} km`,
           icon: <MapPin className="h-3.5 w-3.5 shrink-0 text-text-secondary" />,
         },
         {
-          label: booking.seat_numbers.length > 1 ? "Seats" : "Seat",
+          label: booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat"),
           value: booking.seat_numbers.join(", "),
         },
       ]}
@@ -483,7 +487,7 @@ function BookingCard({
               isCancelled ? "bg-error/10 text-error" : "bg-border text-text-secondary"
             }`}
           >
-            {isCancelled ? "Cancelled" : "Completed"}
+            {isCancelled ? t("bookings.cancelled") : t("bookings.completed")}
           </span>
         ) : (
           <StatusBadge status="confirmed" />
@@ -492,24 +496,18 @@ function BookingCard({
       actions={
         tab !== "current" ? undefined : confirmingCancel ? (
           <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
-            <p className="text-center text-[13px] text-text-secondary">Cancel this booking?</p>
+            <p className="text-center text-[13px] text-text-secondary">{t("bookings.cancelConfirm")}</p>
             <div className="flex gap-2">
-              <Button variant="outline" loading={cancelling} onClick={onCancel}>
-                Yes, cancel
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
-                Keep
-              </Button>
+              <Button variant="outline" loading={cancelling} onClick={onCancel}>{t("bookings.cancelYes")}</Button>
+              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>{t("bookings.keep")}</Button>
             </div>
           </div>
         ) : (
           <div className="flex gap-2">
             <Button onClick={onTrack}>
-              {booking.distance_remaining_km > 0 ? "Track" : "View trip"}
+              {booking.distance_remaining_km > 0 ? t("bookings.track") : t("bookings.viewTrip")}
             </Button>
-            <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
-              Cancel Booking
-            </Button>
+            <Button variant="outline" onClick={() => setConfirmingCancel(true)}>{t("track.cancelBooking")}</Button>
           </div>
         )
       }

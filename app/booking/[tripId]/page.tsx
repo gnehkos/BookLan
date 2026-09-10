@@ -12,6 +12,8 @@ import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { SERVICE_FEE_USD } from "@/constants/booking";
 import { companyProfile } from "@/constants/companyProfile";
+import { useT } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
 
@@ -39,6 +41,7 @@ const ACTION_BAR_HEIGHT = 150;
 const SCREEN_INSET = 16;
 export default function BusDetailPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ tripId: string }>();
   const tripId = params.tripId;
 
@@ -75,7 +78,7 @@ export default function BusDetailPage() {
 
       if (!cancelled) {
         if (fetchError || !data) {
-          setError("Couldn't load this trip. It may no longer be available.");
+          setError(t("trip.loadFailed"));
         } else {
           setTrip(data as unknown as TripDetail);
         }
@@ -151,7 +154,7 @@ export default function BusDetailPage() {
           <div className="flex items-center gap-2 px-4 pt-6 pb-3">
             <button
               onClick={() => router.back()}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white"
             >
               <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
@@ -175,17 +178,22 @@ export default function BusDetailPage() {
       : profile.rating;
   const ratingNote =
     reviews && reviews.length > 0
-      ? `${reviews.length} review${reviews.length > 1 ? "s" : ""}`
-      : `${profile.tripCount} trips`;
+      ? t("company.reviews", { n: reviews.length })
+      : t("company.trips", { n: profile.tripCount });
 
   const reviewList =
     reviews && reviews.length > 0
       ? reviews.map((r) => ({
           author: r.users?.name || "Passenger",
           stars: r.rating,
-          text: r.comment || "Rated this trip.",
+          text: r.comment || t("company.ratedTrip"),
         }))
-      : profile.reviews;
+      : // The stand-ins carry keys rather than sentences, so they translate too.
+        profile.reviews.map((r) => ({
+          author: r.author,
+          stars: r.stars,
+          text: t(r.textKey as TranslationKey),
+        }));
 
   return (
     <div className="flex min-h-screen justify-center bg-surface">
@@ -193,19 +201,19 @@ export default function BusDetailPage() {
         <div className="flex items-center gap-3 px-4 pb-4 pt-6">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-white shadow-[var(--shadow-float)]"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-[16px] font-semibold text-text-primary">Select seats</h1>
+            <h1 className="truncate text-[16px] font-semibold text-text-primary">{t("seats.title")}</h1>
             <span className="truncate text-[12px] text-text-secondary">
               {trip.origin} → {trip.destination}
             </span>
           </div>
           <span className="shrink-0 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-semibold text-primary">
-            {trip.seats_available} left
+            {t("seats.left", { n: trip.seats_available })}
           </span>
         </div>
 
@@ -252,9 +260,7 @@ export default function BusDetailPage() {
                   {ratingValue} · {ratingNote}
                 </span>
               </span>
-              <span className="flex shrink-0 items-center gap-1 rounded-pill bg-surface px-2.5 py-1.5 text-[11px] font-bold text-primary">
-                Details
-                <ChevronUp className="h-3 w-3" strokeWidth={3} />
+              <span className="flex shrink-0 items-center gap-1 rounded-pill bg-surface px-2.5 py-1.5 text-[11px] font-bold text-primary">{t("company.details")}<ChevronUp className="h-3 w-3" strokeWidth={3} />
               </span>
             </button>
 
@@ -265,16 +271,14 @@ export default function BusDetailPage() {
                 <span className="text-[11.5px] leading-tight text-text-secondary">
                   {selectedSeats.length > 0
                     ? `Seat${selectedSeats.length > 1 ? "s" : ""} ${selectedSeats.join(", ")}`
-                    : `$${pricePerSeat.toFixed(2)} per seat`}
+                    : t("seats.perSeat", { price: pricePerSeat.toFixed(2) })}
                 </span>
                 <span className="truncate text-[19px] font-extrabold leading-tight text-text-primary">
-                  {selectedSeats.length > 0 ? `$${totalPrice.toFixed(2)}` : "Choose a seat"}
+                  {selectedSeats.length > 0 ? `$${totalPrice.toFixed(2)}` : t("seats.chooseSeat")}
                 </span>
               </span>
               <span className="w-[132px] shrink-0">
-                <Button disabled={selectedSeats.length === 0} onClick={handleConfirmSeats}>
-                  Continue
-                </Button>
+                <Button disabled={selectedSeats.length === 0} onClick={handleConfirmSeats}>{t("common.continue")}</Button>
               </span>
             </div>
           </div>
@@ -307,7 +311,7 @@ export default function BusDetailPage() {
                 <VehicleBadge type={vehicleType} />
                 <button
                   onClick={() => setDetailsOpen(false)}
-                  aria-label="Close company details"
+                  aria-label={t("company.close")}
                   className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface"
                 >
                   <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
@@ -322,7 +326,7 @@ export default function BusDetailPage() {
                     <MapPin className="h-4 w-4 text-text-secondary" />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-[12px] text-text-secondary">Pickup point</span>
+                    <span className="text-[12px] text-text-secondary">{t("company.pickupPoint")}</span>
                     <span className="truncate text-[14px] font-medium text-text-primary">
                       {pickup?.stationName ??
                         pickup?.placeName ??
@@ -340,7 +344,7 @@ export default function BusDetailPage() {
                     <MapPin className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-[12px] text-text-secondary">Destination</span>
+                    <span className="text-[12px] text-text-secondary">{t("common.destination")}</span>
                     <span className="truncate text-[14px] font-medium text-text-primary">
                       {trip.destination}
                     </span>
@@ -349,14 +353,14 @@ export default function BusDetailPage() {
               </Card>
 
               <Card>
-                <span className="text-[16px] font-semibold text-text-primary">Photos</span>
+                <span className="text-[16px] font-semibold text-text-primary">{t("company.photos")}</span>
                 <CompanyPhotos name={companyName} />
               </Card>
 
               <Card>
                 <span className="text-[16px] font-semibold text-text-primary">
-                  Ratings &amp; Reviews
-                </span>
+          {t("company.ratingsReviews")}
+          </span>
                 <div className="mt-3 flex flex-col gap-3">
                   {(allReviews ? reviewList : reviewList.slice(0, 2)).map((review, i) => (
                     <div key={`${review.author}-${i}`} className="rounded-[12px] bg-surface p-4">
@@ -386,8 +390,8 @@ export default function BusDetailPage() {
                     className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-[12px] border border-border py-2.5 text-[13px] font-bold text-primary transition-colors hover:bg-surface"
                   >
                     {allReviews
-                      ? "Show fewer"
-                      : `See all ${reviewList.length} reviews`}
+                      ? t("company.showFewer")
+                      : t("company.seeAll", { n: reviewList.length })}
                     <ChevronUp
                       className={`h-3.5 w-3.5 transition-transform duration-200 ${
                         allReviews ? "" : "rotate-180"
@@ -398,15 +402,17 @@ export default function BusDetailPage() {
               </Card>
 
               <Card>
-                <span className="text-[16px] font-semibold text-text-primary">Policies</span>
+                <span className="text-[16px] font-semibold text-text-primary">{t("company.policies")}</span>
                 <ul className="mt-3 flex flex-col gap-3">
-                  {profile.policies.map((policy) => (
-                    <li key={policy} className="flex items-start gap-3">
+                  {profile.policyKeys.map((policyKey) => (
+                    <li key={policyKey} className="flex items-start gap-3">
                       <Check
                         className="mt-0.5 h-4 w-4 shrink-0 text-text-secondary"
                         strokeWidth={2.5}
                       />
-                      <span className="text-[12px] text-text-secondary">{policy}</span>
+                      <span className="text-[12px] text-text-secondary">
+                        {t(policyKey as TranslationKey)}
+                      </span>
                     </li>
                   ))}
                 </ul>

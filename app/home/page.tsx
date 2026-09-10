@@ -7,6 +7,7 @@ import { Inbox, Search, User as UserIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import { clearSession } from "@/lib/session";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
 
 const BusMap = dynamic(() => import("@/components/BusMap"), {
   ssr: false,
@@ -23,6 +24,7 @@ const BusMap = dynamic(() => import("@/components/BusMap"), {
  */
 export default function HomePage() {
   const router = useRouter();
+  const t = useT();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,14 +76,14 @@ export default function HomePage() {
               <div className="flex shrink-0 items-center gap-2">
                 <button
                   onClick={() => router.push("/inbox")}
-                  aria-label="Inbox"
+                  aria-label={t("home.inbox")}
                   className="glass flex h-11 w-11 items-center justify-center rounded-full"
                 >
                   <Inbox className="h-5 w-5 text-text-primary" />
                 </button>
                 <button
                   onClick={() => router.push("/profile")}
-                  aria-label="Your profile"
+                  aria-label={t("home.yourProfile")}
                   className="glass flex h-11 w-11 items-center justify-center overflow-hidden rounded-full"
                 >
                   {photoUrl ? (
@@ -99,13 +101,9 @@ export default function HomePage() {
               className="glass mt-4 flex h-[54px] w-full items-center gap-3 rounded-[18px] pl-4 pr-1.5 text-left"
             >
               <Search className="h-[18px] w-[18px] shrink-0 text-text-secondary" />
-              <span className="flex-1 truncate text-[14px] font-medium text-text-muted">
-                Where are you going?
-              </span>
+              <span className="flex-1 truncate text-[14px] font-medium text-text-muted">{t("home.searchPlaceholder")}</span>
               <span className="flex shrink-0 items-center gap-1.5 rounded-[13px] bg-gradient-to-b from-primary to-primary-dark px-4 py-2.5 text-[13px] font-bold text-white">
-                <Search className="h-[13px] w-[13px]" />
-                Search
-              </span>
+                <Search className="h-[13px] w-[13px]" />{t("common.search")}</span>
             </button>
           </div>
         </div>

@@ -16,9 +16,11 @@ import {
   type ChatThread,
 } from "@/lib/chat";
 import { DRIVER_PHONE } from "@/constants/drivers";
+import { useT } from "@/lib/i18n";
 
 export default function ChatThreadPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ bookingId: string }>();
   const bookingId = params.bookingId;
 
@@ -57,8 +59,8 @@ export default function ChatThreadPage() {
       from: "you",
       kind: "system",
       text: outcome.connected
-        ? `Call ended · ${formatDuration(outcome.seconds)}`
-        : "Call cancelled",
+        ? t("call.ended", { duration: formatDuration(outcome.seconds) })
+        : t("call.cancelled"),
     });
   }
 
@@ -71,14 +73,12 @@ export default function ChatThreadPage() {
         <div className="flex w-full max-w-[393px] flex-1 flex-col px-5 pt-6">
           <button
             onClick={() => router.push("/inbox")}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
           </button>
-          <p className="py-16 text-center text-[14px] text-text-secondary">
-            This conversation is no longer available.
-          </p>
+          <p className="py-16 text-center text-[14px] text-text-secondary">{t("inbox.gone")}</p>
         </div>
       </div>
     );
@@ -90,7 +90,7 @@ export default function ChatThreadPage() {
         <div className="flex items-center gap-3 border-b border-border bg-white px-5 pt-6 pb-4">
           <button
             onClick={() => router.push("/inbox")}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-surface"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
@@ -106,7 +106,7 @@ export default function ChatThreadPage() {
           </div>
           <button
             onClick={() => setCalling(true)}
-            aria-label="Call driver"
+            aria-label={t("track.callDriver")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-white transition-transform active:scale-95"
           >
             <Phone className="h-[18px] w-[18px]" />

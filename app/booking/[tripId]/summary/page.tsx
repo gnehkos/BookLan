@@ -11,6 +11,7 @@ import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
 import { SERVICE_FEE_USD } from "@/constants/booking";
 import { getActivePickupBooking } from "@/lib/activeBooking";
+import { useT } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -29,6 +30,7 @@ type StoredDropoff = { id: string; name: string; address: string };
 
 export default function SummaryPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ tripId: string }>();
   const tripId = params.tripId;
 
@@ -117,7 +119,7 @@ export default function SummaryPage() {
     );
 
     if (insertError || !booking) {
-      throw new Error(insertError?.message ?? "Could not create booking.");
+      throw new Error(insertError?.message ?? t("payment.createFailed"));
     }
 
     // Best-effort: the booking above already succeeded, so a failure here must never
@@ -158,12 +160,12 @@ export default function SummaryPage() {
         <div className="flex items-center gap-2 bg-white px-4 pt-6 pb-4">
           <button
             onClick={() => router.back()}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
           >
             <ArrowLeft className="h-6 w-6 text-text-primary" />
           </button>
-          <h1 className="text-[16px] font-semibold text-text-primary">Confirm Booking</h1>
+          <h1 className="text-[16px] font-semibold text-text-primary">{t("confirm.title")}</h1>
         </div>
 
         {/* Journey: pickup and drop-off joined by a connector, so the trip
@@ -178,23 +180,19 @@ export default function SummaryPage() {
 
             <div className="flex min-w-0 flex-1 flex-col gap-5">
               <div className="flex min-w-0 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                  PICKUP POINT
-                </span>
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("confirm.pickupPoint")}</span>
                 <span className="truncate text-[15px] font-semibold text-text-primary">
                   {pickup.stationName ??
                     pickup.placeName ??
                     `${pickup.lat.toFixed(4)}, ${pickup.lng.toFixed(4)}`}
                 </span>
                 <span className="text-[12px] text-text-secondary">
-                  {pickup.stationName ? "Station pickup" : "Roadside pickup"}
+                  {pickup.stationName ? t("confirm.stationPickup") : t("confirm.roadsidePickup")}
                 </span>
               </div>
 
               <div className="flex min-w-0 flex-col">
-                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                  DROP-OFF STATION
-                </span>
+                <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("confirm.dropoffStation")}</span>
                 <span className="truncate text-[15px] font-semibold text-primary">
                   {dropoff.name}
                 </span>
@@ -228,9 +226,7 @@ export default function SummaryPage() {
 
         {/* Fare breakdown — roadside pricing is per km, so show the maths. */}
         <div className="mx-4 mt-3 rounded-[12px] bg-white p-4 shadow-[var(--shadow-float)]">
-          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-            FARE BREAKDOWN
-          </span>
+          <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("fare.title")}</span>
 
           <div className="mt-3 flex flex-col gap-2.5">
             <Row
@@ -240,11 +236,11 @@ export default function SummaryPage() {
             {seat.seatNumbers.length > 1 && (
               <Row label={`× ${seat.seatNumbers.length} seats`} value="" />
             )}
-            <Row label="Service fee" value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
+            <Row label={t("common.serviceFee")} value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
           </div>
 
           <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-            <span className="text-[14px] font-semibold text-text-primary">Total</span>
+            <span className="text-[14px] font-semibold text-text-primary">{t("common.total")}</span>
             <span className="text-[24px] font-bold leading-none text-primary">
               ${seat.totalPrice.toFixed(2)}
             </span>

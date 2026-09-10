@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import BooklanLogo from "@/components/BooklanLogo";
 import SplashScreen from "@/components/SplashScreen";
+import { useT } from "@/lib/i18n";
 
 /** How long the launch screen holds before the app takes over. */
 const SPLASH_MS = 2100;
@@ -17,22 +18,23 @@ const SPLASH_MS = 2100;
 const STEPS = [
   {
     image: "/onboarding/step-1.png",
-    title: "Book from anywhere",
-    body: "No station needed. Flag down any bus or van right from where you stand on the national road.",
+    titleKey: "onboarding.1.title",
+    bodyKey: "onboarding.1.body",
   },
   {
     image: "/onboarding/step-2.png",
-    title: "Pre-book in advance",
-    body: "Schedule your trip a day ahead. Pick your route, date, and seats — all locked in before you travel.",
+    titleKey: "onboarding.2.title",
+    bodyKey: "onboarding.2.body",
   },
   {
     image: "/onboarding/step-3.png",
-    title: "Pay and get picked up",
-    body: "Pay securely in-app with your E-Bank account. Show your Ticket ID to the driver and hop on.",
+    titleKey: "onboarding.3.title",
+    bodyKey: "onboarding.3.body",
   },
 ] as const;
 
 export default function OnboardingPage() {
+  const t = useT();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [ready, setReady] = useState(false);
@@ -101,10 +103,10 @@ export default function OnboardingPage() {
             </div>
 
             <h1 className="mt-11 max-w-[280px] text-center text-[26px] font-extrabold leading-[39px] tracking-[-0.7px] text-text-primary">
-              {current.title}
+              {t(current.titleKey)}
             </h1>
             <p className="mt-3 max-w-[313px] text-center text-[15px] font-medium leading-[24.75px] text-text-muted">
-              {current.body}
+              {t(current.bodyKey)}
             </p>
           </div>
         </div>
@@ -112,7 +114,7 @@ export default function OnboardingPage() {
         <div className="flex items-center justify-center gap-1.5 pb-6">
           {STEPS.map((s, index) => (
             <button
-              key={s.title}
+              key={s.titleKey}
               onClick={() => setStep(index)}
               aria-label={`Go to step ${index + 1}`}
               aria-current={index === step ? "step" : undefined}
@@ -128,7 +130,7 @@ export default function OnboardingPage() {
             onClick={next}
             className="w-full rounded-[16px] bg-gradient-to-b from-primary to-primary-dark px-6 py-4 text-[15px] font-bold text-white transition-transform hover:brightness-105 active:scale-[0.99]"
           >
-            {isLast ? "Get Started" : "Continue"}
+            {isLast ? t("onboarding.getStarted") : t("common.continue")}
           </button>
 
           {!isLast && (
@@ -136,8 +138,8 @@ export default function OnboardingPage() {
               onClick={finish}
               className="w-full p-2 text-center text-[14px] font-semibold text-text-muted"
             >
-              Skip
-            </button>
+          {t("common.skip")}
+          </button>
           )}
         </div>
       </div>

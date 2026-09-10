@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Mic, MicOff, PhoneOff, Volume2, VolumeX } from "lucide-react";
 import CompanyLogo from "@/components/CompanyLogo";
+import { useT } from "@/lib/i18n";
 
 /**
  * A full-screen in-app call, in the shape of a messaging app's call UI.
@@ -29,6 +30,7 @@ export default function CallScreen({
    */
   onClose: (outcome: { connected: boolean; seconds: number }) => void;
 }) {
+  const t = useT();
   const [connected, setConnected] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [muted, setMuted] = useState(false);
@@ -68,14 +70,14 @@ export default function CallScreen({
           <span className="mt-3 font-mono text-[14px] tracking-[0.4px] text-white/45">{phone}</span>
 
           <span className="mt-6 text-[14px] font-medium text-white/80">
-            {connected ? elapsed : "Calling…"}
+            {connected ? elapsed : t("call.calling")}
           </span>
         </div>
 
         <div className="mt-auto flex items-center gap-5">
           <button
             onClick={() => setMuted((value) => !value)}
-            aria-label={muted ? "Unmute" : "Mute"}
+            aria-label={muted ? t("call.unmute") : t("call.mute")}
             aria-pressed={muted}
             className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors ${
               muted ? "bg-white text-primary" : "bg-white/12 text-white hover:bg-white/20"
@@ -86,7 +88,7 @@ export default function CallScreen({
 
           <button
             onClick={() => onClose({ connected, seconds })}
-            aria-label="End call"
+            aria-label={t("call.end")}
             className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-error text-white transition-transform active:scale-95"
           >
             <PhoneOff className="h-6 w-6" />
@@ -94,7 +96,7 @@ export default function CallScreen({
 
           <button
             onClick={() => setSpeaker((value) => !value)}
-            aria-label={speaker ? "Speaker off" : "Speaker on"}
+            aria-label={speaker ? "Speaker off" : t("call.speaker")}
             aria-pressed={speaker}
             className={`flex h-14 w-14 items-center justify-center rounded-full transition-colors ${
               speaker ? "bg-white text-primary" : "bg-white/12 text-white hover:bg-white/20"

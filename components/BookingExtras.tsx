@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Info, Loader2, MapPin, Star, X } from "lucide-react";
 import Portal from "@/components/Portal";
 import { safeQuery, supabase } from "@/lib/supabase";
+import { useT } from "@/lib/i18n";
 
 export type BookingMilestones = {
   bookedAt?: string | null;
@@ -52,6 +53,7 @@ export default function BookingExtras({
   reviewed: boolean;
   onReviewed: (bookingId: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState<"details" | "review" | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -76,7 +78,7 @@ export default function BookingExtras({
     );
 
     if (saveError) {
-      setError("Couldn't save your review. Please try again.");
+      setError(t("rate.saveFailed"));
       setSaving(false);
       return;
     }
@@ -90,7 +92,7 @@ export default function BookingExtras({
     <>
       <button
         onClick={() => setOpen("details")}
-        aria-label="Trip details"
+        aria-label={t("extras.tripDetails")}
         className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-white text-text-secondary transition-colors hover:bg-surface"
       >
         <Info className="h-[15px] w-[15px]" />
@@ -98,7 +100,7 @@ export default function BookingExtras({
 
       <button
         onClick={() => !reviewed && setOpen("review")}
-        aria-label={reviewed ? "Already reviewed" : "Rate this trip"}
+        aria-label={reviewed ? t("extras.reviewed") : t("extras.rateTrip")}
         disabled={reviewed}
         className={`flex h-7 w-7 items-center justify-center rounded-full border transition-colors ${
           reviewed
@@ -121,11 +123,11 @@ export default function BookingExtras({
             >
               <div className="flex items-center justify-between">
                 <span className="text-[14px] font-extrabold text-text-primary">
-                  {open === "details" ? "Trip details" : "Rate this trip"}
+                  {open === "details" ? t("extras.tripDetails") : t("extras.rateTrip")}
                 </span>
                 <button
                   onClick={() => setOpen(null)}
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   className="flex h-7 w-7 items-center justify-center rounded-full bg-surface text-text-secondary"
                 >
                   <X className="h-3.5 w-3.5" strokeWidth={3} />
@@ -134,27 +136,27 @@ export default function BookingExtras({
 
               {open === "details" ? (
                 <div className="mt-3 flex flex-col gap-2">
-                  <Line label="Booked" value={when(milestones.bookedAt)} />
+                  <Line label={t("extras.booked")} value={when(milestones.bookedAt)} />
                   {milestones.travelDate && (
-                    <Line label="Travel date" value={milestones.travelDate} />
+                    <Line label={t("common.travelDate")} value={milestones.travelDate} />
                   )}
-                  {milestones.departure && <Line label="Departure" value={milestones.departure} />}
+                  {milestones.departure && <Line label={t("common.departure")} value={milestones.departure} />}
                   {milestones.boardedAt !== undefined && (
-                    <Line label="Driver accepted" value={when(milestones.boardedAt)} />
+                    <Line label={t("extras.driverAccepted")} value={when(milestones.boardedAt)} />
                   )}
                   {milestones.completedAt !== undefined && (
-                    <Line label="Arrived" value={when(milestones.completedAt)} />
+                    <Line label={t("extras.arrived")} value={when(milestones.completedAt)} />
                   )}
                   {milestones.pickupName && (
                     <Line
-                      label="Pickup"
+                      label={t("common.pickup")}
                       value={milestones.pickupName}
                       icon={<MapPin className="h-3 w-3 shrink-0 text-text-muted" />}
                     />
                   )}
                   {milestones.dropoffName && (
                     <Line
-                      label="Drop-off"
+                      label={t("common.dropoff")}
                       value={milestones.dropoffName}
                       icon={<MapPin className="h-3 w-3 shrink-0 text-text-muted" />}
                     />
@@ -181,7 +183,7 @@ export default function BookingExtras({
                   <input
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Anything worth mentioning? (optional)"
+                    placeholder={t("extras.commentPlaceholder")}
                     className="h-10 w-full rounded-[10px] border border-border bg-surface px-3 text-[13px] text-text-primary outline-none placeholder:text-text-muted focus:border-primary"
                   />
 
@@ -192,7 +194,7 @@ export default function BookingExtras({
                     disabled={rating === 0 || saving}
                     className="flex h-11 items-center justify-center rounded-[12px] bg-primary text-[14px] font-bold text-white disabled:opacity-40"
                   >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit review"}
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : t("extras.submitReview")}
                   </button>
                 </div>
               )}

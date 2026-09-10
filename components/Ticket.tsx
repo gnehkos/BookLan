@@ -1,5 +1,6 @@
 import CompanyLogo from "@/components/CompanyLogo";
 import TicketQr from "@/components/TicketQr";
+import { useT } from "@/lib/i18n";
 
 /**
  * Boarding ticket, shaped like a paper one: a white stub with punched notches
@@ -28,6 +29,7 @@ export default function Ticket({
   /** Must match the surface behind the ticket for the notches to look punched. */
   notchColorClass?: string;
 }) {
+  const t = useT();
   return (
     <div className="relative w-full overflow-hidden rounded-[16px] bg-white shadow-[var(--shadow-float)]">
       <div className="flex items-center gap-3 p-4">
@@ -72,7 +74,7 @@ export default function Ticket({
       </div>
 
       <div className="flex flex-col items-center gap-1 px-4 pb-5 pt-4">
-        <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">TICKET ID</span>
+        <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.ticketId")}</span>
         <span className="font-mono text-[22px] font-bold tracking-[1px] text-text-primary">
           {ticketId}
         </span>

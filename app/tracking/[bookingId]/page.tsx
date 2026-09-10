@@ -28,6 +28,7 @@ import { appendMessage, formatDuration, getThread, type ChatMessage } from "@/li
 import CallScreen from "@/components/CallScreen";
 import TicketQr from "@/components/TicketQr";
 import Portal from "@/components/Portal";
+import { useT } from "@/lib/i18n";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
@@ -72,6 +73,7 @@ type BookingRow = {
 const SCREEN_INSET = 16;
 export default function TrackingPage() {
   const router = useRouter();
+  const t = useT();
   const params = useParams<{ bookingId: string }>();
   const bookingId = params.bookingId;
 
@@ -113,9 +115,9 @@ export default function TrackingPage() {
         // The id comes from the URL, so confirm it's actually this passenger's
         // booking before rendering anyone's ticket and pickup location.
         if (fetchError || !row) {
-          setLoadError("Couldn't load this booking. It may not exist.");
+          setLoadError(t("track.loadFailed"));
         } else if (row.user_id !== localStorage.getItem("booklan_user_id")) {
-          setLoadError("This booking belongs to a different account.");
+          setLoadError(t("track.wrongAccount"));
         } else {
           setBooking(row);
           setDistance(row.distance_remaining_km);
@@ -228,7 +230,7 @@ export default function TrackingPage() {
     );
 
     if (error) {
-      setCancelError("Couldn't cancel this booking. Please try again.");
+      setCancelError(t("track.cancelFailed"));
       setCancelling(false);
       return;
     }
@@ -258,8 +260,8 @@ export default function TrackingPage() {
       from: "you",
       kind: "system",
       text: outcome.connected
-        ? `Call ended · ${formatDuration(outcome.seconds)}`
-        : "Call cancelled",
+        ? t("call.ended", { duration: formatDuration(outcome.seconds) })
+        : t("call.cancelled"),
     });
   }
 
@@ -280,7 +282,7 @@ export default function TrackingPage() {
           <div className="flex items-center gap-2 px-4 pt-6 pb-3">
             <button
               onClick={() => router.push("/bookings")}
-              aria-label="Back"
+              aria-label={t("common.back")}
               className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface"
             >
               <ArrowLeft className="h-6 w-6 text-text-primary" />
@@ -322,7 +324,7 @@ export default function TrackingPage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-5">
           <button
             onClick={() => router.push("/bookings")}
-            aria-label="Back"
+            aria-label={t("common.back")}
             className="glass pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full"
           >
             <ArrowLeft className="h-[18px] w-[18px] text-text-primary" />
@@ -376,14 +378,14 @@ export default function TrackingPage() {
             <div className="flex shrink-0 gap-2">
               <button
                 onClick={() => setShowCallModal(true)}
-                aria-label="Call driver"
+                aria-label={t("track.callDriver")}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-white transition-transform active:scale-95"
               >
                 <Phone className="h-[18px] w-[18px]" />
               </button>
               <button
                 onClick={() => setShowChatModal(true)}
-                aria-label="Message driver"
+                aria-label={t("track.messageDriver")}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-accent transition-transform active:scale-95"
               >
                 <MessageCircle className="h-[18px] w-[18px] text-secondary-dark" />
@@ -396,9 +398,7 @@ export default function TrackingPage() {
               bus, and it was previously the smallest text on the panel. */}
           <div className="mt-3 flex items-center gap-3 rounded-[14px] bg-surface px-3 py-2.5">
             <span className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-[10px] font-bold tracking-[0.4px] text-text-muted">
-                YOUR DRIVER
-              </span>
+              <span className="truncate text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("track.yourDriver")}</span>
               <span className="truncate text-[13px] font-bold text-text-primary">
                 {driverName}
               </span>
@@ -419,7 +419,9 @@ export default function TrackingPage() {
             aria-expanded={showDetails}
             className="mt-2 flex w-full items-center justify-between rounded-[12px] px-1 py-1.5 text-left"
           >
-            <span className="text-[12px] font-bold text-text-secondary">Trip details</span>
+            <span className="text-[12px] font-bold text-text-secondary">
+          {t("track.tripDetails")}
+          </span>
             <ChevronDown
               className={`h-4 w-4 text-text-muted transition-transform duration-200 ${
                 showDetails ? "rotate-180" : ""
@@ -430,21 +432,21 @@ export default function TrackingPage() {
           {showDetails && (
             <div className="mb-1 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-[14px] bg-surface p-3">
               <Detail label="Ticket ID" value={booking.ticket_id} mono />
-              <Detail label="Operator" value={companyName} />
-              <Detail label="Vehicle" value={vehicleType} capitalize />
+              <Detail label={t("common.operator")} value={companyName} />
+              <Detail label={t("common.vehicle")} value={vehicleType} capitalize />
               <Detail
-                label={booking.seat_numbers.length > 1 ? "Seats" : "Seat"}
+                label={booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat")}
                 value={booking.seat_numbers.join(", ")}
               />
-              <Detail label="Destination" value={destination} />
-              <Detail label="Distance left" value={`${distance} km`} />
+              <Detail label={t("common.destination")} value={destination} />
+              <Detail label={t("track.distanceLeft")} value={`${distance} km`} />
             </div>
           )}
 
           {phase === "approaching" && (
             <>
               <div className="mt-4 flex items-baseline justify-center gap-2">
-                <span className="text-[12px] text-text-secondary">Arriving in</span>
+                <span className="text-[12px] text-text-secondary">{t("track.arrivingIn")}</span>
                 <span className="text-[36px] font-bold leading-none text-primary">
                   {etaMinutes}
                 </span>
@@ -456,20 +458,16 @@ export default function TrackingPage() {
               <button
                 onClick={() => setShowCancelConfirm(true)}
                 className="mt-4 flex h-11 w-full items-center justify-center rounded-[12px] border border-error text-[14px] font-semibold text-error hover:bg-error/5"
-              >
-                Cancel Booking
-              </button>
+              >{t("track.cancelBooking")}</button>
             </>
           )}
 
           {phase === "verifying" && (
             <div className="mt-4 flex flex-col items-center gap-2">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              <span className="text-[16px] font-semibold text-text-primary">
-                Driver is verifying your ticket
-              </span>
+              <span className="text-[16px] font-semibold text-text-primary">{t("track.verifying")}</span>
               <span className="text-center text-[12px] text-text-secondary">
-                Show {booking.ticket_id} to the driver.
+                {t("track.showToDriver", { ticketId: booking.ticket_id })}
               </span>
             </div>
           )}
@@ -478,9 +476,9 @@ export default function TrackingPage() {
             <div className="mt-4 flex flex-col items-center gap-2">
               <CheckCircle2 className="h-8 w-8 animate-[pop-in_0.5s_ease-out] text-success" />
               <span className="text-[16px] font-semibold text-text-primary">
-                Ticket approved — you&apos;re on board
-              </span>
-              <span className="text-[12px] text-text-secondary">Starting your trip…</span>
+          {t("track.approved")}
+          </span>
+              <span className="text-[12px] text-text-secondary">{t("track.starting")}</span>
             </div>
           )}
         </div>
@@ -524,7 +522,7 @@ export default function TrackingPage() {
                   setShowChatModal(false);
                   setShowCallModal(true);
                 }}
-                aria-label="Call driver"
+                aria-label={t("track.callDriver")}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-white transition-transform active:scale-95"
               >
                 <Phone className="h-[17px] w-[17px]" />
@@ -533,9 +531,7 @@ export default function TrackingPage() {
 
             <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-5 py-4">
               {messages.length === 0 && (
-                <p className="py-8 text-center text-[13px] text-text-muted">
-                  Send your driver a message about your pickup.
-                </p>
+                <p className="py-8 text-center text-[13px] text-text-muted">{t("chat.prompt")}</p>
               )}
               {messages.map((message) => (
                 <ChatBubble key={message.id} message={message} />
@@ -555,18 +551,16 @@ export default function TrackingPage() {
           <Modal onClose={() => setShowCancelConfirm(false)}>
           <div className="flex flex-col items-center gap-3 px-6 pb-6">
             <AlertTriangle className="h-8 w-8 text-error" />
-            <h2 className="text-[16px] font-semibold text-text-primary">Cancel this booking?</h2>
+            <h2 className="text-[16px] font-semibold text-text-primary">
+          {t("track.cancelConfirm")}
+          </h2>
             <p className="text-center text-[14px] text-text-secondary">
-              This can&apos;t be undone. Your seat will be released.
-            </p>
+          {t("track.cancelWarning")}
+          </p>
             {cancelError && <p className="text-center text-[13px] text-error">{cancelError}</p>}
             <div className="mt-2 flex w-full flex-col gap-2">
-              <Button variant="outline" loading={cancelling} onClick={handleConfirmCancel}>
-                Yes, cancel booking
-              </Button>
-              <Button variant="ghost" onClick={() => setShowCancelConfirm(false)}>
-                Keep booking
-              </Button>
+              <Button variant="outline" loading={cancelling} onClick={handleConfirmCancel}>{t("track.cancelYes")}</Button>
+              <Button variant="ghost" onClick={() => setShowCancelConfirm(false)}>{t("track.keepBooking")}</Button>
             </div>
           </div>
           </Modal>
@@ -578,6 +572,7 @@ export default function TrackingPage() {
 }
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  const t = useT();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={onClose}>
       <div
@@ -587,7 +582,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
         <div className="flex justify-end p-2">
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-surface"
           >
             <X className="h-3.5 w-3.5 text-text-primary" strokeWidth={3} />
