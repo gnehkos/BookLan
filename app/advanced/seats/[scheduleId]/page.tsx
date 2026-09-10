@@ -7,7 +7,7 @@ import Button from "@/components/Button";
 import ErrorState from "@/components/ErrorState";
 import SeatMap from "@/components/SeatMap";
 import { safeQuery, supabase } from "@/lib/supabase";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -24,6 +24,7 @@ type ScheduleDetail = {
 };
 
 export default function AdvancedSeatsPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const params = useParams<{ scheduleId: string }>();
@@ -141,7 +142,7 @@ export default function AdvancedSeatsPage() {
               {schedule.companies?.name ?? "Unknown company"}
             </h1>
             <span className="text-[13px] text-text-secondary">
-              {schedule.origin} → {schedule.destination} · {schedule.departure_time}–
+              {p(schedule.origin)} → {p(schedule.destination)} · {schedule.departure_time}–
               {schedule.arrival_time}
             </span>
           </div>

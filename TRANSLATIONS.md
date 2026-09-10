@@ -48,7 +48,7 @@ These change how much gets translated, so they are worth settling first.
 | `common.destination` | Destination | គោលដៅ |
 | `common.departure` | Departure | ការចេញដំណើរ |
 | `common.travelDate` | Travel date | កាលបរិច្ឆេទធ្វើដំណើរ |
-| `common.vehicle` | Vehicle | យានយន្ត |
+| `common.vehicle` | Vehicle | ប្រភេទឡាន |
 | `common.operator` | Operator | ក្រុមហ៊ុន |
 | `common.seat` | Seat | កៅអី |
 | `common.seats` | Seats | កៅអី |
@@ -57,8 +57,11 @@ These change how much gets translated, so they are worth settling first.
 | `common.dropoff` | Drop-off | ចំណុចចុះ |
 | `common.from` | FROM | ចេញពី |
 | `common.to` | TO | ទៅ |
-| `common.bus` | bus | ឡានក្រុង |
-| `common.van` | van | ឡានវ៉ាន់ |
+| `common.bus` | bus | រថយន្តក្រុង |
+| `common.van` | van | រថយន្តតូច |
+| `common.km` | km | គម |
+| `common.kmValue` | {km} km | {km} គម |
+| `common.seatNumber` | Seat {n} | កៅអី {n} |
 
 ## 2. Splash and onboarding
 
@@ -224,7 +227,7 @@ These change how much gets translated, so they are worth settling first.
 | `confirm.roadsidePickup` | Roadside pickup | ទទួលតាមផ្លូវ |
 | `confirm.stationPickup` | Station pickup | ទទួលនៅស្ថានីយ |
 | `fare.title` | FARE BREAKDOWN | បំបែកតម្លៃ |
-| `fare.perKm` | {km} km × ${rate}/km | {km} គីឡូម៉ែត្រ × ${rate}/គ.ម |
+| `fare.perKm` | {km} km × ${rate}/km | {km} គម × ${rate}/គម |
 | `fare.seatMultiplier` | × {n} seats | × {n} កៅអី |
 | `payment.bank` | ABA Bank | ABA Bank |
 | `payment.subtitle` | Pay with your ABA Account | បង់ប្រាក់ដោយគណនី ABA របស់អ្នក |
@@ -276,7 +279,7 @@ These change how much gets translated, so they are worth settling first.
 |---|---|---|
 | `ontrip.inProgress` | Trip in progress | ដំណើរកំពុងបន្ត |
 | `ontrip.onTheWay` | On the way to {destination} | កំពុងធ្វើដំណើរទៅ {destination} |
-| `ontrip.kmLeft` | {km} km left | នៅសល់ {km} គីឡូម៉ែត្រ |
+| `ontrip.kmLeft` | {km} km left | នៅសល់ {km} គម |
 | `ontrip.arrivedAt` | Arrived at {destination} | បានមកដល់ {destination} |
 | `ontrip.backToBookings` | Back to bookings | ត្រឡប់ទៅការកក់ |
 | `ontrip.myBookings` | My Bookings | ការកក់របស់ខ្ញុំ |

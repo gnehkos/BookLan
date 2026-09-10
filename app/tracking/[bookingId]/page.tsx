@@ -28,7 +28,7 @@ import { appendMessage, formatDuration, getThread, type ChatMessage } from "@/li
 import CallScreen from "@/components/CallScreen";
 import TicketQr from "@/components/TicketQr";
 import Portal from "@/components/Portal";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 const TrackingMap = dynamic(() => import("@/components/TrackingMap"), {
   ssr: false,
@@ -72,6 +72,7 @@ type BookingRow = {
  *  hide the nav, so there is nothing else to clear. */
 const SCREEN_INSET = 16;
 export default function TrackingPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const params = useParams<{ bookingId: string }>();
@@ -438,8 +439,8 @@ export default function TrackingPage() {
                 label={booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat")}
                 value={booking.seat_numbers.join(", ")}
               />
-              <Detail label={t("common.destination")} value={destination} />
-              <Detail label={t("track.distanceLeft")} value={`${distance} km`} />
+              <Detail label={t("common.destination")} value={p(destination)} />
+              <Detail label={t("track.distanceLeft")} value={t("common.kmValue", { km: distance })} />
             </div>
           )}
 
@@ -451,7 +452,7 @@ export default function TrackingPage() {
                   {etaMinutes}
                 </span>
                 <span className="text-[14px] font-medium text-text-secondary">
-                  min · {distance} km
+                  {t("track.min")} · {t("common.kmValue", { km: distance })}
                 </span>
               </div>
 

@@ -137,7 +137,7 @@ export default function TripMap({
           </span>
           <span className="mt-0.5 flex items-center gap-1 text-[12px] text-text-secondary">
             <MapPin className="h-3 w-3 text-text-secondary" />
-            <span className="font-medium text-text-primary">{remainingKm} km</span>
+            <span className="font-medium text-text-primary">{t("common.kmValue", { km: remainingKm })}</span>
             <span>to go</span>
           </span>
           <span className="mt-1 block text-[16px] font-bold text-primary">

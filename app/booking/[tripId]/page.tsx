@@ -12,7 +12,7 @@ import VehicleBadge from "@/components/VehicleBadge";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { SERVICE_FEE_USD } from "@/constants/booking";
 import { companyProfile } from "@/constants/companyProfile";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/i18n/dictionary";
 
 type VehicleType = "bus" | "van";
@@ -40,6 +40,7 @@ const ACTION_BAR_HEIGHT = 150;
  *  hide the nav, so there is nothing else to clear. */
 const SCREEN_INSET = 16;
 export default function BusDetailPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const params = useParams<{ tripId: string }>();
@@ -209,7 +210,7 @@ export default function BusDetailPage() {
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-[16px] font-semibold text-text-primary">{t("seats.title")}</h1>
             <span className="truncate text-[12px] text-text-secondary">
-              {trip.origin} → {trip.destination}
+              {p(trip.origin)} → {p(trip.destination)}
             </span>
           </div>
           <span className="shrink-0 rounded-pill bg-accent px-3 py-1.5 text-[12px] font-semibold text-primary">
@@ -346,7 +347,7 @@ export default function BusDetailPage() {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="text-[12px] text-text-secondary">{t("common.destination")}</span>
                     <span className="truncate text-[14px] font-medium text-text-primary">
-                      {trip.destination}
+                      {p(trip.destination)}
                     </span>
                   </div>
                 </div>

@@ -460,7 +460,7 @@ function BookingCard({
       rows={[
         {
           label: t("common.distance"),
-          value: `${booking.active_trips?.distance_km ?? 0} km`,
+          value: t("common.kmValue", { km: booking.active_trips?.distance_km ?? 0 }),
           icon: <MapPin className="h-3.5 w-3.5 shrink-0 text-text-secondary" />,
         },
         {

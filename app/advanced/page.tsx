@@ -16,7 +16,6 @@ function todayISO() {
 
 /** Today / Tomorrow / a weekday label, for the quick-pick date chips. */
 function dateChips(t: (key: TranslationKey) => string) {
-  const p = useProvinceName();
   return [0, 1, 2].map((offset) => {
     const day = new Date();
     day.setDate(day.getDate() + offset);

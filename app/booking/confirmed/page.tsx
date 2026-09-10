@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import Button from "@/components/Button";
 import Ticket from "@/components/Ticket";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -21,6 +21,7 @@ type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredDropoff = { name: string };
 
 export default function ConfirmedPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const [trip, setTrip] = useState<StoredTrip | null>(null);
@@ -63,7 +64,7 @@ export default function ConfirmedPage() {
         <div className="mt-6 w-full">
           <Ticket
             company={trip.companies?.name ?? "BookLan"}
-            route={`${trip.origin} → ${trip.destination}`}
+            route={`${p(trip.origin)} → ${p(trip.destination)}`}
             ticketId={ticketId}
             details={[
               { label: t("common.vehicle"), value: trip.companies?.vehicle_type ?? "bus" },

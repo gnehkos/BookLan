@@ -11,7 +11,7 @@ import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
 import { SERVICE_FEE_USD } from "@/constants/booking";
 import { getActivePickupBooking } from "@/lib/activeBooking";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -29,6 +29,7 @@ type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredDropoff = { id: string; name: string; address: string };
 
 export default function SummaryPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const params = useParams<{ tripId: string }>();
@@ -211,7 +212,7 @@ export default function SummaryPage() {
             </span>
             <div className="flex items-center gap-2">
               <VehicleBadge type={trip.companies?.vehicle_type ?? "bus"} />
-              <span className="truncate text-[12px] text-text-secondary">to {trip.destination}</span>
+              <span className="truncate text-[12px] text-text-secondary">to {p(trip.destination)}</span>
             </div>
           </div>
           <div className="flex shrink-0 flex-col items-end">
@@ -230,7 +231,7 @@ export default function SummaryPage() {
 
           <div className="mt-3 flex flex-col gap-2.5">
             <Row
-              label={`${trip.distance_km} km × $${trip.price_per_km.toFixed(2)}/km`}
+              label={t("fare.perKm", { km: trip.distance_km, rate: trip.price_per_km.toFixed(2) })}
               value={`$${(trip.distance_km * trip.price_per_km).toFixed(2)}`}
             />
             {seat.seatNumbers.length > 1 && (
@@ -249,7 +250,7 @@ export default function SummaryPage() {
 
         <PaymentCard
           amount={seat.totalPrice}
-          itemName={`${trip.companies?.name ?? "BookLan"} ticket to ${trip.destination}`}
+          itemName={`${trip.companies?.name ?? "BookLan"} ticket to ${p(trip.destination)}`}
           onSuccess={handlePaymentSuccess}
         />
       </div>

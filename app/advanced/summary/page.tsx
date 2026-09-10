@@ -9,7 +9,7 @@ import PaymentCard from "@/components/PaymentCard";
 import { verifyStoredUser } from "@/lib/session";
 import { safeQuery, supabase } from "@/lib/supabase";
 import { generateTicketId } from "@/lib/ticket";
-import { useT } from "@/lib/i18n";
+import { useT, useProvinceName } from "@/lib/i18n";
 
 type VehicleType = "bus" | "van";
 
@@ -27,6 +27,7 @@ type StoredSeat = { seatNumbers: number[]; totalPrice: number };
 type StoredStation = { id: string; name: string; address: string };
 
 export default function AdvancedSummaryPage() {
+  const p = useProvinceName();
   const router = useRouter();
   const t = useT();
   const [schedule, setSchedule] = useState<StoredSchedule | null>(null);
@@ -245,7 +246,7 @@ export default function AdvancedSummaryPage() {
 
         <PaymentCard
           amount={seat.totalPrice}
-          itemName={`${company} scheduled ticket to ${schedule.destination}`}
+          itemName={`${company} scheduled ticket to ${p(schedule.destination)}`}
           onSuccess={handlePaymentSuccess}
         />
       </div>

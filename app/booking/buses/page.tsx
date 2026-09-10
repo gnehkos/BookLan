@@ -388,7 +388,7 @@ function BusCard({
         <div className="mt-3.5 grid grid-cols-3 gap-2.5">
           <InfoChip
             icon={<MapPin className="h-3.5 w-3.5" />}
-            text={`${trip.distance_km} km`}
+            text={t("common.kmValue", { km: trip.distance_km })}
             className="bg-surface text-text-secondary"
           />
           <InfoChip

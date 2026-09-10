@@ -99,7 +99,7 @@ export default function SeatMap({
                     key={seatNumber}
                     disabled={isTaken || blockedByLimit}
                     onClick={() => onToggle(seatNumber)}
-                    aria-label={`Seat ${seatNumber}`}
+                    aria-label={t("common.seatNumber", { n: seatNumber })}
                     className={`flex h-9 w-10 items-center justify-center rounded-[8px] border text-[12px] font-semibold transition-colors ${
                       colIndex === 1 ? "mr-2.5" : ""
                     } ${

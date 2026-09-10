@@ -249,8 +249,8 @@ export default function TripPage() {
                     label={booking.seat_numbers.length > 1 ? t("common.seats") : t("common.seat")}
                     value={booking.seat_numbers.join(", ")}
                   />
-                  <Detail label={t("common.destination")} value={destinationName} />
-                  <Detail label={t("track.distanceLeft")} value={`${remainingKm} km`} />
+                  <Detail label={t("common.destination")} value={p(destinationName)} />
+                  <Detail label={t("track.distanceLeft")} value={t("common.kmValue", { km: remainingKm })} />
                   {dropoffName && <Detail label={t("common.dropoff")} value={dropoffName} />}
                   </div>
                 </div>
