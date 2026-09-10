@@ -12,7 +12,7 @@ export default function VehicleBadge({ type }: { type: "bus" | "van" }) {
   const isVan = type === "van";
   return (
     <span
-      className={`shrink-0 rounded-pill px-2.5 py-1 text-[12px] font-medium capitalize ${
+      className={`w-fit shrink-0 self-start rounded-pill px-2.5 py-1 text-[12px] font-medium ${
         isVan ? "bg-[#EFF6FF] text-secondary" : "bg-[#E8EEF4] text-primary"
       }`}
     >

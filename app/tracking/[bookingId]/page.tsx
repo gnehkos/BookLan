@@ -239,7 +239,9 @@ export default function TrackingPage() {
     if (booking) {
       await releaseTripSeats(booking.trip_id, booking.seat_numbers.length);
     }
-    router.push("/home");
+    // History, not Home: the cancelled ticket is the proof the cancellation
+    // went through, and dropping the passenger on the map hides it.
+    router.push("/bookings?tab=past");
   }
 
   function sendMessage(message: Omit<ChatMessage, "id" | "at">) {

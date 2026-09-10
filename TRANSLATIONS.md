@@ -67,6 +67,7 @@ These change how much gets translated, so they are worth settling first.
 | `common.noneSelected` | None selected | មិនទាន់ជ្រើសរើស |
 | `common.minutes` | {n}m | {n}នាទី |
 | `common.hoursMinutes` | {h}h {n}m | {h}ម៉ោង {n}នាទី |
+| `common.hoursShort` | {h}h | {h}ម៉ោង |
 | `common.youAreHere` | You | អ្នក |
 
 ## 2. Splash and onboarding
@@ -226,6 +227,8 @@ These change how much gets translated, so they are worth settling first.
 | `results.scheduledOn` | {n} scheduled · {date} | មាន {n} · {date} |
 | `results.journeyHours` | {h}h journey | ធ្វើដំណើរ {h} ម៉ោង |
 | `results.seatsAvailable` | {n} seats | {n} កៅអី |
+| `results.perSeatUnit` | per seat | ក្នុងមួយកៅអី |
+| `results.noDepartures` | No departures from {from} to {to}. | គ្មានដំណើរពី {from} ទៅ {to} ទេ។ |
 | `schedule.loadFailed` | Couldn't load this schedule. It may no longer be available. | មិនអាចទាញយកកាលវិភាគនេះបានទេ។ វាប្រហែលលែងមានហើយ។ |
 
 ## 10. Confirm booking and payment

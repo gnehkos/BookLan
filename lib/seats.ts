@@ -17,7 +17,10 @@ export async function completeBooking(bookingId: string) {
       // Stamped here rather than inferred later, so booking history can show
       // when the trip actually ended.
       .update({ status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", bookingId);
+      .eq("id", bookingId)
+      // Only a live booking finishes. Without this, re-opening a trip screen
+      // after cancelling would flip the cancelled ticket to completed.
+      .eq("status", "confirmed");
   } catch {
     // Non-fatal: the passenger has already arrived either way.
   }

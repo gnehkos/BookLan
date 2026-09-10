@@ -193,7 +193,9 @@ export default function AdvancedResultsPage() {
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.from")}</span>
               <select
-                value={p(from)}
+                // The value is the stored English name — the same string the
+                // options carry. Only the label is translated.
+                value={from}
                 onChange={(e) => {
                   const next = e.target.value;
                   updateRoute(next, next === to ? (CITIES.find((c) => c !== next) ?? to) : to);
@@ -202,7 +204,7 @@ export default function AdvancedResultsPage() {
               >
                 {CITIES.map((city) => (
                   <option key={city} value={city}>
-                    {city}
+                    {p(city)}
                   </option>
                 ))}
               </select>
@@ -218,13 +220,13 @@ export default function AdvancedResultsPage() {
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">{t("common.to")}</span>
               <select
-                value={p(to)}
+                value={to}
                 onChange={(e) => updateRoute(from, e.target.value)}
                 className="w-full truncate bg-transparent text-[14px] font-semibold text-primary outline-none"
               >
                 {CITIES.filter((city) => city !== from).map((city) => (
                   <option key={city} value={city}>
-                    {city}
+                    {p(city)}
                   </option>
                 ))}
               </select>
@@ -293,7 +295,7 @@ export default function AdvancedResultsPage() {
 
           {!loading && !error && sorted.length === 0 && (
             <p className="py-10 text-center text-sm text-text-secondary">
-              No departures from {p(from)} to {p(to)}.
+              {t("results.noDepartures", { from: p(from), to: p(to) })}
             </p>
           )}
 
@@ -334,7 +336,7 @@ export default function AdvancedResultsPage() {
                         <span className="block text-[20px] font-bold leading-tight text-primary">
                           ${schedule.price_per_seat.toFixed(2)}
                         </span>
-                        <span className="block text-[10px] text-text-secondary">per seat</span>
+                        <span className="block text-[10px] text-text-secondary">{t("results.perSeatUnit")}</span>
                       </div>
                     </div>
 
@@ -344,7 +346,7 @@ export default function AdvancedResultsPage() {
                       </span>
                       <span className="h-px flex-1 bg-border" />
                       <span className="shrink-0 text-[11px] text-text-secondary">
-                        {schedule.duration_hours}h
+                        {t("common.hoursShort", { h: schedule.duration_hours })}
                       </span>
                       <span className="h-px flex-1 bg-border" />
                       <span className="text-[16px] font-semibold text-text-primary">

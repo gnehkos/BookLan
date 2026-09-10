@@ -191,7 +191,10 @@ export default function BookingsPage() {
       setCancelError(t("bookings.cancelFailed"));
     } else {
       await releaseTripSeats(booking.trip_id, booking.seat_numbers.length);
-      if (userId) await loadBookings(tab, userId);
+      // Move to History so the cancelled ticket stays on screen. Leaving the
+      // passenger on Upcoming makes a cancellation look like a deletion.
+      setTab("past");
+      if (userId) await loadBookings("past", userId);
     }
     setCancellingId(null);
   }
@@ -207,7 +210,8 @@ export default function BookingsPage() {
       setCancelError(t("bookings.cancelFailed"));
     } else {
       await releaseScheduleSeats(booking.schedule_id, booking.seat_numbers.length);
-      if (userId) await loadBookings(tab, userId);
+      setTab("past");
+      if (userId) await loadBookings("past", userId);
     }
     setCancellingId(null);
   }
