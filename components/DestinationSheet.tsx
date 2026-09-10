@@ -43,7 +43,9 @@ export default function DestinationSheet({
         <div className="flex items-start justify-between px-5 pt-3">
           <div className="flex flex-col">
             <h2 className="text-[16px] font-semibold text-text-primary">{t("destinationSheet.title")}</h2>
-            <span className="text-[12px] text-text-secondary">Currently going to {current}</span>
+            <span className="text-[12px] text-text-secondary">
+              {t("destinationSheet.goingTo", { destination: p(current) })}
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -83,7 +85,7 @@ export default function DestinationSheet({
               const active = place.name === current;
               return (
                 <button
-                  key={p(place.name)}
+                  key={place.name}
                   onClick={() => {
                     onSelect(place.name);
                     onClose();

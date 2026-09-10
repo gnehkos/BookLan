@@ -159,7 +159,16 @@ export function roadsFor(destination: string | null | undefined): RoadCorridor[]
   const matches = NATIONAL_ROADS.filter((road) =>
     road.serves.some((province) => province.toLowerCase() === destination.toLowerCase())
   );
-  return matches.length > 0 ? matches : NATIONAL_ROADS;
+  if (matches.length > 0) return matches;
+
+  // Every province is mapped to a corridor, so a miss means the caller passed
+  // something other than a stored province name — a translated one, most
+  // likely. Falling back to the whole network makes every road pinnable, which
+  // is the opposite of the rule, so make the mistake audible.
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`roadsFor: no corridor serves "${destination}" — expected a stored English name`);
+  }
+  return NATIONAL_ROADS;
 }
 
 export function isInsidePhnomPenh(lat: number, lng: number): boolean {

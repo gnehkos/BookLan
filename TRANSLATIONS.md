@@ -120,6 +120,7 @@ These change how much gets translated, so they are worth settling first.
 | `destinationSheet.title` | Change destination | ប្តូរគោលដៅ |
 | `destinationSheet.search` | Search a province | ស្វែងរកខេត្ត |
 | `destinationSheet.current` | Current | បច្ចុប្បន្ន |
+| `destinationSheet.goingTo` | Currently going to {destination} | បច្ចុប្បន្នកំពុងទៅ {destination} |
 
 ## 5. Pickup map
 

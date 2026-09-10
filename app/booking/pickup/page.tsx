@@ -119,7 +119,8 @@ export default function PickupPage() {
       <div className="relative w-full max-w-[393px] overflow-hidden bg-white">
         <div className="absolute inset-0 z-0">
           <PickupMap
-            destination={p(destination)}
+            // The stored English name: the map looks its corridor up by it.
+            destination={destination}
             initialPosition={existing}
             onPositionChange={handlePositionChange}
             bottomInset={sheetHeight}

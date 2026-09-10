@@ -316,7 +316,7 @@ export default function BusesPage() {
 
       {destinationSheetOpen && (
         <DestinationSheet
-          current={p(destination)}
+          current={destination}
           onSelect={changeDestination}
           onClose={() => setDestinationSheetOpen(false)}
         />
