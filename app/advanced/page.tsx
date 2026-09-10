@@ -35,8 +35,10 @@ export default function AdvancedBookingPage() {
   const router = useRouter();
   const t = useT();
   const [ready, setReady] = useState(false);
-  const [from, setFrom] = useState<string>(CITIES[0]);
-  const [to, setTo] = useState<string>(CITIES[1]);
+  // The capital and the busiest destination: the pair most people want,
+  // and a far better starting point than the alphabetical first two.
+  const [from, setFrom] = useState<string>("Phnom Penh");
+  const [to, setTo] = useState<string>("Siem Reap");
   const [date, setDate] = useState(todayISO());
 
   useEffect(() => {

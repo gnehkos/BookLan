@@ -458,7 +458,10 @@ function Detail({
         {label.toUpperCase()}
       </span>
       <span
-        className={`truncate text-[12.5px] font-semibold text-text-primary ${
+        // Wrapping on spaces rather than truncating: a station name like
+        // "Larryta Siem Reap Main" is worth two lines, and clipping it mid-word
+        // tells the passenger nothing.
+        className={`break-words text-[12.5px] font-semibold leading-snug text-text-primary ${
           mono ? "font-mono" : ""
         } ${capitalize ? "capitalize" : ""}`}
       >

@@ -174,7 +174,7 @@ export default function AdvancedSeatsPage() {
                   selectedSeats.length ? "text-text-primary" : "text-text-muted"
                 }`}
               >
-                {selectedSeats.length ? selectedSeats.join(", ") : "None selected"}
+                {selectedSeats.length ? selectedSeats.join(", ") : t("common.noneSelected")}
               </span>
             </div>
             <div className="flex flex-col items-end">

@@ -271,7 +271,9 @@ export default function BusDetailPage() {
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="text-[11.5px] leading-tight text-text-secondary">
                   {selectedSeats.length > 0
-                    ? `Seat${selectedSeats.length > 1 ? "s" : ""} ${selectedSeats.join(", ")}`
+                    ? t(selectedSeats.length > 1 ? "common.seatsList" : "common.seatList", {
+                        list: selectedSeats.join(", "),
+                      })
                     : t("seats.perSeat", { price: pricePerSeat.toFixed(2) })}
                 </span>
                 <span className="truncate text-[19px] font-extrabold leading-tight text-text-primary">

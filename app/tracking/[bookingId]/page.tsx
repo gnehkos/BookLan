@@ -372,7 +372,9 @@ export default function TrackingPage() {
                 {companyName}
               </span>
               <span className="truncate text-[12px] text-text-secondary">
-                Seat{booking.seat_numbers.length > 1 ? "s" : ""} {booking.seat_numbers.join(", ")} ·
+                {t(booking.seat_numbers.length > 1 ? "common.seatsList" : "common.seatList", {
+                  list: booking.seat_numbers.join(", "),
+                })}{" · "}
                 {t("track.toDestination", { destination: p(destination) })}
               </span>
             </div>

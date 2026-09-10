@@ -235,7 +235,7 @@ export default function SummaryPage() {
               value={`$${(trip.distance_km * trip.price_per_km).toFixed(2)}`}
             />
             {seat.seatNumbers.length > 1 && (
-              <Row label={`× ${seat.seatNumbers.length} seats`} value="" />
+              <Row label={t("fare.seatMultiplier", { n: seat.seatNumbers.length })} value="" />
             )}
             <Row label={t("common.serviceFee")} value={`$${SERVICE_FEE_USD.toFixed(2)}`} />
           </div>

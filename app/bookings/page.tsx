@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarClock, MapPin, Ticket as TicketIcon } from "lucide-react";
+import { AlertTriangle, CalendarClock, Loader2, MapPin, Ticket as TicketIcon } from "lucide-react";
 import ActiveTripBanner from "@/components/ActiveTripBanner";
 import Button from "@/components/Button";
 import BookingExtras from "@/components/BookingExtras";
+import Portal from "@/components/Portal";
 import TicketToggle from "@/components/TicketToggle";
 import BookingReceipt from "@/components/BookingReceipt";
 import FareBreakdown from "@/components/FareBreakdown";
@@ -394,16 +395,51 @@ function ScheduledCard({
       ticketId={booking.ticket_id}
       statusSlot={<StatusBadge status={booking.status} />}
       actions={
-        cancelled ? undefined : confirmingCancel ? (
-          <div className="flex flex-col gap-2 rounded-[12px] bg-surface p-3">
-            <p className="text-center text-[13px] text-text-secondary">{t("bookings.cancelConfirm")}</p>
-            <div className="flex gap-2">
-              <Button variant="outline" loading={cancelling} onClick={onCancel}>{t("bookings.cancelYes")}</Button>
-              <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>{t("bookings.keep")}</Button>
-            </div>
-          </div>
-        ) : (
-          <Button variant="outline" onClick={() => setConfirmingCancel(true)}>{t("track.cancelBooking")}</Button>
+        cancelled || tab === "past" ? undefined : (
+          <>
+            <Button variant="outline" onClick={() => setConfirmingCancel(true)}>
+              {t("track.cancelBooking")}
+            </Button>
+
+            {confirmingCancel && (
+              <Portal>
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-6"
+                  onClick={() => setConfirmingCancel(false)}
+                >
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[20px] bg-white p-5 shadow-[var(--shadow-lift)]"
+                  >
+                    <AlertTriangle className="h-8 w-8 text-error" />
+                    <span className="text-center text-[16px] font-bold text-text-primary">
+                      {t("bookings.cancelConfirm")}
+                    </span>
+                    <span className="text-center text-[12.5px] leading-[19px] text-text-secondary">
+                      {t("track.cancelWarning")}
+                    </span>
+
+                    <div className="mt-1 flex w-full flex-col gap-2">
+                      <button
+                        onClick={onCancel}
+                        disabled={cancelling}
+                        className="flex h-11 items-center justify-center rounded-[12px] bg-error text-[14px] font-bold text-white disabled:opacity-60"
+                      >
+                        {cancelling ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          t("track.cancelYes")
+                        )}
+                      </button>
+                      <Button variant="ghost" onClick={() => setConfirmingCancel(false)}>
+                        {t("bookings.keep")}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Portal>
+            )}
+          </>
         )
       }
       topActions={

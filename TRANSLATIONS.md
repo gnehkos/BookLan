@@ -62,6 +62,9 @@ These change how much gets translated, so they are worth settling first.
 | `common.km` | km | គម |
 | `common.kmValue` | {km} km | {km} គម |
 | `common.seatNumber` | Seat {n} | កៅអី {n} |
+| `common.seatsList` | Seats {list} | កៅអី {list} |
+| `common.seatList` | Seat {list} | កៅអី {list} |
+| `common.noneSelected` | None selected | មិនទាន់ជ្រើសរើស |
 | `common.minutes` | {n}m | {n}នាទី |
 | `common.hoursMinutes` | {h}h {n}m | {h}ម៉ោង {n}នាទី |
 | `common.youAreHere` | You | អ្នក |
@@ -219,6 +222,10 @@ These change how much gets translated, so they are worth settling first.
 | `results.sortEarliest` | Earliest | ចេញដំណើរមុនគេ |
 | `results.loadFailed` | Couldn't load departures. Check your connection and try again. | មិនអាចទាញយកដំណើរបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត រួចព្យាយាមម្តងទៀត។ |
 | `results.date` | DATE | កាលបរិច្ឆេទ |
+| `results.departuresTo` | Departures to {destination} | ដំណើរទៅ {destination} |
+| `results.scheduledOn` | {n} scheduled · {date} | មាន {n} · {date} |
+| `results.journeyHours` | {h}h journey | ធ្វើដំណើរ {h} ម៉ោង |
+| `results.seatsAvailable` | {n} seats | {n} កៅអី |
 | `schedule.loadFailed` | Couldn't load this schedule. It may no longer be available. | មិនអាចទាញយកកាលវិភាគនេះបានទេ។ វាប្រហែលលែងមានហើយ។ |
 
 ## 10. Confirm booking and payment

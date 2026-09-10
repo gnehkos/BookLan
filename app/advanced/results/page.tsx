@@ -175,10 +175,10 @@ export default function AdvancedResultsPage() {
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-[16px] font-semibold text-text-primary">
-              Departures to {p(to)}
+              {t("results.departuresTo", { destination: p(to) })}
             </h1>
             <span className="text-[12px] text-text-secondary">
-              {sorted.length} scheduled · {date}
+              {t("results.scheduledOn", { n: sorted.length, date })}
             </span>
           </div>
         </div>
@@ -355,7 +355,7 @@ export default function AdvancedResultsPage() {
                     <div className="mt-3.5 grid grid-cols-2 gap-2.5">
                       <span className="flex items-center justify-center gap-1 rounded-[10px] bg-surface px-2 py-2 text-[11px] font-medium text-text-secondary">
                         <Clock className="h-3.5 w-3.5" />
-                        {schedule.duration_hours}h journey
+                        {t("results.journeyHours", { h: schedule.duration_hours })}
                       </span>
                       <span
                         className={`flex items-center justify-center gap-1 rounded-[10px] px-2 py-2 text-[11px] font-medium ${
@@ -363,7 +363,7 @@ export default function AdvancedResultsPage() {
                         }`}
                       >
                         <Users className="h-3.5 w-3.5" />
-                        {schedule.seats_available} seats
+                        {t("results.seatsAvailable", { n: schedule.seats_available })}
                       </span>
                     </div>
                   </div>
