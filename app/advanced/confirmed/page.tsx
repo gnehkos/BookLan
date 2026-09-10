@@ -56,7 +56,7 @@ export default function AdvancedConfirmedPage() {
 
         <h1 className="mt-5 text-2xl font-bold text-text-primary">{t("confirmed.title")}</h1>
         <p className="mt-1 text-center text-[14px] text-text-secondary">
-          Your seat is reserved for {travelDate}. Show your ticket when boarding.
+          {t("confirmed.subtitleDated", { date: travelDate ?? "" })}
         </p>
 
         <div className="mt-6 w-full">

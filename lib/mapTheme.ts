@@ -38,16 +38,22 @@ export const TILE_LABEL_URL = process.env.NEXT_PUBLIC_MAP_TILE_URL ? null : ESRI
 export const TILE_ATTRIBUTION =
   process.env.NEXT_PUBLIC_MAP_ATTRIBUTION || "© Esri, HERE, Garmin, © OpenStreetMap contributors";
 
-export const userIcon = L.divIcon({
+/**
+ * The passenger's own position. Takes its label as an argument because Leaflet
+ * injects this markup itself, outside React, so it cannot read the language.
+ */
+export function userIcon(label: string) {
+  return L.divIcon({
   className: "",
   html: `<div class="booklan-user-marker">
       <span class="booklan-user-pulse"></span>
       <span class="booklan-user-dot"></span>
-      <span class="booklan-user-label">You</span>
+      <span class="booklan-user-label">${escapeHtml(label)}</span>
     </div>`,
   iconSize: [18, 18],
   iconAnchor: [9, 9],
-});
+  });
+}
 
 function escapeHtml(value: string) {
   return value.replace(

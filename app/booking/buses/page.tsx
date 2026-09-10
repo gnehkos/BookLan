@@ -86,11 +86,14 @@ const SORT_TABS: { mode: SortMode; labelKey: TranslationKey }[] = [
   { mode: "seats", labelKey: "buses.sortMostSeats" },
 ];
 
-function formatDuration(km: number) {
+// Takes t so the unit follows the language — "20m" reads as "20នាទី".
+function formatDuration(km: number, t: (key: TranslationKey, vars?: Record<string, string | number>) => string) {
   const totalMinutes = Math.max(1, Math.round((km / AVG_SPEED_KMH) * 60));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return hours > 0
+    ? t("common.hoursMinutes", { h: hours, n: minutes })
+    : t("common.minutes", { n: minutes });
 }
 
 export default function BusesPage() {
@@ -393,7 +396,7 @@ function BusCard({
           />
           <InfoChip
             icon={<Clock className="h-3.5 w-3.5" />}
-            text={formatDuration(trip.distance_km)}
+            text={formatDuration(trip.distance_km, t)}
             className="bg-surface text-text-secondary"
           />
           <InfoChip

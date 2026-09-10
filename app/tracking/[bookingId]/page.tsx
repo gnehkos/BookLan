@@ -373,7 +373,7 @@ export default function TrackingPage() {
               </span>
               <span className="truncate text-[12px] text-text-secondary">
                 Seat{booking.seat_numbers.length > 1 ? "s" : ""} {booking.seat_numbers.join(", ")} ·
-                to {destination}
+                {t("track.toDestination", { destination: p(destination) })}
               </span>
             </div>
             <div className="flex shrink-0 gap-2">

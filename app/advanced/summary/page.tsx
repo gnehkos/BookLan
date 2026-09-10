@@ -213,7 +213,7 @@ export default function AdvancedSummaryPage() {
           </div>
           <div className="flex shrink-0 flex-col items-end">
             <span className="text-[10px] font-bold tracking-[0.4px] text-text-muted">
-              {seats > 1 ? "SEATS" : "SEAT"}
+              {seats > 1 ? t("common.seats") : t("common.seat")}
             </span>
             <span className="text-[17px] font-extrabold leading-tight text-text-primary">
               {seat.seatNumbers.join(", ")}
@@ -228,7 +228,7 @@ export default function AdvancedSummaryPage() {
           <div className="mt-3 flex flex-col gap-2.5">
             <div className="flex items-center justify-between gap-3 text-[13px]">
               <span className="text-text-secondary">
-                ${perSeat.toFixed(2)} per seat × {seats} seat{seats > 1 ? "s" : ""}
+                {t("fare.perSeatTimes", { price: perSeat.toFixed(2), n: seats })}
               </span>
               <span className="font-medium text-text-primary">
                 ${(perSeat * seats).toFixed(2)}

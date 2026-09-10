@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import RecenterControl from "@/components/RecenterControl";
 import { PHNOM_PENH } from "@/constants/booking";
 import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, userIcon } from "@/lib/mapTheme";
+import { useT } from "@/lib/i18n";
 
 /**
  * The passenger's own map. Deliberately shows only their location — plotting
@@ -14,6 +15,7 @@ import { TILE_ATTRIBUTION, TILE_LABEL_URL, TILE_URL, userIcon } from "@/lib/mapT
  * who opens the app.
  */
 export default function BusMap() {
+  const t = useT();
   const [center, setCenter] = useState<[number, number] | null>(null);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
 
@@ -56,7 +58,7 @@ export default function BusMap() {
       <TileLayer url={TILE_URL} />
       {TILE_LABEL_URL && <TileLayer url={TILE_LABEL_URL} />}
 
-      {userPos && <Marker position={userPos} icon={userIcon} />}
+      {userPos && <Marker position={userPos} icon={userIcon(t("common.youAreHere"))} />}
 
       {/* Sits above the bottom nav so it never ends up underneath it. Pressing
           it re-reads the device location before flying, so it follows the user

@@ -67,7 +67,10 @@ export default function ConfirmedPage() {
             route={`${p(trip.origin)} → ${p(trip.destination)}`}
             ticketId={ticketId}
             details={[
-              { label: t("common.vehicle"), value: trip.companies?.vehicle_type ?? "bus" },
+              {
+                label: t("common.vehicle"),
+                value: trip.companies?.vehicle_type === "van" ? t("common.van") : t("common.bus"),
+              },
               {
                 label: seat.seatNumbers.length > 1 ? t("common.seats") : t("common.seat"),
                 value: seat.seatNumbers.join(", "),

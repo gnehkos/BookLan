@@ -62,6 +62,9 @@ These change how much gets translated, so they are worth settling first.
 | `common.km` | km | គម |
 | `common.kmValue` | {km} km | {km} គម |
 | `common.seatNumber` | Seat {n} | កៅអី {n} |
+| `common.minutes` | {n}m | {n}នាទី |
+| `common.hoursMinutes` | {h}h {n}m | {h}ម៉ោង {n}នាទី |
+| `common.youAreHere` | You | អ្នក |
 
 ## 2. Splash and onboarding
 
@@ -150,7 +153,7 @@ These change how much gets translated, so they are worth settling first.
 | `buses.sortSoonest` | Soonest | មកដល់លឿនបំផុត |
 | `buses.sortCheapest` | Cheapest | ថោកបំផុត |
 | `buses.sortMostSeats` | Most seats | កៅអីនៅសល់ច្រើនបំផុត |
-| `buses.seatsLeft` | {n} seats left | នៅសល់ {n} កៅអី |
+| `buses.seatsLeft` | {n} seats | {n} កៅអី |
 
 ## 7. Seat selection and company details
 
@@ -229,6 +232,7 @@ These change how much gets translated, so they are worth settling first.
 | `fare.title` | FARE BREAKDOWN | បំបែកតម្លៃ |
 | `fare.perKm` | {km} km × ${rate}/km | {km} គម × ${rate}/គម |
 | `fare.seatMultiplier` | × {n} seats | × {n} កៅអី |
+| `fare.perSeatTimes` | ${price} per seat × {n} seats | ${price} ក្នុងមួយកៅអី × {n} កៅអី |
 | `payment.bank` | ABA Bank | ABA Bank |
 | `payment.subtitle` | Pay with your ABA Account | បង់ប្រាក់ដោយគណនី ABA របស់អ្នក |
 | `payment.pay` | Pay ${amount} with ABA | បង់ ${amount} តាម ABA |
@@ -242,6 +246,7 @@ These change how much gets translated, so they are worth settling first.
 |---|---|---|
 | `confirmed.title` | Booking Confirmed! | ការកក់ជោគជ័យ! |
 | `confirmed.subtitle` | Your seat is reserved. Show your ticket to the driver when boarding. | កៅអីរបស់អ្នកត្រូវបានកក់។ សូមបង្ហាញសំបុត្រទៅអ្នកបើកបរពេលឡើងជិះ។ |
+| `confirmed.subtitleDated` | Your seat is reserved for {date}. Show your ticket when boarding. | កៅអីរបស់អ្នកត្រូវបានកក់សម្រាប់ថ្ងៃទី {date}។ សូមបង្ហាញសំបុត្រពេលឡើងជិះ។ |
 | `confirmed.showId` | Show this ID to the driver when boarding | បង្ហាញលេខនេះទៅអ្នកបើកបរពេលឡើងជិះ |
 | `confirmed.track` | Track My Bus | តាមដានឡានរបស់ខ្ញុំ |
 | `confirmed.viewAll` | View All Bookings | មើលការកក់ទាំងអស់ |
@@ -258,6 +263,7 @@ These change how much gets translated, so they are worth settling first.
 | `track.callDriver` | Call driver | ហៅអ្នកបើកបរ |
 | `track.messageDriver` | Message driver | ផ្ញើសារទៅអ្នកបើកបរ |
 | `track.tripDetails` | Trip details | ព័ត៌មានដំណើរ |
+| `track.toDestination` | to {destination} | ទៅ {destination} |
 | `track.distanceLeft` | Distance left | ចម្ងាយនៅសល់ |
 | `track.verifying` | Driver is verifying your ticket | អ្នកបើកបរកំពុងផ្ទៀងផ្ទាត់សំបុត្ររបស់អ្នក |
 | `track.showToDriver` | Show {ticketId} to the driver. | បង្ហាញ {ticketId} ទៅអ្នកបើកបរ។ |
@@ -290,6 +296,7 @@ These change how much gets translated, so they are worth settling first.
 | `rate.title` | How was your trip with {company}? | តើដំណើររបស់អ្នកជាមួយ {company} យ៉ាងណាដែរ? |
 | `rate.comment` | Add a comment (optional) | បន្ថែមមតិ (ស្រេចចិត្ត) |
 | `rate.thanks` | Thanks for the rating | អរគុណសម្រាប់ការវាយតម្លៃ |
+| `rate.submit` | Submit rating | ផ្ញើការវាយតម្លៃ |
 | `rate.saveFailed` | Couldn't save your review. Please try again. | មិនអាចរក្សាទុកមតិរបស់អ្នកបានទេ។ សូមព្យាយាមម្តងទៀត។ |
 
 ## 14. My bookings

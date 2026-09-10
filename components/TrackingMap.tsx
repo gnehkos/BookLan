@@ -177,7 +177,7 @@ export default function TrackingMap({
       )}
 
       {/* The "You" label is baked into the marker itself. */}
-      <Marker position={pickup} icon={userIcon} />
+      <Marker position={pickup} icon={userIcon(t("common.youAreHere"))} />
 
       {distanceKm > 0 && (
         <Marker position={busPosition} icon={vehicleIcon(company)}>

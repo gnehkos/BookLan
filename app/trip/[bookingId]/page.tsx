@@ -430,7 +430,7 @@ function TripRating({
 
       <div className="flex gap-3">
         <Button disabled={rating === 0 || saving} onClick={submit}>
-          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Submit rating"}
+          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : t("rate.submit")}
         </Button>
         <Button variant="outline" onClick={() => router.push("/home")}>{t("common.skip")}</Button>
       </div>
